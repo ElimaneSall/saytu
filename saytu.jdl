@@ -1,0 +1,107 @@
+entity Adresse {
+    region String,
+    ville String ,
+    commune String,
+    latitude Double,
+    longitude Double
+}
+
+entity OLT {
+    nom String required,
+    ip String required,
+    vendeur String required,
+    etat String required,
+    createdAt LocalDate,
+    updatedAt LocalDate
+
+}
+
+entity ONT {
+    index String required,
+    ontIP String required,
+    serviceId String required,
+    slot String required,
+    pon String required,
+    ponIndex String required,
+    maxUp String required,
+    maxDown String required,
+    createdAt LocalDate,
+    updatedAt LocalDate
+
+}
+
+enum StatutONT {
+    ACTIF,
+    INACTIF
+}
+
+entity Diagnostic {
+    index String required,
+    statutONT StatutONT,
+    debitUp String required,
+    debitDown String required,
+    dateDiagnostic LocalDate,
+}
+entity Metrique {
+    oltPower String required,
+    ontPower String required,
+    createdAt LocalDate,
+}
+
+entity TypeDiagnostic {
+    libelle String required unique,
+}
+
+entity Anomalie {
+    libelle String required unique,
+}
+
+entity Signal {
+    libelle String required unique,
+    seuilMin Double required
+    seuilMax Double required
+
+}
+
+entity Client {
+    nclient Long required,
+    nom String required,
+    prenom String required,
+    etat String required,
+    numeroFixe String required,
+    contactMobileClient String required,
+    isDoublons Boolean required,
+
+}
+
+entity Offre {
+    libelle String required unique,
+    debitMax String required,
+
+}
+
+relationship OneToOne {
+    OLT{adresse(region)} to  Adresse{olt(nom)}
+    ONT{client(numeroFixe)} to Client{ont(nom)}
+}
+
+
+relationship ManyToOne {
+    Client{offre} to Offre{client}
+    Diagnostic{typeDiagnostic} to TypeDiagnostic{diagnostic}
+    Diagnostic{signal} to Signal{diagnostic}
+    ONT{olt} to OLT{ont}
+    Diagnostic{ont} to ONT{diagnostic}
+    Metrique{ont} to ONT{metrique}
+
+
+}
+
+relationship ManyToMany {
+    Diagnostic{anomalie} to Anomalie{diagnostic}
+}
+
+dto * with mapstruct
+service * with serviceImpl
+filter *
+paginate * with pagination
