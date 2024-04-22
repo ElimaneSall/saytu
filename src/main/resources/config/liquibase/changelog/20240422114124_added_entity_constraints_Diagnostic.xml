@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    <!--
+        Added the constraints for entity Diagnostic.
+    -->
+    <changeSet id="20240422114124-2" author="jhipster">
+
+        <addForeignKeyConstraint baseColumnNames="type_diagnostic_id"
+                                 baseTableName="diagnostic"
+                                 constraintName="fk_diagnostic__type_diagnostic_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="type_diagnostic"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="signal_id"
+                                 baseTableName="diagnostic"
+                                 constraintName="fk_diagnostic__signal_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="jhi_signal"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="ont_id"
+                                 baseTableName="diagnostic"
+                                 constraintName="fk_diagnostic__ont_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="ont"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="diagnostic_id"
+                                 baseTableName="rel_diagnostic__anomalie"
+                                 constraintName="fk_rel_diagnostic__anomalie__diagnostic_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="diagnostic"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="anomalie_id"
+                                 baseTableName="rel_diagnostic__anomalie"
+                                 constraintName="fk_rel_diagnostic__anomalie__anomalie_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="anomalie"
+                                 />
+    </changeSet>
+</databaseChangeLog>

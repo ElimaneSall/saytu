@@ -1,0 +1,71 @@
+{
+  "annotations": {
+    "changelogDate": "20240422114124"
+  },
+  "applications": "*",
+  "clientRootFolder": "SaytuBackend",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "index",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "statutONT",
+      "fieldType": "StatutONT",
+      "fieldValues": "ACTIF,INACTIF"
+    },
+    {
+      "fieldName": "debitUp",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "debitDown",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "dateDiagnostic",
+      "fieldType": "LocalDate"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "SaytuBackend",
+  "name": "Diagnostic",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "typeDiagnostic",
+      "otherEntityRelationshipName": "diagnostic",
+      "relationshipName": "typeDiagnostic",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "signal",
+      "otherEntityRelationshipName": "diagnostic",
+      "relationshipName": "signal",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "oNT",
+      "otherEntityRelationshipName": "diagnostic",
+      "relationshipName": "ont",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "anomalie",
+      "otherEntityRelationshipName": "diagnostic",
+      "relationshipName": "anomalie",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

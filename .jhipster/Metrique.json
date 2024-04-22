@@ -1,0 +1,40 @@
+{
+  "annotations": {
+    "changelogDate": "20240422114125"
+  },
+  "applications": "*",
+  "clientRootFolder": "SaytuBackend",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "oltPower",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "ontPower",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "LocalDate"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "SaytuBackend",
+  "name": "Metrique",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "oNT",
+      "otherEntityRelationshipName": "metrique",
+      "relationshipName": "ont",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

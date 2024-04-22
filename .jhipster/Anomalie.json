@@ -1,0 +1,31 @@
+{
+  "annotations": {
+    "changelogDate": "20240422114127"
+  },
+  "applications": "*",
+  "clientRootFolder": "SaytuBackend",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "libelle",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "SaytuBackend",
+  "name": "Anomalie",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "diagnostic",
+      "otherEntityRelationshipName": "anomalie",
+      "relationshipName": "diagnostic",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

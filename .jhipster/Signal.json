@@ -1,0 +1,42 @@
+{
+  "annotations": {
+    "changelogDate": "20240422114128"
+  },
+  "applications": "*",
+  "clientRootFolder": "SaytuBackend",
+  "databaseType": "sql",
+  "dto": "mapstruct",
+  "entityTableName": "jhi_signal",
+  "fields": [
+    {
+      "fieldName": "libelle",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"]
+    },
+    {
+      "fieldName": "seuilMin",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "seuilMax",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "microserviceName": "SaytuBackend",
+  "name": "Signal",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "diagnostic",
+      "otherEntityRelationshipName": "signal",
+      "relationshipName": "diagnostic",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceImpl"
+}

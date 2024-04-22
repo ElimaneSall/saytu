@@ -82,7 +82,7 @@ entity Offre {
 
 relationship OneToOne {
     OLT{adresse(region)} to  Adresse{olt(nom)}
-    ONT{client(numeroFixe)} to Client{ont(nom)}
+    ONT{client(numeroFixe)} to Client{ont(serviceId)}
 }
 
 
