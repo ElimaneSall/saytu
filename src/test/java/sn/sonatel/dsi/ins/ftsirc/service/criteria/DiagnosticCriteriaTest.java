@@ -80,7 +80,7 @@ class DiagnosticCriteriaTest {
         diagnosticCriteria.debitUp();
         diagnosticCriteria.debitDown();
         diagnosticCriteria.dateDiagnostic();
-        diagnosticCriteria.typeDiagnosticId();
+        diagnosticCriteria.typeDiagnostic();
         diagnosticCriteria.signalId();
         diagnosticCriteria.ontId();
         diagnosticCriteria.anomalieId();
@@ -96,7 +96,7 @@ class DiagnosticCriteriaTest {
                 condition.apply(criteria.getDebitUp()) &&
                 condition.apply(criteria.getDebitDown()) &&
                 condition.apply(criteria.getDateDiagnostic()) &&
-                condition.apply(criteria.getTypeDiagnosticId()) &&
+                condition.apply(criteria.getTypeDiagnostic()) &&
                 condition.apply(criteria.getSignalId()) &&
                 condition.apply(criteria.getOntId()) &&
                 condition.apply(criteria.getAnomalieId()) &&
@@ -114,7 +114,7 @@ class DiagnosticCriteriaTest {
                 condition.apply(criteria.getDebitUp(), copy.getDebitUp()) &&
                 condition.apply(criteria.getDebitDown(), copy.getDebitDown()) &&
                 condition.apply(criteria.getDateDiagnostic(), copy.getDateDiagnostic()) &&
-                condition.apply(criteria.getTypeDiagnosticId(), copy.getTypeDiagnosticId()) &&
+                condition.apply(criteria.getTypeDiagnostic(), copy.getTypeDiagnostic()) &&
                 condition.apply(criteria.getSignalId(), copy.getSignalId()) &&
                 condition.apply(criteria.getOntId(), copy.getOntId()) &&
                 condition.apply(criteria.getAnomalieId(), copy.getAnomalieId()) &&

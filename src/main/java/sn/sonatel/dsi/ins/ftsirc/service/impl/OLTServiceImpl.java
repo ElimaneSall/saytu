@@ -3,8 +3,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.impl;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.OLT;
@@ -62,15 +60,11 @@ public class OLTServiceImpl implements OLTService {
             .map(oLTMapper::toDto);
     }
 
-    public Page<OLTDTO> findAllWithEagerRelationships(Pageable pageable) {
-        return oLTRepository.findAllWithEagerRelationships(pageable).map(oLTMapper::toDto);
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Optional<OLTDTO> findOne(Long id) {
         log.debug("Request to get OLT : {}", id);
-        return oLTRepository.findOneWithEagerRelationships(id).map(oLTMapper::toDto);
+        return oLTRepository.findById(id).map(oLTMapper::toDto);
     }
 
     @Override

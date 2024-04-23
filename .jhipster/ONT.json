@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20240422114123"
+    "changelogDate": "20240422163249"
   },
   "applications": "*",
   "clientRootFolder": "SaytuBackend",
@@ -39,13 +39,11 @@
     },
     {
       "fieldName": "maxUp",
-      "fieldType": "String",
-      "fieldValidateRules": ["required"]
+      "fieldType": "String"
     },
     {
       "fieldName": "maxDown",
-      "fieldType": "String",
-      "fieldValidateRules": ["required"]
+      "fieldType": "String"
     },
     {
       "fieldName": "createdAt",

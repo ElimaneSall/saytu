@@ -10,6 +10,7 @@ import java.util.Set;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
 
 /**
  * A Diagnostic.
@@ -35,19 +36,17 @@ public class Diagnostic implements Serializable {
     @Column(name = "statut_ont")
     private StatutONT statutONT;
 
-    @NotNull
-    @Column(name = "debit_up", nullable = false)
+    @Column(name = "debit_up")
     private String debitUp;
 
-    @NotNull
-    @Column(name = "debit_down", nullable = false)
+    @Column(name = "debit_down")
     private String debitDown;
 
     @Column(name = "date_diagnostic")
     private LocalDate dateDiagnostic;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "diagnostics" }, allowSetters = true)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_diagnostic")
     private TypeDiagnostic typeDiagnostic;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -152,13 +151,13 @@ public class Diagnostic implements Serializable {
         return this.typeDiagnostic;
     }
 
-    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
-        this.typeDiagnostic = typeDiagnostic;
-    }
-
     public Diagnostic typeDiagnostic(TypeDiagnostic typeDiagnostic) {
         this.setTypeDiagnostic(typeDiagnostic);
         return this;
+    }
+
+    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
+        this.typeDiagnostic = typeDiagnostic;
     }
 
     public Signal getSignal() {
@@ -239,6 +238,7 @@ public class Diagnostic implements Serializable {
             ", debitUp='" + getDebitUp() + "'" +
             ", debitDown='" + getDebitDown() + "'" +
             ", dateDiagnostic='" + getDateDiagnostic() + "'" +
+            ", typeDiagnostic='" + getTypeDiagnostic() + "'" +
             "}";
     }
 }

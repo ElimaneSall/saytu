@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
 
 /**
  * A DTO for the {@link sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic} entity.
@@ -21,15 +22,13 @@ public class DiagnosticDTO implements Serializable {
 
     private StatutONT statutONT;
 
-    @NotNull
     private String debitUp;
 
-    @NotNull
     private String debitDown;
 
     private LocalDate dateDiagnostic;
 
-    private TypeDiagnosticDTO typeDiagnostic;
+    private TypeDiagnostic typeDiagnostic;
 
     private SignalDTO signal;
 
@@ -85,11 +84,11 @@ public class DiagnosticDTO implements Serializable {
         this.dateDiagnostic = dateDiagnostic;
     }
 
-    public TypeDiagnosticDTO getTypeDiagnostic() {
+    public TypeDiagnostic getTypeDiagnostic() {
         return typeDiagnostic;
     }
 
-    public void setTypeDiagnostic(TypeDiagnosticDTO typeDiagnostic) {
+    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
         this.typeDiagnostic = typeDiagnostic;
     }
 
@@ -148,7 +147,7 @@ public class DiagnosticDTO implements Serializable {
             ", debitUp='" + getDebitUp() + "'" +
             ", debitDown='" + getDebitDown() + "'" +
             ", dateDiagnostic='" + getDateDiagnostic() + "'" +
-            ", typeDiagnostic=" + getTypeDiagnostic() +
+            ", typeDiagnostic='" + getTypeDiagnostic() + "'" +
             ", signal=" + getSignal() +
             ", ont=" + getOnt() +
             ", anomalies=" + getAnomalies() +

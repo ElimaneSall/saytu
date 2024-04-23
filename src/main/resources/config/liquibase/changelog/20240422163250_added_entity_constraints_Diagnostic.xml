@@ -8,14 +8,7 @@
     <!--
         Added the constraints for entity Diagnostic.
     -->
-    <changeSet id="20240422114124-2" author="jhipster">
-
-        <addForeignKeyConstraint baseColumnNames="type_diagnostic_id"
-                                 baseTableName="diagnostic"
-                                 constraintName="fk_diagnostic__type_diagnostic_id"
-                                 referencedColumnNames="id"
-                                 referencedTableName="type_diagnostic"
-                                 />
+    <changeSet id="20240422163250-2" author="jhipster">
 
         <addForeignKeyConstraint baseColumnNames="signal_id"
                                  baseTableName="diagnostic"

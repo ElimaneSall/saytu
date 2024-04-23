@@ -14,7 +14,7 @@ public class OLTDTO implements Serializable {
     private Long id;
 
     @NotNull
-    private String nom;
+    private String libelle;
 
     @NotNull
     private String ip;
@@ -22,14 +22,27 @@ public class OLTDTO implements Serializable {
     @NotNull
     private String vendeur;
 
-    @NotNull
+    private String typeEquipment;
+
+    private String codeEquipment;
+
+    private String adresse;
+
+    private String emplacement;
+
+    private String typeCarte;
+
+    private String latitude;
+
+    private String longitude;
+
+    private String capacite;
+
     private String etat;
 
     private LocalDate createdAt;
 
     private LocalDate updatedAt;
-
-    private AdresseDTO adresse;
 
     public Long getId() {
         return id;
@@ -39,12 +52,12 @@ public class OLTDTO implements Serializable {
         this.id = id;
     }
 
-    public String getNom() {
-        return nom;
+    public String getLibelle() {
+        return libelle;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setLibelle(String libelle) {
+        this.libelle = libelle;
     }
 
     public String getIp() {
@@ -61,6 +74,70 @@ public class OLTDTO implements Serializable {
 
     public void setVendeur(String vendeur) {
         this.vendeur = vendeur;
+    }
+
+    public String getTypeEquipment() {
+        return typeEquipment;
+    }
+
+    public void setTypeEquipment(String typeEquipment) {
+        this.typeEquipment = typeEquipment;
+    }
+
+    public String getCodeEquipment() {
+        return codeEquipment;
+    }
+
+    public void setCodeEquipment(String codeEquipment) {
+        this.codeEquipment = codeEquipment;
+    }
+
+    public String getAdresse() {
+        return adresse;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+
+    public String getEmplacement() {
+        return emplacement;
+    }
+
+    public void setEmplacement(String emplacement) {
+        this.emplacement = emplacement;
+    }
+
+    public String getTypeCarte() {
+        return typeCarte;
+    }
+
+    public void setTypeCarte(String typeCarte) {
+        this.typeCarte = typeCarte;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getCapacite() {
+        return capacite;
+    }
+
+    public void setCapacite(String capacite) {
+        this.capacite = capacite;
     }
 
     public String getEtat() {
@@ -85,14 +162,6 @@ public class OLTDTO implements Serializable {
 
     public void setUpdatedAt(LocalDate updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public AdresseDTO getAdresse() {
-        return adresse;
-    }
-
-    public void setAdresse(AdresseDTO adresse) {
-        this.adresse = adresse;
     }
 
     @Override
@@ -121,13 +190,20 @@ public class OLTDTO implements Serializable {
     public String toString() {
         return "OLTDTO{" +
             "id=" + getId() +
-            ", nom='" + getNom() + "'" +
+            ", libelle='" + getLibelle() + "'" +
             ", ip='" + getIp() + "'" +
             ", vendeur='" + getVendeur() + "'" +
+            ", typeEquipment='" + getTypeEquipment() + "'" +
+            ", codeEquipment='" + getCodeEquipment() + "'" +
+            ", adresse='" + getAdresse() + "'" +
+            ", emplacement='" + getEmplacement() + "'" +
+            ", typeCarte='" + getTypeCarte() + "'" +
+            ", latitude='" + getLatitude() + "'" +
+            ", longitude='" + getLongitude() + "'" +
+            ", capacite='" + getCapacite() + "'" +
             ", etat='" + getEtat() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
-            ", adresse=" + getAdresse() +
             "}";
     }
 }

@@ -1,11 +1,11 @@
-id;jhi_index;statut_ont;debit_up;debit_down;date_diagnostic
-1;serviable;INACTIF;collègue;observer smack;2024-04-22
-2;énorme avare;ACTIF;ronron brave;miam précisément;2024-04-21
-3;délégation pourvu que;INACTIF;ouille;inviter du moment que soulager;2024-04-22
-4;adepte;ACTIF;alors que si;à cause de;2024-04-21
-5;en bas de alors espiègle;INACTIF;présidence;commis;2024-04-21
-6;paf;ACTIF;pouvoir;en dépit de bof cocorico;2024-04-22
-7;quoique avex;INACTIF;dès que;croâ;2024-04-21
-8;au défaut de;ACTIF;dehors;plic pendant que tant que;2024-04-21
-9;rectorat au-dehors;INACTIF;à partir de auprès de;compter;2024-04-21
-10;sembler;ACTIF;en brusque;adhérer zzzz;2024-04-21
+id;jhi_index;statut_ont;debit_up;debit_down;date_diagnostic;type_diagnostic
+1;serviable;INACTIF;collègue;observer smack;2024-04-22;MANUEL
+2;tantôt dring;ACTIF;lectorat;pschitt foule;2024-04-21;MANUEL
+3;atchoum magnifique aïe;ACTIF;en faveur de bzzz;davantage officier adepte;2024-04-22;AUTOMATIQUE
+4;avant que;INACTIF;peindre par rapport à en bas de;moins bientôt ha ha;2024-04-21;AUTOMATIQUE
+5;déshabiller sous couleur de regrouper;INACTIF;membre à vie à partir de;tic-tac de par commis de cuisine;2024-04-21;AUTOMATIQUE
+6;lever;INACTIF;clac mesurer mairie;brave de la part de ainsi;2024-04-22;AUTOMATIQUE
+7;derechef élaborer;ACTIF;en plus de conseil municipal derrière;prendre géométrique euh;2024-04-22;AUTOMATIQUE
+8;insuffisamment en plus de propre;ACTIF;sentir commenter pendant que;oui;2024-04-21;AUTOMATIQUE
+9;membre de l’équipe;INACTIF;afin que relier demain;conseil d’administration;2024-04-22;AUTOMATIQUE
+10;dans la mesure où pauvre;INACTIF;débile;encore dès;2024-04-22;AUTOMATIQUE

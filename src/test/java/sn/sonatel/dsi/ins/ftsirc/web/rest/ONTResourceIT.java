@@ -299,40 +299,6 @@ class ONTResourceIT {
 
     @Test
     @Transactional
-    void checkMaxUpIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        oNT.setMaxUp(null);
-
-        // Create the ONT, which fails.
-        ONTDTO oNTDTO = oNTMapper.toDto(oNT);
-
-        restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    void checkMaxDownIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        oNT.setMaxDown(null);
-
-        // Create the ONT, which fails.
-        ONTDTO oNTDTO = oNTMapper.toDto(oNT);
-
-        restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void getAllONTS() throws Exception {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);

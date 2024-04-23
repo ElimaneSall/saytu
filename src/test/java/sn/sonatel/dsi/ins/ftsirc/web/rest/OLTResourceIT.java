@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -13,27 +12,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.IntegrationTest;
-import sn.sonatel.dsi.ins.ftsirc.domain.Adresse;
 import sn.sonatel.dsi.ins.ftsirc.domain.OLT;
 import sn.sonatel.dsi.ins.ftsirc.repository.OLTRepository;
-import sn.sonatel.dsi.ins.ftsirc.service.OLTService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
 import sn.sonatel.dsi.ins.ftsirc.service.mapper.OLTMapper;
 
@@ -41,19 +32,42 @@ import sn.sonatel.dsi.ins.ftsirc.service.mapper.OLTMapper;
  * Integration tests for the {@link OLTResource} REST controller.
  */
 @IntegrationTest
-@ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc
 @WithMockUser
 class OLTResourceIT {
 
-    private static final String DEFAULT_NOM = "AAAAAAAAAA";
-    private static final String UPDATED_NOM = "BBBBBBBBBB";
+    private static final String DEFAULT_LIBELLE = "AAAAAAAAAA";
+    private static final String UPDATED_LIBELLE = "BBBBBBBBBB";
 
     private static final String DEFAULT_IP = "AAAAAAAAAA";
     private static final String UPDATED_IP = "BBBBBBBBBB";
 
     private static final String DEFAULT_VENDEUR = "AAAAAAAAAA";
     private static final String UPDATED_VENDEUR = "BBBBBBBBBB";
+
+    private static final String DEFAULT_TYPE_EQUIPMENT = "AAAAAAAAAA";
+    private static final String UPDATED_TYPE_EQUIPMENT = "BBBBBBBBBB";
+
+    private static final String DEFAULT_CODE_EQUIPMENT = "AAAAAAAAAA";
+    private static final String UPDATED_CODE_EQUIPMENT = "BBBBBBBBBB";
+
+    private static final String DEFAULT_ADRESSE = "AAAAAAAAAA";
+    private static final String UPDATED_ADRESSE = "BBBBBBBBBB";
+
+    private static final String DEFAULT_EMPLACEMENT = "AAAAAAAAAA";
+    private static final String UPDATED_EMPLACEMENT = "BBBBBBBBBB";
+
+    private static final String DEFAULT_TYPE_CARTE = "AAAAAAAAAA";
+    private static final String UPDATED_TYPE_CARTE = "BBBBBBBBBB";
+
+    private static final String DEFAULT_LATITUDE = "AAAAAAAAAA";
+    private static final String UPDATED_LATITUDE = "BBBBBBBBBB";
+
+    private static final String DEFAULT_LONGITUDE = "AAAAAAAAAA";
+    private static final String UPDATED_LONGITUDE = "BBBBBBBBBB";
+
+    private static final String DEFAULT_CAPACITE = "AAAAAAAAAA";
+    private static final String UPDATED_CAPACITE = "BBBBBBBBBB";
 
     private static final String DEFAULT_ETAT = "AAAAAAAAAA";
     private static final String UPDATED_ETAT = "BBBBBBBBBB";
@@ -78,14 +92,8 @@ class OLTResourceIT {
     @Autowired
     private OLTRepository oLTRepository;
 
-    @Mock
-    private OLTRepository oLTRepositoryMock;
-
     @Autowired
     private OLTMapper oLTMapper;
-
-    @Mock
-    private OLTService oLTServiceMock;
 
     @Autowired
     private EntityManager em;
@@ -103,9 +111,17 @@ class OLTResourceIT {
      */
     public static OLT createEntity(EntityManager em) {
         OLT oLT = new OLT()
-            .nom(DEFAULT_NOM)
+            .libelle(DEFAULT_LIBELLE)
             .ip(DEFAULT_IP)
             .vendeur(DEFAULT_VENDEUR)
+            .typeEquipment(DEFAULT_TYPE_EQUIPMENT)
+            .codeEquipment(DEFAULT_CODE_EQUIPMENT)
+            .adresse(DEFAULT_ADRESSE)
+            .emplacement(DEFAULT_EMPLACEMENT)
+            .typeCarte(DEFAULT_TYPE_CARTE)
+            .latitude(DEFAULT_LATITUDE)
+            .longitude(DEFAULT_LONGITUDE)
+            .capacite(DEFAULT_CAPACITE)
             .etat(DEFAULT_ETAT)
             .createdAt(DEFAULT_CREATED_AT)
             .updatedAt(DEFAULT_UPDATED_AT);
@@ -120,9 +136,17 @@ class OLTResourceIT {
      */
     public static OLT createUpdatedEntity(EntityManager em) {
         OLT oLT = new OLT()
-            .nom(UPDATED_NOM)
+            .libelle(UPDATED_LIBELLE)
             .ip(UPDATED_IP)
             .vendeur(UPDATED_VENDEUR)
+            .typeEquipment(UPDATED_TYPE_EQUIPMENT)
+            .codeEquipment(UPDATED_CODE_EQUIPMENT)
+            .adresse(UPDATED_ADRESSE)
+            .emplacement(UPDATED_EMPLACEMENT)
+            .typeCarte(UPDATED_TYPE_CARTE)
+            .latitude(UPDATED_LATITUDE)
+            .longitude(UPDATED_LONGITUDE)
+            .capacite(UPDATED_CAPACITE)
             .etat(UPDATED_ETAT)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT);
@@ -176,10 +200,10 @@ class OLTResourceIT {
 
     @Test
     @Transactional
-    void checkNomIsRequired() throws Exception {
+    void checkLibelleIsRequired() throws Exception {
         long databaseSizeBeforeTest = getRepositoryCount();
         // set the field null
-        oLT.setNom(null);
+        oLT.setLibelle(null);
 
         // Create the OLT, which fails.
         OLTDTO oLTDTO = oLTMapper.toDto(oLT);
@@ -227,23 +251,6 @@ class OLTResourceIT {
 
     @Test
     @Transactional
-    void checkEtatIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        oLT.setEtat(null);
-
-        // Create the OLT, which fails.
-        OLTDTO oLTDTO = oLTMapper.toDto(oLT);
-
-        restOLTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void getAllOLTS() throws Exception {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
@@ -254,29 +261,20 @@ class OLTResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(oLT.getId().intValue())))
-            .andExpect(jsonPath("$.[*].nom").value(hasItem(DEFAULT_NOM)))
+            .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
             .andExpect(jsonPath("$.[*].ip").value(hasItem(DEFAULT_IP)))
             .andExpect(jsonPath("$.[*].vendeur").value(hasItem(DEFAULT_VENDEUR)))
+            .andExpect(jsonPath("$.[*].typeEquipment").value(hasItem(DEFAULT_TYPE_EQUIPMENT)))
+            .andExpect(jsonPath("$.[*].codeEquipment").value(hasItem(DEFAULT_CODE_EQUIPMENT)))
+            .andExpect(jsonPath("$.[*].adresse").value(hasItem(DEFAULT_ADRESSE)))
+            .andExpect(jsonPath("$.[*].emplacement").value(hasItem(DEFAULT_EMPLACEMENT)))
+            .andExpect(jsonPath("$.[*].typeCarte").value(hasItem(DEFAULT_TYPE_CARTE)))
+            .andExpect(jsonPath("$.[*].latitude").value(hasItem(DEFAULT_LATITUDE)))
+            .andExpect(jsonPath("$.[*].longitude").value(hasItem(DEFAULT_LONGITUDE)))
+            .andExpect(jsonPath("$.[*].capacite").value(hasItem(DEFAULT_CAPACITE)))
             .andExpect(jsonPath("$.[*].etat").value(hasItem(DEFAULT_ETAT)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())));
-    }
-
-    @SuppressWarnings({ "unchecked" })
-    void getAllOLTSWithEagerRelationshipsIsEnabled() throws Exception {
-        when(oLTServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
-
-        restOLTMockMvc.perform(get(ENTITY_API_URL + "?eagerload=true")).andExpect(status().isOk());
-
-        verify(oLTServiceMock, times(1)).findAllWithEagerRelationships(any());
-    }
-
-    @SuppressWarnings({ "unchecked" })
-    void getAllOLTSWithEagerRelationshipsIsNotEnabled() throws Exception {
-        when(oLTServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
-
-        restOLTMockMvc.perform(get(ENTITY_API_URL + "?eagerload=false")).andExpect(status().isOk());
-        verify(oLTRepositoryMock, times(1)).findAll(any(Pageable.class));
     }
 
     @Test
@@ -291,9 +289,17 @@ class OLTResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(oLT.getId().intValue()))
-            .andExpect(jsonPath("$.nom").value(DEFAULT_NOM))
+            .andExpect(jsonPath("$.libelle").value(DEFAULT_LIBELLE))
             .andExpect(jsonPath("$.ip").value(DEFAULT_IP))
             .andExpect(jsonPath("$.vendeur").value(DEFAULT_VENDEUR))
+            .andExpect(jsonPath("$.typeEquipment").value(DEFAULT_TYPE_EQUIPMENT))
+            .andExpect(jsonPath("$.codeEquipment").value(DEFAULT_CODE_EQUIPMENT))
+            .andExpect(jsonPath("$.adresse").value(DEFAULT_ADRESSE))
+            .andExpect(jsonPath("$.emplacement").value(DEFAULT_EMPLACEMENT))
+            .andExpect(jsonPath("$.typeCarte").value(DEFAULT_TYPE_CARTE))
+            .andExpect(jsonPath("$.latitude").value(DEFAULT_LATITUDE))
+            .andExpect(jsonPath("$.longitude").value(DEFAULT_LONGITUDE))
+            .andExpect(jsonPath("$.capacite").value(DEFAULT_CAPACITE))
             .andExpect(jsonPath("$.etat").value(DEFAULT_ETAT))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
             .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()));
@@ -316,52 +322,52 @@ class OLTResourceIT {
 
     @Test
     @Transactional
-    void getAllOLTSByNomIsEqualToSomething() throws Exception {
+    void getAllOLTSByLibelleIsEqualToSomething() throws Exception {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where nom equals to
-        defaultOLTFiltering("nom.equals=" + DEFAULT_NOM, "nom.equals=" + UPDATED_NOM);
+        // Get all the oLTList where libelle equals to
+        defaultOLTFiltering("libelle.equals=" + DEFAULT_LIBELLE, "libelle.equals=" + UPDATED_LIBELLE);
     }
 
     @Test
     @Transactional
-    void getAllOLTSByNomIsInShouldWork() throws Exception {
+    void getAllOLTSByLibelleIsInShouldWork() throws Exception {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where nom in
-        defaultOLTFiltering("nom.in=" + DEFAULT_NOM + "," + UPDATED_NOM, "nom.in=" + UPDATED_NOM);
+        // Get all the oLTList where libelle in
+        defaultOLTFiltering("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE, "libelle.in=" + UPDATED_LIBELLE);
     }
 
     @Test
     @Transactional
-    void getAllOLTSByNomIsNullOrNotNull() throws Exception {
+    void getAllOLTSByLibelleIsNullOrNotNull() throws Exception {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where nom is not null
-        defaultOLTFiltering("nom.specified=true", "nom.specified=false");
+        // Get all the oLTList where libelle is not null
+        defaultOLTFiltering("libelle.specified=true", "libelle.specified=false");
     }
 
     @Test
     @Transactional
-    void getAllOLTSByNomContainsSomething() throws Exception {
+    void getAllOLTSByLibelleContainsSomething() throws Exception {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where nom contains
-        defaultOLTFiltering("nom.contains=" + DEFAULT_NOM, "nom.contains=" + UPDATED_NOM);
+        // Get all the oLTList where libelle contains
+        defaultOLTFiltering("libelle.contains=" + DEFAULT_LIBELLE, "libelle.contains=" + UPDATED_LIBELLE);
     }
 
     @Test
     @Transactional
-    void getAllOLTSByNomNotContainsSomething() throws Exception {
+    void getAllOLTSByLibelleNotContainsSomething() throws Exception {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where nom does not contain
-        defaultOLTFiltering("nom.doesNotContain=" + UPDATED_NOM, "nom.doesNotContain=" + DEFAULT_NOM);
+        // Get all the oLTList where libelle does not contain
+        defaultOLTFiltering("libelle.doesNotContain=" + UPDATED_LIBELLE, "libelle.doesNotContain=" + DEFAULT_LIBELLE);
     }
 
     @Test
@@ -462,6 +468,418 @@ class OLTResourceIT {
 
         // Get all the oLTList where vendeur does not contain
         defaultOLTFiltering("vendeur.doesNotContain=" + UPDATED_VENDEUR, "vendeur.doesNotContain=" + DEFAULT_VENDEUR);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeEquipmentIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeEquipment equals to
+        defaultOLTFiltering("typeEquipment.equals=" + DEFAULT_TYPE_EQUIPMENT, "typeEquipment.equals=" + UPDATED_TYPE_EQUIPMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeEquipmentIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeEquipment in
+        defaultOLTFiltering(
+            "typeEquipment.in=" + DEFAULT_TYPE_EQUIPMENT + "," + UPDATED_TYPE_EQUIPMENT,
+            "typeEquipment.in=" + UPDATED_TYPE_EQUIPMENT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeEquipmentIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeEquipment is not null
+        defaultOLTFiltering("typeEquipment.specified=true", "typeEquipment.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeEquipmentContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeEquipment contains
+        defaultOLTFiltering("typeEquipment.contains=" + DEFAULT_TYPE_EQUIPMENT, "typeEquipment.contains=" + UPDATED_TYPE_EQUIPMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeEquipmentNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeEquipment does not contain
+        defaultOLTFiltering(
+            "typeEquipment.doesNotContain=" + UPDATED_TYPE_EQUIPMENT,
+            "typeEquipment.doesNotContain=" + DEFAULT_TYPE_EQUIPMENT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCodeEquipmentIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where codeEquipment equals to
+        defaultOLTFiltering("codeEquipment.equals=" + DEFAULT_CODE_EQUIPMENT, "codeEquipment.equals=" + UPDATED_CODE_EQUIPMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCodeEquipmentIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where codeEquipment in
+        defaultOLTFiltering(
+            "codeEquipment.in=" + DEFAULT_CODE_EQUIPMENT + "," + UPDATED_CODE_EQUIPMENT,
+            "codeEquipment.in=" + UPDATED_CODE_EQUIPMENT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCodeEquipmentIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where codeEquipment is not null
+        defaultOLTFiltering("codeEquipment.specified=true", "codeEquipment.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCodeEquipmentContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where codeEquipment contains
+        defaultOLTFiltering("codeEquipment.contains=" + DEFAULT_CODE_EQUIPMENT, "codeEquipment.contains=" + UPDATED_CODE_EQUIPMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCodeEquipmentNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where codeEquipment does not contain
+        defaultOLTFiltering(
+            "codeEquipment.doesNotContain=" + UPDATED_CODE_EQUIPMENT,
+            "codeEquipment.doesNotContain=" + DEFAULT_CODE_EQUIPMENT
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByAdresseIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where adresse equals to
+        defaultOLTFiltering("adresse.equals=" + DEFAULT_ADRESSE, "adresse.equals=" + UPDATED_ADRESSE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByAdresseIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where adresse in
+        defaultOLTFiltering("adresse.in=" + DEFAULT_ADRESSE + "," + UPDATED_ADRESSE, "adresse.in=" + UPDATED_ADRESSE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByAdresseIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where adresse is not null
+        defaultOLTFiltering("adresse.specified=true", "adresse.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByAdresseContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where adresse contains
+        defaultOLTFiltering("adresse.contains=" + DEFAULT_ADRESSE, "adresse.contains=" + UPDATED_ADRESSE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByAdresseNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where adresse does not contain
+        defaultOLTFiltering("adresse.doesNotContain=" + UPDATED_ADRESSE, "adresse.doesNotContain=" + DEFAULT_ADRESSE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByEmplacementIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where emplacement equals to
+        defaultOLTFiltering("emplacement.equals=" + DEFAULT_EMPLACEMENT, "emplacement.equals=" + UPDATED_EMPLACEMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByEmplacementIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where emplacement in
+        defaultOLTFiltering("emplacement.in=" + DEFAULT_EMPLACEMENT + "," + UPDATED_EMPLACEMENT, "emplacement.in=" + UPDATED_EMPLACEMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByEmplacementIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where emplacement is not null
+        defaultOLTFiltering("emplacement.specified=true", "emplacement.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByEmplacementContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where emplacement contains
+        defaultOLTFiltering("emplacement.contains=" + DEFAULT_EMPLACEMENT, "emplacement.contains=" + UPDATED_EMPLACEMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByEmplacementNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where emplacement does not contain
+        defaultOLTFiltering("emplacement.doesNotContain=" + UPDATED_EMPLACEMENT, "emplacement.doesNotContain=" + DEFAULT_EMPLACEMENT);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeCarteIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeCarte equals to
+        defaultOLTFiltering("typeCarte.equals=" + DEFAULT_TYPE_CARTE, "typeCarte.equals=" + UPDATED_TYPE_CARTE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeCarteIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeCarte in
+        defaultOLTFiltering("typeCarte.in=" + DEFAULT_TYPE_CARTE + "," + UPDATED_TYPE_CARTE, "typeCarte.in=" + UPDATED_TYPE_CARTE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeCarteIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeCarte is not null
+        defaultOLTFiltering("typeCarte.specified=true", "typeCarte.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeCarteContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeCarte contains
+        defaultOLTFiltering("typeCarte.contains=" + DEFAULT_TYPE_CARTE, "typeCarte.contains=" + UPDATED_TYPE_CARTE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByTypeCarteNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where typeCarte does not contain
+        defaultOLTFiltering("typeCarte.doesNotContain=" + UPDATED_TYPE_CARTE, "typeCarte.doesNotContain=" + DEFAULT_TYPE_CARTE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLatitudeIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where latitude equals to
+        defaultOLTFiltering("latitude.equals=" + DEFAULT_LATITUDE, "latitude.equals=" + UPDATED_LATITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLatitudeIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where latitude in
+        defaultOLTFiltering("latitude.in=" + DEFAULT_LATITUDE + "," + UPDATED_LATITUDE, "latitude.in=" + UPDATED_LATITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLatitudeIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where latitude is not null
+        defaultOLTFiltering("latitude.specified=true", "latitude.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLatitudeContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where latitude contains
+        defaultOLTFiltering("latitude.contains=" + DEFAULT_LATITUDE, "latitude.contains=" + UPDATED_LATITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLatitudeNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where latitude does not contain
+        defaultOLTFiltering("latitude.doesNotContain=" + UPDATED_LATITUDE, "latitude.doesNotContain=" + DEFAULT_LATITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLongitudeIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where longitude equals to
+        defaultOLTFiltering("longitude.equals=" + DEFAULT_LONGITUDE, "longitude.equals=" + UPDATED_LONGITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLongitudeIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where longitude in
+        defaultOLTFiltering("longitude.in=" + DEFAULT_LONGITUDE + "," + UPDATED_LONGITUDE, "longitude.in=" + UPDATED_LONGITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLongitudeIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where longitude is not null
+        defaultOLTFiltering("longitude.specified=true", "longitude.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLongitudeContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where longitude contains
+        defaultOLTFiltering("longitude.contains=" + DEFAULT_LONGITUDE, "longitude.contains=" + UPDATED_LONGITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByLongitudeNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where longitude does not contain
+        defaultOLTFiltering("longitude.doesNotContain=" + UPDATED_LONGITUDE, "longitude.doesNotContain=" + DEFAULT_LONGITUDE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCapaciteIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where capacite equals to
+        defaultOLTFiltering("capacite.equals=" + DEFAULT_CAPACITE, "capacite.equals=" + UPDATED_CAPACITE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCapaciteIsInShouldWork() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where capacite in
+        defaultOLTFiltering("capacite.in=" + DEFAULT_CAPACITE + "," + UPDATED_CAPACITE, "capacite.in=" + UPDATED_CAPACITE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCapaciteIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where capacite is not null
+        defaultOLTFiltering("capacite.specified=true", "capacite.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCapaciteContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where capacite contains
+        defaultOLTFiltering("capacite.contains=" + DEFAULT_CAPACITE, "capacite.contains=" + UPDATED_CAPACITE);
+    }
+
+    @Test
+    @Transactional
+    void getAllOLTSByCapaciteNotContainsSomething() throws Exception {
+        // Initialize the database
+        oLTRepository.saveAndFlush(oLT);
+
+        // Get all the oLTList where capacite does not contain
+        defaultOLTFiltering("capacite.doesNotContain=" + UPDATED_CAPACITE, "capacite.doesNotContain=" + DEFAULT_CAPACITE);
     }
 
     @Test
@@ -654,28 +1072,6 @@ class OLTResourceIT {
         defaultOLTFiltering("updatedAt.greaterThan=" + SMALLER_UPDATED_AT, "updatedAt.greaterThan=" + DEFAULT_UPDATED_AT);
     }
 
-    @Test
-    @Transactional
-    void getAllOLTSByAdresseIsEqualToSomething() throws Exception {
-        Adresse adresse;
-        if (TestUtil.findAll(em, Adresse.class).isEmpty()) {
-            oLTRepository.saveAndFlush(oLT);
-            adresse = AdresseResourceIT.createEntity(em);
-        } else {
-            adresse = TestUtil.findAll(em, Adresse.class).get(0);
-        }
-        em.persist(adresse);
-        em.flush();
-        oLT.setAdresse(adresse);
-        oLTRepository.saveAndFlush(oLT);
-        Long adresseId = adresse.getId();
-        // Get all the oLTList where adresse equals to adresseId
-        defaultOLTShouldBeFound("adresseId.equals=" + adresseId);
-
-        // Get all the oLTList where adresse equals to (adresseId + 1)
-        defaultOLTShouldNotBeFound("adresseId.equals=" + (adresseId + 1));
-    }
-
     private void defaultOLTFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
         defaultOLTShouldBeFound(shouldBeFound);
         defaultOLTShouldNotBeFound(shouldNotBeFound);
@@ -690,9 +1086,17 @@ class OLTResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(oLT.getId().intValue())))
-            .andExpect(jsonPath("$.[*].nom").value(hasItem(DEFAULT_NOM)))
+            .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
             .andExpect(jsonPath("$.[*].ip").value(hasItem(DEFAULT_IP)))
             .andExpect(jsonPath("$.[*].vendeur").value(hasItem(DEFAULT_VENDEUR)))
+            .andExpect(jsonPath("$.[*].typeEquipment").value(hasItem(DEFAULT_TYPE_EQUIPMENT)))
+            .andExpect(jsonPath("$.[*].codeEquipment").value(hasItem(DEFAULT_CODE_EQUIPMENT)))
+            .andExpect(jsonPath("$.[*].adresse").value(hasItem(DEFAULT_ADRESSE)))
+            .andExpect(jsonPath("$.[*].emplacement").value(hasItem(DEFAULT_EMPLACEMENT)))
+            .andExpect(jsonPath("$.[*].typeCarte").value(hasItem(DEFAULT_TYPE_CARTE)))
+            .andExpect(jsonPath("$.[*].latitude").value(hasItem(DEFAULT_LATITUDE)))
+            .andExpect(jsonPath("$.[*].longitude").value(hasItem(DEFAULT_LONGITUDE)))
+            .andExpect(jsonPath("$.[*].capacite").value(hasItem(DEFAULT_CAPACITE)))
             .andExpect(jsonPath("$.[*].etat").value(hasItem(DEFAULT_ETAT)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
             .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())));
@@ -744,9 +1148,17 @@ class OLTResourceIT {
         // Disconnect from session so that the updates on updatedOLT are not directly saved in db
         em.detach(updatedOLT);
         updatedOLT
-            .nom(UPDATED_NOM)
+            .libelle(UPDATED_LIBELLE)
             .ip(UPDATED_IP)
             .vendeur(UPDATED_VENDEUR)
+            .typeEquipment(UPDATED_TYPE_EQUIPMENT)
+            .codeEquipment(UPDATED_CODE_EQUIPMENT)
+            .adresse(UPDATED_ADRESSE)
+            .emplacement(UPDATED_EMPLACEMENT)
+            .typeCarte(UPDATED_TYPE_CARTE)
+            .latitude(UPDATED_LATITUDE)
+            .longitude(UPDATED_LONGITUDE)
+            .capacite(UPDATED_CAPACITE)
             .etat(UPDATED_ETAT)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT);
@@ -842,7 +1254,17 @@ class OLTResourceIT {
         OLT partialUpdatedOLT = new OLT();
         partialUpdatedOLT.setId(oLT.getId());
 
-        partialUpdatedOLT.vendeur(UPDATED_VENDEUR).etat(UPDATED_ETAT).updatedAt(UPDATED_UPDATED_AT);
+        partialUpdatedOLT
+            .vendeur(UPDATED_VENDEUR)
+            .typeEquipment(UPDATED_TYPE_EQUIPMENT)
+            .adresse(UPDATED_ADRESSE)
+            .emplacement(UPDATED_EMPLACEMENT)
+            .typeCarte(UPDATED_TYPE_CARTE)
+            .latitude(UPDATED_LATITUDE)
+            .longitude(UPDATED_LONGITUDE)
+            .capacite(UPDATED_CAPACITE)
+            .etat(UPDATED_ETAT)
+            .createdAt(UPDATED_CREATED_AT);
 
         restOLTMockMvc
             .perform(
@@ -872,9 +1294,17 @@ class OLTResourceIT {
         partialUpdatedOLT.setId(oLT.getId());
 
         partialUpdatedOLT
-            .nom(UPDATED_NOM)
+            .libelle(UPDATED_LIBELLE)
             .ip(UPDATED_IP)
             .vendeur(UPDATED_VENDEUR)
+            .typeEquipment(UPDATED_TYPE_EQUIPMENT)
+            .codeEquipment(UPDATED_CODE_EQUIPMENT)
+            .adresse(UPDATED_ADRESSE)
+            .emplacement(UPDATED_EMPLACEMENT)
+            .typeCarte(UPDATED_TYPE_CARTE)
+            .latitude(UPDATED_LATITUDE)
+            .longitude(UPDATED_LONGITUDE)
+            .capacite(UPDATED_CAPACITE)
             .etat(UPDATED_ETAT)
             .createdAt(UPDATED_CREATED_AT)
             .updatedAt(UPDATED_UPDATED_AT);

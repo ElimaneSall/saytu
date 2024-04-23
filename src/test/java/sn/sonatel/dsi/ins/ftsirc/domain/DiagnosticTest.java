@@ -5,7 +5,6 @@ import static sn.sonatel.dsi.ins.ftsirc.domain.AnomalieTestSamples.*;
 import static sn.sonatel.dsi.ins.ftsirc.domain.DiagnosticTestSamples.*;
 import static sn.sonatel.dsi.ins.ftsirc.domain.ONTTestSamples.*;
 import static sn.sonatel.dsi.ins.ftsirc.domain.SignalTestSamples.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.TypeDiagnosticTestSamples.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,18 +25,6 @@ class DiagnosticTest {
 
         diagnostic2 = getDiagnosticSample2();
         assertThat(diagnostic1).isNotEqualTo(diagnostic2);
-    }
-
-    @Test
-    void typeDiagnosticTest() throws Exception {
-        Diagnostic diagnostic = getDiagnosticRandomSampleGenerator();
-        TypeDiagnostic typeDiagnosticBack = getTypeDiagnosticRandomSampleGenerator();
-
-        diagnostic.setTypeDiagnostic(typeDiagnosticBack);
-        assertThat(diagnostic.getTypeDiagnostic()).isEqualTo(typeDiagnosticBack);
-
-        diagnostic.typeDiagnostic(null);
-        assertThat(diagnostic.getTypeDiagnostic()).isNull();
     }
 
     @Test

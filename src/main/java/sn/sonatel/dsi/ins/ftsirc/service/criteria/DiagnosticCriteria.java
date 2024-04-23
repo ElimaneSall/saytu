@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
 
@@ -38,6 +39,23 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         }
     }
 
+    /**
+     * Class for filtering TypeDiagnostic
+     */
+    public static class TypeDiagnosticFilter extends Filter<TypeDiagnostic> {
+
+        public TypeDiagnosticFilter() {}
+
+        public TypeDiagnosticFilter(TypeDiagnosticFilter filter) {
+            super(filter);
+        }
+
+        @Override
+        public TypeDiagnosticFilter copy() {
+            return new TypeDiagnosticFilter(this);
+        }
+    }
+
     private static final long serialVersionUID = 1L;
 
     private LongFilter id;
@@ -52,7 +70,7 @@ public class DiagnosticCriteria implements Serializable, Criteria {
 
     private LocalDateFilter dateDiagnostic;
 
-    private LongFilter typeDiagnosticId;
+    private TypeDiagnosticFilter typeDiagnostic;
 
     private LongFilter signalId;
 
@@ -71,7 +89,7 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         this.debitUp = other.optionalDebitUp().map(StringFilter::copy).orElse(null);
         this.debitDown = other.optionalDebitDown().map(StringFilter::copy).orElse(null);
         this.dateDiagnostic = other.optionalDateDiagnostic().map(LocalDateFilter::copy).orElse(null);
-        this.typeDiagnosticId = other.optionalTypeDiagnosticId().map(LongFilter::copy).orElse(null);
+        this.typeDiagnostic = other.optionalTypeDiagnostic().map(TypeDiagnosticFilter::copy).orElse(null);
         this.signalId = other.optionalSignalId().map(LongFilter::copy).orElse(null);
         this.ontId = other.optionalOntId().map(LongFilter::copy).orElse(null);
         this.anomalieId = other.optionalAnomalieId().map(LongFilter::copy).orElse(null);
@@ -197,23 +215,23 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         this.dateDiagnostic = dateDiagnostic;
     }
 
-    public LongFilter getTypeDiagnosticId() {
-        return typeDiagnosticId;
+    public TypeDiagnosticFilter getTypeDiagnostic() {
+        return typeDiagnostic;
     }
 
-    public Optional<LongFilter> optionalTypeDiagnosticId() {
-        return Optional.ofNullable(typeDiagnosticId);
+    public Optional<TypeDiagnosticFilter> optionalTypeDiagnostic() {
+        return Optional.ofNullable(typeDiagnostic);
     }
 
-    public LongFilter typeDiagnosticId() {
-        if (typeDiagnosticId == null) {
-            setTypeDiagnosticId(new LongFilter());
+    public TypeDiagnosticFilter typeDiagnostic() {
+        if (typeDiagnostic == null) {
+            setTypeDiagnostic(new TypeDiagnosticFilter());
         }
-        return typeDiagnosticId;
+        return typeDiagnostic;
     }
 
-    public void setTypeDiagnosticId(LongFilter typeDiagnosticId) {
-        this.typeDiagnosticId = typeDiagnosticId;
+    public void setTypeDiagnostic(TypeDiagnosticFilter typeDiagnostic) {
+        this.typeDiagnostic = typeDiagnostic;
     }
 
     public LongFilter getSignalId() {
@@ -308,7 +326,7 @@ public class DiagnosticCriteria implements Serializable, Criteria {
             Objects.equals(debitUp, that.debitUp) &&
             Objects.equals(debitDown, that.debitDown) &&
             Objects.equals(dateDiagnostic, that.dateDiagnostic) &&
-            Objects.equals(typeDiagnosticId, that.typeDiagnosticId) &&
+            Objects.equals(typeDiagnostic, that.typeDiagnostic) &&
             Objects.equals(signalId, that.signalId) &&
             Objects.equals(ontId, that.ontId) &&
             Objects.equals(anomalieId, that.anomalieId) &&
@@ -325,7 +343,7 @@ public class DiagnosticCriteria implements Serializable, Criteria {
             debitUp,
             debitDown,
             dateDiagnostic,
-            typeDiagnosticId,
+            typeDiagnostic,
             signalId,
             ontId,
             anomalieId,
@@ -343,7 +361,7 @@ public class DiagnosticCriteria implements Serializable, Criteria {
             optionalDebitUp().map(f -> "debitUp=" + f + ", ").orElse("") +
             optionalDebitDown().map(f -> "debitDown=" + f + ", ").orElse("") +
             optionalDateDiagnostic().map(f -> "dateDiagnostic=" + f + ", ").orElse("") +
-            optionalTypeDiagnosticId().map(f -> "typeDiagnosticId=" + f + ", ").orElse("") +
+            optionalTypeDiagnostic().map(f -> "typeDiagnostic=" + f + ", ").orElse("") +
             optionalSignalId().map(f -> "signalId=" + f + ", ").orElse("") +
             optionalOntId().map(f -> "ontId=" + f + ", ").orElse("") +
             optionalAnomalieId().map(f -> "anomalieId=" + f + ", ").orElse("") +

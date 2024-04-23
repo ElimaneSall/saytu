@@ -51,7 +51,8 @@ public class DiagnosticAsserts {
             .satisfies(e -> assertThat(e.getStatutONT()).as("check statutONT").isEqualTo(actual.getStatutONT()))
             .satisfies(e -> assertThat(e.getDebitUp()).as("check debitUp").isEqualTo(actual.getDebitUp()))
             .satisfies(e -> assertThat(e.getDebitDown()).as("check debitDown").isEqualTo(actual.getDebitDown()))
-            .satisfies(e -> assertThat(e.getDateDiagnostic()).as("check dateDiagnostic").isEqualTo(actual.getDateDiagnostic()));
+            .satisfies(e -> assertThat(e.getDateDiagnostic()).as("check dateDiagnostic").isEqualTo(actual.getDateDiagnostic()))
+            .satisfies(e -> assertThat(e.getTypeDiagnostic()).as("check typeDiagnostic").isEqualTo(actual.getTypeDiagnostic()));
     }
 
     /**
@@ -63,7 +64,6 @@ public class DiagnosticAsserts {
     public static void assertDiagnosticUpdatableRelationshipsEquals(Diagnostic expected, Diagnostic actual) {
         assertThat(expected)
             .as("Verify Diagnostic relationships")
-            .satisfies(e -> assertThat(e.getTypeDiagnostic()).as("check typeDiagnostic").isEqualTo(actual.getTypeDiagnostic()))
             .satisfies(e -> assertThat(e.getSignal()).as("check signal").isEqualTo(actual.getSignal()))
             .satisfies(e -> assertThat(e.getOnt()).as("check ont").isEqualTo(actual.getOnt()))
             .satisfies(e -> assertThat(e.getAnomalies()).as("check anomalies").isEqualTo(actual.getAnomalies()));

@@ -34,8 +34,8 @@ import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.domain.Signal;
-import sn.sonatel.dsi.ins.ftsirc.domain.TypeDiagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
 import sn.sonatel.dsi.ins.ftsirc.repository.DiagnosticRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.DiagnosticService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.DiagnosticDTO;
@@ -65,6 +65,9 @@ class DiagnosticResourceIT {
     private static final LocalDate DEFAULT_DATE_DIAGNOSTIC = LocalDate.ofEpochDay(0L);
     private static final LocalDate UPDATED_DATE_DIAGNOSTIC = LocalDate.now(ZoneId.systemDefault());
     private static final LocalDate SMALLER_DATE_DIAGNOSTIC = LocalDate.ofEpochDay(-1L);
+
+    private static final TypeDiagnostic DEFAULT_TYPE_DIAGNOSTIC = TypeDiagnostic.AUTOMATIQUE;
+    private static final TypeDiagnostic UPDATED_TYPE_DIAGNOSTIC = TypeDiagnostic.MANUEL;
 
     private static final String ENTITY_API_URL = "/api/diagnostics";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
@@ -107,7 +110,8 @@ class DiagnosticResourceIT {
             .statutONT(DEFAULT_STATUT_ONT)
             .debitUp(DEFAULT_DEBIT_UP)
             .debitDown(DEFAULT_DEBIT_DOWN)
-            .dateDiagnostic(DEFAULT_DATE_DIAGNOSTIC);
+            .dateDiagnostic(DEFAULT_DATE_DIAGNOSTIC)
+            .typeDiagnostic(DEFAULT_TYPE_DIAGNOSTIC);
         return diagnostic;
     }
 
@@ -123,7 +127,8 @@ class DiagnosticResourceIT {
             .statutONT(UPDATED_STATUT_ONT)
             .debitUp(UPDATED_DEBIT_UP)
             .debitDown(UPDATED_DEBIT_DOWN)
-            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC);
+            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
+            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC);
         return diagnostic;
     }
 
@@ -193,40 +198,6 @@ class DiagnosticResourceIT {
 
     @Test
     @Transactional
-    void checkDebitUpIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        diagnostic.setDebitUp(null);
-
-        // Create the Diagnostic, which fails.
-        DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(diagnostic);
-
-        restDiagnosticMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(diagnosticDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    void checkDebitDownIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
-        // set the field null
-        diagnostic.setDebitDown(null);
-
-        // Create the Diagnostic, which fails.
-        DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(diagnostic);
-
-        restDiagnosticMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(diagnosticDTO)))
-            .andExpect(status().isBadRequest());
-
-        assertSameRepositoryCount(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void getAllDiagnostics() throws Exception {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
@@ -241,7 +212,8 @@ class DiagnosticResourceIT {
             .andExpect(jsonPath("$.[*].statutONT").value(hasItem(DEFAULT_STATUT_ONT.toString())))
             .andExpect(jsonPath("$.[*].debitUp").value(hasItem(DEFAULT_DEBIT_UP)))
             .andExpect(jsonPath("$.[*].debitDown").value(hasItem(DEFAULT_DEBIT_DOWN)))
-            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())));
+            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())))
+            .andExpect(jsonPath("$.[*].typeDiagnostic").value(hasItem(DEFAULT_TYPE_DIAGNOSTIC.toString())));
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -277,7 +249,8 @@ class DiagnosticResourceIT {
             .andExpect(jsonPath("$.statutONT").value(DEFAULT_STATUT_ONT.toString()))
             .andExpect(jsonPath("$.debitUp").value(DEFAULT_DEBIT_UP))
             .andExpect(jsonPath("$.debitDown").value(DEFAULT_DEBIT_DOWN))
-            .andExpect(jsonPath("$.dateDiagnostic").value(DEFAULT_DATE_DIAGNOSTIC.toString()));
+            .andExpect(jsonPath("$.dateDiagnostic").value(DEFAULT_DATE_DIAGNOSTIC.toString()))
+            .andExpect(jsonPath("$.typeDiagnostic").value(DEFAULT_TYPE_DIAGNOSTIC.toString()));
     }
 
     @Test
@@ -563,23 +536,34 @@ class DiagnosticResourceIT {
     @Test
     @Transactional
     void getAllDiagnosticsByTypeDiagnosticIsEqualToSomething() throws Exception {
-        TypeDiagnostic typeDiagnostic;
-        if (TestUtil.findAll(em, TypeDiagnostic.class).isEmpty()) {
-            diagnosticRepository.saveAndFlush(diagnostic);
-            typeDiagnostic = TypeDiagnosticResourceIT.createEntity(em);
-        } else {
-            typeDiagnostic = TestUtil.findAll(em, TypeDiagnostic.class).get(0);
-        }
-        em.persist(typeDiagnostic);
-        em.flush();
-        diagnostic.setTypeDiagnostic(typeDiagnostic);
+        // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
-        Long typeDiagnosticId = typeDiagnostic.getId();
-        // Get all the diagnosticList where typeDiagnostic equals to typeDiagnosticId
-        defaultDiagnosticShouldBeFound("typeDiagnosticId.equals=" + typeDiagnosticId);
 
-        // Get all the diagnosticList where typeDiagnostic equals to (typeDiagnosticId + 1)
-        defaultDiagnosticShouldNotBeFound("typeDiagnosticId.equals=" + (typeDiagnosticId + 1));
+        // Get all the diagnosticList where typeDiagnostic equals to
+        defaultDiagnosticFiltering("typeDiagnostic.equals=" + DEFAULT_TYPE_DIAGNOSTIC, "typeDiagnostic.equals=" + UPDATED_TYPE_DIAGNOSTIC);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByTypeDiagnosticIsInShouldWork() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where typeDiagnostic in
+        defaultDiagnosticFiltering(
+            "typeDiagnostic.in=" + DEFAULT_TYPE_DIAGNOSTIC + "," + UPDATED_TYPE_DIAGNOSTIC,
+            "typeDiagnostic.in=" + UPDATED_TYPE_DIAGNOSTIC
+        );
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByTypeDiagnosticIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where typeDiagnostic is not null
+        defaultDiagnosticFiltering("typeDiagnostic.specified=true", "typeDiagnostic.specified=false");
     }
 
     @Test
@@ -666,7 +650,8 @@ class DiagnosticResourceIT {
             .andExpect(jsonPath("$.[*].statutONT").value(hasItem(DEFAULT_STATUT_ONT.toString())))
             .andExpect(jsonPath("$.[*].debitUp").value(hasItem(DEFAULT_DEBIT_UP)))
             .andExpect(jsonPath("$.[*].debitDown").value(hasItem(DEFAULT_DEBIT_DOWN)))
-            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())));
+            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())))
+            .andExpect(jsonPath("$.[*].typeDiagnostic").value(hasItem(DEFAULT_TYPE_DIAGNOSTIC.toString())));
 
         // Check, that the count call also returns 1
         restDiagnosticMockMvc
@@ -719,7 +704,8 @@ class DiagnosticResourceIT {
             .statutONT(UPDATED_STATUT_ONT)
             .debitUp(UPDATED_DEBIT_UP)
             .debitDown(UPDATED_DEBIT_DOWN)
-            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC);
+            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
+            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC);
         DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(updatedDiagnostic);
 
         restDiagnosticMockMvc
@@ -849,7 +835,8 @@ class DiagnosticResourceIT {
             .statutONT(UPDATED_STATUT_ONT)
             .debitUp(UPDATED_DEBIT_UP)
             .debitDown(UPDATED_DEBIT_DOWN)
-            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC);
+            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
+            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC);
 
         restDiagnosticMockMvc
             .perform(

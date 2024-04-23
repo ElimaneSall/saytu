@@ -1,7 +1,6 @@
 package sn.sonatel.dsi.ins.ftsirc.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static sn.sonatel.dsi.ins.ftsirc.domain.AdresseTestSamples.*;
 import static sn.sonatel.dsi.ins.ftsirc.domain.OLTTestSamples.*;
 import static sn.sonatel.dsi.ins.ftsirc.domain.ONTTestSamples.*;
 
@@ -24,18 +23,6 @@ class OLTTest {
 
         oLT2 = getOLTSample2();
         assertThat(oLT1).isNotEqualTo(oLT2);
-    }
-
-    @Test
-    void adresseTest() throws Exception {
-        OLT oLT = getOLTRandomSampleGenerator();
-        Adresse adresseBack = getAdresseRandomSampleGenerator();
-
-        oLT.setAdresse(adresseBack);
-        assertThat(oLT.getAdresse()).isEqualTo(adresseBack);
-
-        oLT.adresse(null);
-        assertThat(oLT.getAdresse()).isNull();
     }
 
     @Test

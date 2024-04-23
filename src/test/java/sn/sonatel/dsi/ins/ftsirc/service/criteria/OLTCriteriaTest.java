@@ -75,13 +75,20 @@ class OLTCriteriaTest {
 
     private static void setAllFilters(OLTCriteria oLTCriteria) {
         oLTCriteria.id();
-        oLTCriteria.nom();
+        oLTCriteria.libelle();
         oLTCriteria.ip();
         oLTCriteria.vendeur();
+        oLTCriteria.typeEquipment();
+        oLTCriteria.codeEquipment();
+        oLTCriteria.adresse();
+        oLTCriteria.emplacement();
+        oLTCriteria.typeCarte();
+        oLTCriteria.latitude();
+        oLTCriteria.longitude();
+        oLTCriteria.capacite();
         oLTCriteria.etat();
         oLTCriteria.createdAt();
         oLTCriteria.updatedAt();
-        oLTCriteria.adresseId();
         oLTCriteria.ontId();
         oLTCriteria.distinct();
     }
@@ -90,13 +97,20 @@ class OLTCriteriaTest {
         return new Condition<>(
             criteria ->
                 condition.apply(criteria.getId()) &&
-                condition.apply(criteria.getNom()) &&
+                condition.apply(criteria.getLibelle()) &&
                 condition.apply(criteria.getIp()) &&
                 condition.apply(criteria.getVendeur()) &&
+                condition.apply(criteria.getTypeEquipment()) &&
+                condition.apply(criteria.getCodeEquipment()) &&
+                condition.apply(criteria.getAdresse()) &&
+                condition.apply(criteria.getEmplacement()) &&
+                condition.apply(criteria.getTypeCarte()) &&
+                condition.apply(criteria.getLatitude()) &&
+                condition.apply(criteria.getLongitude()) &&
+                condition.apply(criteria.getCapacite()) &&
                 condition.apply(criteria.getEtat()) &&
                 condition.apply(criteria.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt()) &&
-                condition.apply(criteria.getAdresseId()) &&
                 condition.apply(criteria.getOntId()) &&
                 condition.apply(criteria.getDistinct()),
             "every filter matches"
@@ -107,13 +121,20 @@ class OLTCriteriaTest {
         return new Condition<>(
             criteria ->
                 condition.apply(criteria.getId(), copy.getId()) &&
-                condition.apply(criteria.getNom(), copy.getNom()) &&
+                condition.apply(criteria.getLibelle(), copy.getLibelle()) &&
                 condition.apply(criteria.getIp(), copy.getIp()) &&
                 condition.apply(criteria.getVendeur(), copy.getVendeur()) &&
+                condition.apply(criteria.getTypeEquipment(), copy.getTypeEquipment()) &&
+                condition.apply(criteria.getCodeEquipment(), copy.getCodeEquipment()) &&
+                condition.apply(criteria.getAdresse(), copy.getAdresse()) &&
+                condition.apply(criteria.getEmplacement(), copy.getEmplacement()) &&
+                condition.apply(criteria.getTypeCarte(), copy.getTypeCarte()) &&
+                condition.apply(criteria.getLatitude(), copy.getLatitude()) &&
+                condition.apply(criteria.getLongitude(), copy.getLongitude()) &&
+                condition.apply(criteria.getCapacite(), copy.getCapacite()) &&
                 condition.apply(criteria.getEtat(), copy.getEtat()) &&
                 condition.apply(criteria.getCreatedAt(), copy.getCreatedAt()) &&
                 condition.apply(criteria.getUpdatedAt(), copy.getUpdatedAt()) &&
-                condition.apply(criteria.getAdresseId(), copy.getAdresseId()) &&
                 condition.apply(criteria.getOntId(), copy.getOntId()) &&
                 condition.apply(criteria.getDistinct(), copy.getDistinct()),
             "every filter matches"

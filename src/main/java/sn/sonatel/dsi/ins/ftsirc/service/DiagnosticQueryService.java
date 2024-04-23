@@ -92,13 +92,8 @@ public class DiagnosticQueryService extends QueryService<Diagnostic> {
             if (criteria.getDateDiagnostic() != null) {
                 specification = specification.and(buildRangeSpecification(criteria.getDateDiagnostic(), Diagnostic_.dateDiagnostic));
             }
-            if (criteria.getTypeDiagnosticId() != null) {
-                specification = specification.and(
-                    buildSpecification(
-                        criteria.getTypeDiagnosticId(),
-                        root -> root.join(Diagnostic_.typeDiagnostic, JoinType.LEFT).get(TypeDiagnostic_.id)
-                    )
-                );
+            if (criteria.getTypeDiagnostic() != null) {
+                specification = specification.and(buildSpecification(criteria.getTypeDiagnostic(), Diagnostic_.typeDiagnostic));
             }
             if (criteria.getSignalId() != null) {
                 specification = specification.and(

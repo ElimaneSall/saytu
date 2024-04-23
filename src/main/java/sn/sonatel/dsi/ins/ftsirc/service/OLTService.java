@@ -1,8 +1,6 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
 
 /**
@@ -32,14 +30,6 @@ public interface OLTService {
      * @return the persisted entity.
      */
     Optional<OLTDTO> partialUpdate(OLTDTO oLTDTO);
-
-    /**
-     * Get all the oLTS with eager load of many-to-many relationships.
-     *
-     * @param pageable the pagination information.
-     * @return the list of entities.
-     */
-    Page<OLTDTO> findAllWithEagerRelationships(Pageable pageable);
 
     /**
      * Get the "id" oLT.

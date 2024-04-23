@@ -77,14 +77,38 @@ public class OLTQueryService extends QueryService<OLT> {
             if (criteria.getId() != null) {
                 specification = specification.and(buildRangeSpecification(criteria.getId(), OLT_.id));
             }
-            if (criteria.getNom() != null) {
-                specification = specification.and(buildStringSpecification(criteria.getNom(), OLT_.nom));
+            if (criteria.getLibelle() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getLibelle(), OLT_.libelle));
             }
             if (criteria.getIp() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getIp(), OLT_.ip));
             }
             if (criteria.getVendeur() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getVendeur(), OLT_.vendeur));
+            }
+            if (criteria.getTypeEquipment() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getTypeEquipment(), OLT_.typeEquipment));
+            }
+            if (criteria.getCodeEquipment() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getCodeEquipment(), OLT_.codeEquipment));
+            }
+            if (criteria.getAdresse() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getAdresse(), OLT_.adresse));
+            }
+            if (criteria.getEmplacement() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getEmplacement(), OLT_.emplacement));
+            }
+            if (criteria.getTypeCarte() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getTypeCarte(), OLT_.typeCarte));
+            }
+            if (criteria.getLatitude() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getLatitude(), OLT_.latitude));
+            }
+            if (criteria.getLongitude() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getLongitude(), OLT_.longitude));
+            }
+            if (criteria.getCapacite() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getCapacite(), OLT_.capacite));
             }
             if (criteria.getEtat() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getEtat(), OLT_.etat));
@@ -94,11 +118,6 @@ public class OLTQueryService extends QueryService<OLT> {
             }
             if (criteria.getUpdatedAt() != null) {
                 specification = specification.and(buildRangeSpecification(criteria.getUpdatedAt(), OLT_.updatedAt));
-            }
-            if (criteria.getAdresseId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getAdresseId(), root -> root.join(OLT_.adresse, JoinType.LEFT).get(Adresse_.id))
-                );
             }
             if (criteria.getOntId() != null) {
                 specification = specification.and(

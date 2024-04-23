@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20240422114124"
+    "changelogDate": "20240422163250"
   },
   "applications": "*",
   "clientRootFolder": "SaytuBackend",
@@ -19,17 +19,20 @@
     },
     {
       "fieldName": "debitUp",
-      "fieldType": "String",
-      "fieldValidateRules": ["required"]
+      "fieldType": "String"
     },
     {
       "fieldName": "debitDown",
-      "fieldType": "String",
-      "fieldValidateRules": ["required"]
+      "fieldType": "String"
     },
     {
       "fieldName": "dateDiagnostic",
       "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "typeDiagnostic",
+      "fieldType": "TypeDiagnostic",
+      "fieldValues": "AUTOMATIQUE,MANUEL"
     }
   ],
   "jpaMetamodelFiltering": true,
@@ -37,13 +40,6 @@
   "name": "Diagnostic",
   "pagination": "pagination",
   "relationships": [
-    {
-      "otherEntityName": "typeDiagnostic",
-      "otherEntityRelationshipName": "diagnostic",
-      "relationshipName": "typeDiagnostic",
-      "relationshipSide": "left",
-      "relationshipType": "many-to-one"
-    },
     {
       "otherEntityName": "signal",
       "otherEntityRelationshipName": "diagnostic",

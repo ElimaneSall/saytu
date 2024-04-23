@@ -7,15 +7,21 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <!--
-        Added the entity Anomalie.
+        Added the entity Signal.
     -->
-    <changeSet id="20240422114127-1" author="jhipster">
-        <createTable tableName="anomalie">
+    <changeSet id="20240422163253-1" author="jhipster">
+        <createTable tableName="jhi_signal">
             <column name="id" type="bigint" autoIncrement="true" startWith="1500">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="libelle" type="varchar(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="ux_anomalie__libelle" />
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_jhi_signal__libelle" />
+            </column>
+            <column name="seuil_min" type="double">
+                <constraints nullable="false" />
+            </column>
+            <column name="seuil_max" type="double">
+                <constraints nullable="false" />
             </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
@@ -31,14 +37,16 @@
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
     -->
-    <changeSet id="20240422114127-1-data" author="jhipster" context="faker">
+    <changeSet id="20240422163253-1-data" author="jhipster" context="faker">
         <loadData
-                  file="config/liquibase/fake-data/anomalie.csv"
+                  file="config/liquibase/fake-data/jhi_signal.csv"
                   separator=";"
-                  tableName="anomalie"
+                  tableName="jhi_signal"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
             <column name="libelle" type="string"/>
+            <column name="seuil_min" type="numeric"/>
+            <column name="seuil_max" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

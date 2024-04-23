@@ -9,8 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * A ONT.
@@ -52,20 +50,16 @@ public class ONT implements Serializable {
     @Column(name = "pon_index", nullable = false)
     private String ponIndex;
 
-    @NotNull
-    @Column(name = "max_up", nullable = false)
+    @Column(name = "max_up")
     private String maxUp;
 
-    @NotNull
-    @Column(name = "max_down", nullable = false)
+    @Column(name = "max_down")
     private String maxDown;
 
     @Column(name = "created_at")
-    @CreationTimestamp
     private LocalDate createdAt;
 
     @Column(name = "updated_at")
-    @UpdateTimestamp
     private LocalDate updatedAt;
 
     @JsonIgnoreProperties(value = { "offre", "ont" }, allowSetters = true)
@@ -74,12 +68,12 @@ public class ONT implements Serializable {
     private Client client;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties(value = { "adresse", "onts" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "onts" }, allowSetters = true)
     private OLT olt;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ont")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    @JsonIgnoreProperties(value = { "typeDiagnostic", "signal", "ont", "anomalies" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "signal", "ont", "anomalies" }, allowSetters = true)
     private Set<Diagnostic> diagnostics = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "ont")

@@ -31,10 +31,8 @@ public class ONTDTO implements Serializable {
     @NotNull
     private String ponIndex;
 
-    @NotNull
     private String maxUp;
 
-    @NotNull
     private String maxDown;
 
     private LocalDate createdAt;

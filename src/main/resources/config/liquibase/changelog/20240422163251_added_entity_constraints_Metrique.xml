@@ -6,15 +6,15 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
     <!--
-        Added the constraints for entity Client.
+        Added the constraints for entity Metrique.
     -->
-    <changeSet id="20240422114129-2" author="jhipster">
+    <changeSet id="20240422163251-2" author="jhipster">
 
-        <addForeignKeyConstraint baseColumnNames="offre_id"
-                                 baseTableName="client"
-                                 constraintName="fk_client__offre_id"
+        <addForeignKeyConstraint baseColumnNames="ont_id"
+                                 baseTableName="metrique"
+                                 constraintName="fk_metrique__ont_id"
                                  referencedColumnNames="id"
-                                 referencedTableName="offre"
+                                 referencedTableName="ont"
                                  />
     </changeSet>
 </databaseChangeLog>

@@ -1,19 +1,18 @@
-entity Adresse {
-    region String,
-    ville String ,
-    commune String,
-    latitude Double,
-    longitude Double
-}
-
 entity OLT {
-    nom String required,
+    libelle String required,
     ip String required,
     vendeur String required,
-    etat String required,
+    typeEquipment String ,
+    codeEquipment String,
+    adresse String ,
+    emplacement String,
+    typeCarte String,
+    latitude String,
+    longitude String,
+    capacite String,
+    etat String,
     createdAt LocalDate,
     updatedAt LocalDate
-
 }
 
 entity ONT {
@@ -23,8 +22,8 @@ entity ONT {
     slot String required,
     pon String required,
     ponIndex String required,
-    maxUp String required,
-    maxDown String required,
+    maxUp String,
+    maxDown String,
     createdAt LocalDate,
     updatedAt LocalDate
 
@@ -38,18 +37,21 @@ enum StatutONT {
 entity Diagnostic {
     index String required,
     statutONT StatutONT,
-    debitUp String required,
-    debitDown String required,
+    debitUp String,
+    debitDown String,
     dateDiagnostic LocalDate,
+    typeDiagnostic TypeDiagnostic
 }
+
+enum TypeDiagnostic {
+    AUTOMATIQUE,
+    MANUEL
+}
+
 entity Metrique {
     oltPower String required,
     ontPower String required,
     createdAt LocalDate,
-}
-
-entity TypeDiagnostic {
-    libelle String required unique,
 }
 
 entity Anomalie {
@@ -81,14 +83,12 @@ entity Offre {
 }
 
 relationship OneToOne {
-    OLT{adresse(region)} to  Adresse{olt(nom)}
     ONT{client(numeroFixe)} to Client{ont(serviceId)}
 }
 
 
 relationship ManyToOne {
     Client{offre} to Offre{client}
-    Diagnostic{typeDiagnostic} to TypeDiagnostic{diagnostic}
     Diagnostic{signal} to Signal{diagnostic}
     ONT{olt} to OLT{ont}
     Diagnostic{ont} to ONT{diagnostic}

@@ -21,10 +21,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.IntegrationTest;
-import sn.sonatel.dsi.ins.ftsirc.domain.Adresse;
-import sn.sonatel.dsi.ins.ftsirc.repository.AdresseRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.AdresseDTO;
-import sn.sonatel.dsi.ins.ftsirc.service.mapper.AdresseMapper;
 
 /**
  * Integration tests for the {@link AdresseResource} REST controller.

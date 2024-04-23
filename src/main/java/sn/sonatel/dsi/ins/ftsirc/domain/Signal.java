@@ -39,7 +39,7 @@ public class Signal implements Serializable {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "signal")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    @JsonIgnoreProperties(value = { "typeDiagnostic", "signal", "ont", "anomalies" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "signal", "ont", "anomalies" }, allowSetters = true)
     private Set<Diagnostic> diagnostics = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

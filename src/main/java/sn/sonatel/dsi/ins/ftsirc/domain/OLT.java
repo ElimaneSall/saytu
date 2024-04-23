@@ -27,8 +27,8 @@ public class OLT implements Serializable {
     private Long id;
 
     @NotNull
-    @Column(name = "nom", nullable = false)
-    private String nom;
+    @Column(name = "libelle", nullable = false)
+    private String libelle;
 
     @NotNull
     @Column(name = "ip", nullable = false)
@@ -38,8 +38,31 @@ public class OLT implements Serializable {
     @Column(name = "vendeur", nullable = false)
     private String vendeur;
 
-    @NotNull
-    @Column(name = "etat", nullable = false)
+    @Column(name = "type_equipment")
+    private String typeEquipment;
+
+    @Column(name = "code_equipment")
+    private String codeEquipment;
+
+    @Column(name = "adresse")
+    private String adresse;
+
+    @Column(name = "emplacement")
+    private String emplacement;
+
+    @Column(name = "type_carte")
+    private String typeCarte;
+
+    @Column(name = "latitude")
+    private String latitude;
+
+    @Column(name = "longitude")
+    private String longitude;
+
+    @Column(name = "capacite")
+    private String capacite;
+
+    @Column(name = "etat")
     private String etat;
 
     @Column(name = "created_at")
@@ -47,11 +70,6 @@ public class OLT implements Serializable {
 
     @Column(name = "updated_at")
     private LocalDate updatedAt;
-
-    @JsonIgnoreProperties(value = { "olt" }, allowSetters = true)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(unique = true)
-    private Adresse adresse;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "olt")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -73,17 +91,17 @@ public class OLT implements Serializable {
         this.id = id;
     }
 
-    public String getNom() {
-        return this.nom;
+    public String getLibelle() {
+        return this.libelle;
     }
 
-    public OLT nom(String nom) {
-        this.setNom(nom);
+    public OLT libelle(String libelle) {
+        this.setLibelle(libelle);
         return this;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setLibelle(String libelle) {
+        this.libelle = libelle;
     }
 
     public String getIp() {
@@ -110,6 +128,110 @@ public class OLT implements Serializable {
 
     public void setVendeur(String vendeur) {
         this.vendeur = vendeur;
+    }
+
+    public String getTypeEquipment() {
+        return this.typeEquipment;
+    }
+
+    public OLT typeEquipment(String typeEquipment) {
+        this.setTypeEquipment(typeEquipment);
+        return this;
+    }
+
+    public void setTypeEquipment(String typeEquipment) {
+        this.typeEquipment = typeEquipment;
+    }
+
+    public String getCodeEquipment() {
+        return this.codeEquipment;
+    }
+
+    public OLT codeEquipment(String codeEquipment) {
+        this.setCodeEquipment(codeEquipment);
+        return this;
+    }
+
+    public void setCodeEquipment(String codeEquipment) {
+        this.codeEquipment = codeEquipment;
+    }
+
+    public String getAdresse() {
+        return this.adresse;
+    }
+
+    public OLT adresse(String adresse) {
+        this.setAdresse(adresse);
+        return this;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
+    }
+
+    public String getEmplacement() {
+        return this.emplacement;
+    }
+
+    public OLT emplacement(String emplacement) {
+        this.setEmplacement(emplacement);
+        return this;
+    }
+
+    public void setEmplacement(String emplacement) {
+        this.emplacement = emplacement;
+    }
+
+    public String getTypeCarte() {
+        return this.typeCarte;
+    }
+
+    public OLT typeCarte(String typeCarte) {
+        this.setTypeCarte(typeCarte);
+        return this;
+    }
+
+    public void setTypeCarte(String typeCarte) {
+        this.typeCarte = typeCarte;
+    }
+
+    public String getLatitude() {
+        return this.latitude;
+    }
+
+    public OLT latitude(String latitude) {
+        this.setLatitude(latitude);
+        return this;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return this.longitude;
+    }
+
+    public OLT longitude(String longitude) {
+        this.setLongitude(longitude);
+        return this;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getCapacite() {
+        return this.capacite;
+    }
+
+    public OLT capacite(String capacite) {
+        this.setCapacite(capacite);
+        return this;
+    }
+
+    public void setCapacite(String capacite) {
+        this.capacite = capacite;
     }
 
     public String getEtat() {
@@ -149,19 +271,6 @@ public class OLT implements Serializable {
 
     public void setUpdatedAt(LocalDate updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public Adresse getAdresse() {
-        return this.adresse;
-    }
-
-    public void setAdresse(Adresse adresse) {
-        this.adresse = adresse;
-    }
-
-    public OLT adresse(Adresse adresse) {
-        this.setAdresse(adresse);
-        return this;
     }
 
     public Set<ONT> getOnts() {
@@ -219,9 +328,17 @@ public class OLT implements Serializable {
     public String toString() {
         return "OLT{" +
             "id=" + getId() +
-            ", nom='" + getNom() + "'" +
+            ", libelle='" + getLibelle() + "'" +
             ", ip='" + getIp() + "'" +
             ", vendeur='" + getVendeur() + "'" +
+            ", typeEquipment='" + getTypeEquipment() + "'" +
+            ", codeEquipment='" + getCodeEquipment() + "'" +
+            ", adresse='" + getAdresse() + "'" +
+            ", emplacement='" + getEmplacement() + "'" +
+            ", typeCarte='" + getTypeCarte() + "'" +
+            ", latitude='" + getLatitude() + "'" +
+            ", longitude='" + getLongitude() + "'" +
+            ", capacite='" + getCapacite() + "'" +
             ", etat='" + getEtat() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +

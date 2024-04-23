@@ -1,6 +1,6 @@
 {
   "annotations": {
-    "changelogDate": "20240422114122"
+    "changelogDate": "20240422163248"
   },
   "applications": "*",
   "clientRootFolder": "SaytuBackend",
@@ -8,7 +8,7 @@
   "dto": "mapstruct",
   "fields": [
     {
-      "fieldName": "nom",
+      "fieldName": "libelle",
       "fieldType": "String",
       "fieldValidateRules": ["required"]
     },
@@ -23,9 +23,40 @@
       "fieldValidateRules": ["required"]
     },
     {
+      "fieldName": "typeEquipment",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "codeEquipment",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "adresse",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "emplacement",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "typeCarte",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "latitude",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "longitude",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "capacite",
+      "fieldType": "String"
+    },
+    {
       "fieldName": "etat",
-      "fieldType": "String",
-      "fieldValidateRules": ["required"]
+      "fieldType": "String"
     },
     {
       "fieldName": "createdAt",
@@ -41,14 +72,6 @@
   "name": "OLT",
   "pagination": "pagination",
   "relationships": [
-    {
-      "otherEntityField": "region",
-      "otherEntityName": "adresse",
-      "otherEntityRelationshipName": "olt",
-      "relationshipName": "adresse",
-      "relationshipSide": "left",
-      "relationshipType": "one-to-one"
-    },
     {
       "otherEntityName": "oNT",
       "otherEntityRelationshipName": "olt",
