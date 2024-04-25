@@ -72,4 +72,7 @@ public class OLTServiceImpl implements OLTService {
         log.debug("Request to delete OLT : {}", id);
         oLTRepository.deleteById(id);
     }
+
+    @Override
+    public void getAllONTs() {}
 }
