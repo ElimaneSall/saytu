@@ -1,5 +1,6 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,14 @@ public interface ONTService {
      * @return the persisted entity.
      */
     ONTDTO save(ONTDTO oNTDTO);
+
+    /**
+     * Save list ONT.
+     *
+     * @param listONTDTOs the entity to save.
+     * @return the persisted entity.
+     */
+    List<ONTDTO> saveListONT(List<ONTDTO> listONTDTOs);
 
     /**
      * Updates a oNT.
