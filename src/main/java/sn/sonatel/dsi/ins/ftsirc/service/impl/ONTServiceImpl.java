@@ -1,5 +1,6 @@
 package sn.sonatel.dsi.ins.ftsirc.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,14 @@ public class ONTServiceImpl implements ONTService {
         ONT oNT = oNTMapper.toEntity(oNTDTO);
         oNT = oNTRepository.save(oNT);
         return oNTMapper.toDto(oNT);
+    }
+
+    @Override
+    public List<ONTDTO> saveListONT(List<ONTDTO> listONTDTOs) {
+        log.debug("Request to save ONT : {}", listONTDTOs);
+        List<ONT> oNTs = oNTMapper.toEntity(listONTDTOs);
+        oNTs = oNTRepository.saveAll(oNTs);
+        return oNTMapper.toDto(oNTs);
     }
 
     @Override
