@@ -16,7 +16,7 @@ public class ScheduledTasks {
         this.oltService = oltService;
     }
 
-    @Scheduled(cron = " 0 8 * * *")
+    @Scheduled(cron = " 0 0 8 * * *")
     public void updateOLT() {
         log.debug("Started OLT UPDATE CRON");
         oltService.updateOLT("/Users/nfl/Documents/Sonatel/SAYTU/OLT_OSN_22.04.24.xlsx");
