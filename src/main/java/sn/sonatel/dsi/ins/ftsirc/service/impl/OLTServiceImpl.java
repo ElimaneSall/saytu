@@ -85,9 +85,6 @@ public class OLTServiceImpl implements OLTService {
     }
 
     @Override
-    public void getAllONTs() {}
-
-    @Override
     public void updateOLT(String path) {
         String excelFilePath = path;
 
