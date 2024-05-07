@@ -1,8 +1,16 @@
 package sn.sonatel.dsi.ins.ftsirc.service.impl;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snmp4j.*;
+import org.snmp4j.event.*;
+import org.snmp4j.mp.SnmpConstants;
+import org.snmp4j.smi.*;
+import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -78,4 +86,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         log.debug("Request to delete Diagnostic : {}", id);
         diagnosticRepository.deleteById(id);
     }
+
+    public static void diagnosticFiberCut() {}
 }
