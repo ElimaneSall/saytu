@@ -46,7 +46,5 @@ public interface OLTService {
      */
     void delete(Long id);
 
-    void getAllONTs();
-
     void updateOLT(String path);
 }
