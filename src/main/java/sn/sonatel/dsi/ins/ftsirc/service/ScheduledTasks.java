@@ -24,7 +24,7 @@ public class ScheduledTasks {
         oltService.updateOLT("/Users/nfl/Documents/Sonatel/SAYTU/OLT_OSN_22.04.24.xlsx");
     }
 
-    @Scheduled(cron = " 0 53 15 * * *")
+    @Scheduled(cron = " 0 34 16 * * *")
     public void updateAllONT() {
         log.debug("Started ONT UPDATE CRON");
         ontService.updateALLONTS();
