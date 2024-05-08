@@ -202,4 +202,16 @@ public class DiagnosticResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    /**
+     * {@code GET  /diagnostics/diagnostic/:serviceId} : count all the diagnostics.
+     *
+     * @param serviceId the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/diagnostic/{serviceId}")
+    public ResponseEntity<String> diagnosticFibre(@PathVariable("serviceId") String serviceId) {
+        log.debug("REST request to diagnose by serviceId: {}", serviceId);
+        return ResponseEntity.ok().body(diagnosticService.diagnosticFiberCut(serviceId));
+    }
 }
