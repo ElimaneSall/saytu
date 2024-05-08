@@ -40,12 +40,12 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //        Long id = Long.parseLong("2109");
-        //        List<ONTDTO> listONTs;
-        //        Optional<OLTDTO> oltdto = oltService.findOne(id);
-        //        OLTDTO ontdto = oltdto.orElseThrow();
-        //        listONTs = getAllONTOnOLT(ontdto);
-        //        ontService.saveListONT(ontMapper.toEntity(listONTs));
+        //                Long id = Long.parseLong("2109");
+        //                List<ONTDTO> listONTs;
+        //                Optional<OLTDTO> oltdto = oltService.findOne(id);
+        //                OLTDTO ontdto = oltdto.orElseThrow();
+        //                listONTs = getAllONTOnOLT(ontdto);
+        //                ontService.saveListONT(ontMapper.toEntity(listONTs));
 
     }
 

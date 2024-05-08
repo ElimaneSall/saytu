@@ -176,6 +176,20 @@ public class DiagnosticResource {
     }
 
     /**
+     * {@code GET  /diagnostics/diagnostic/:serviceId} : count all the diagnostics.
+     *
+     * @param serviceId the criteria which the requested entities should match.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/fibre/{serviceId}")
+    public ResponseEntity<String> diagnosticFibre(@PathVariable("serviceId") Long serviceId) {
+        System.out.println("Elimane Sall");
+        log.debug("REST request to diagnose by serviceId: {}", serviceId);
+        return ResponseEntity.ok().body(diagnosticService.diagnosticFiberCut(String.valueOf(serviceId)));
+        //        return ResponseEntity.ok("Hello World! " );
+    }
+
+    /**
      * {@code GET  /diagnostics/:id} : get the "id" diagnostic.
      *
      * @param id the id of the diagnosticDTO to retrieve.
@@ -201,17 +215,5 @@ public class DiagnosticResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
-    }
-
-    /**
-     * {@code GET  /diagnostics/diagnostic/:serviceId} : count all the diagnostics.
-     *
-     * @param serviceId the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
-     */
-    @GetMapping("/diagnostic/{serviceId}")
-    public ResponseEntity<String> diagnosticFibre(@PathVariable("serviceId") String serviceId) {
-        log.debug("REST request to diagnose by serviceId: {}", serviceId);
-        return ResponseEntity.ok().body(diagnosticService.diagnosticFiberCut(serviceId));
     }
 }

@@ -82,27 +82,26 @@ public class ONTServiceImpl implements ONTService {
         for (OLT olt : oltList) {
             List<ONT> listONTs = new ArrayList<>();
             listONTs = getAllONTOnOLT(olt.getId());
-            //            for (ONT newONT : listONTs.getFirst();) {
-            ONT newONT = listONTs.get(2);
-            ONT oldONT = this.findByServiceId(newONT.getServiceId());
+            for (ONT newONT : listONTs) {
+                ONT oldONT = this.findByServiceId(newONT.getServiceId());
 
-            // check if newONT exist in ONT table
-            if (oldONT == null) {
-                this.save(oNTMapper.toDto(newONT));
-            }
-            // check if oltONT and newONT have a same informations
-            else if (
-                oldONT.getOlt().equals(newONT.getOlt()) ||
-                oldONT.getPonIndex().equals(newONT.getPonIndex()) ||
-                !newONT.getServiceId().startsWith("33")
-            ) {
-                continue;
-            } else {
-                // check good ONT
+                // check if newONT exist in ONT table
+                if (oldONT == null) {
+                    this.save(oNTMapper.toDto(newONT));
+                }
+                // check if oltONT and newONT have a same informations
+                else if (
+                    oldONT.getOlt().equals(newONT.getOlt()) || oldONT.getPonIndex().equals(newONT.getPonIndex())
+                    //                                    !newONT.getServiceId().startsWith("33")
+                ) {
+                    continue;
+                } else {
+                    // check good ONT
 
-                // update
-                this.update(oNTMapper.toDto(newONT));
-                System.out.println("ONT saving " + newONT.getServiceId());
+                    // update
+                    this.update(oNTMapper.toDto(newONT));
+                    System.out.println("ONT saving " + newONT.getServiceId());
+                }
             }
         }
     }
