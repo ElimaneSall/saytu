@@ -99,30 +99,24 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     public String diagnosticFiberCut(String serviceId) {
         try {
             ONT ont = ontRepository.findByServiceId(serviceId);
+            if (ont != null) {
+                //Verifer que les elements ne sont pas null
 
-            String index = ont.getIndex();
-            String ip = ont.getOlt().getIp();
-            String ontId = ont.getOntIP();
-            String vendeur = ont.getOlt().getVendeur();
+                String index = ont.getIndex();
+                String ip = ont.getOlt().getIp();
+                String ontId = ont.getOntIP();
+                String vendeur = ont.getOlt().getVendeur();
 
-            String currentAlarmList = getCurrentAlarms(ip, ontId, index, vendeur);
-            String ontpower = getRxOpticalPower(ip, ontId, index, vendeur);
+                String currentAlarmList = getCurrentAlarms(ip, ontId, index, vendeur);
+                String ontpower = getRxOpticalPower(ip, ontId, index, vendeur);
 
-            if (
-                ((ontpower.equals("32768") && currentAlarmList.contains("1")) ||
-                    currentAlarmList.contains("15") ||
-                    currentAlarmList.contains("16") ||
-                    currentAlarmList.contains("17")) ||
-                ((ontpower.equals("2147483647") && currentAlarmList.equals("1")) ||
-                    currentAlarmList.equals("2") ||
-                    currentAlarmList.equals("3") ||
-                    currentAlarmList.equals("4"))
-            ) {
-                System.out.println(
-                    "{'status': 'ko', 'anomalie': 'Coupure fibre', 'etat': 'Critique', 'description': 'Coupure de fibre optique', 'Recommandation': ['Remonter l'anomalie à l'équipe intervention terrain', 'Faire une mesure de réflectometrie pour localisation du point de coupure.']}"
-                );
-            } else {
-                System.out.println("{'status': 'ok', 'description': 'coupure fibre Non'}");
+                if (ontpower.equals("KO") && currentAlarmList.equals("KO")) {
+                    System.out.println(
+                        "{'status': 'ko', 'anomalie': 'Coupure fibre', 'etat': 'Critique', 'description': 'Coupure de fibre optique', 'Recommandation': ['Remonter l'anomalie à l'équipe intervention terrain', 'Faire une mesure de réflectometrie pour localisation du point de coupure.']}"
+                    );
+                } else {
+                    System.out.println("{'status': 'ok', 'description': 'coupure fibre Non'}");
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,69 +126,126 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     private String getCurrentAlarms(String ip, String index, String ontId, String vendeur) throws IOException {
         String oid_ont = "";
+        String checkFiberCut = "";
+        List<String> alarmList = new ArrayList<>();
+
         CommunityTarget target = new CommunityTarget();
-        if (vendeur.equals("Nokia")) {
-            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.4.1.2." + index;
-            target.setCommunity(new OctetString("t1HAI2nai"));
-            target.setAddress(new UdpAddress(ip + "/161"));
-            target.setRetries(20);
-            target.setTimeout(2000);
-            target.setVersion(SnmpConstants.version2c);
-        } else if (vendeur.equals("Huawei")) {
-            oid_ont = "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.24." + index + "." + ontId;
-            target.setCommunity(new OctetString("OLT@osn_read"));
-            target.setAddress(new UdpAddress(ip + "/161"));
-            target.setRetries(20);
-            target.setTimeout(2000);
-            target.setVersion(SnmpConstants.version2c);
-        }
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
         Snmp snmp = new Snmp(transport);
         transport.listen();
+        if (vendeur.equals("NOKIA")) {
+            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.4.1.2" + "." + index;
+            target.setCommunity(new OctetString("t1HAI2nai"));
+            target.setAddress(new UdpAddress(ip + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid_ont)));
+            pdu.setType(PDU.GET);
 
-        PDU pdu = new PDU();
-        pdu.add(new VariableBinding(new OID(oid_ont)));
-        pdu.setType(PDU.GET);
-        ResponseEvent event = snmp.send(pdu, target);
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    String temp_ = Integer.toBinaryString(Integer.parseInt(varBind.getVariable().toString()));
+                    for (int i = 0; i < temp_.length(); i++) {
+                        if (temp_.charAt(i) == '1') {
+                            alarmList.add(String.valueOf(i + 1));
+                        }
+                    }
+                    for (String i : alarmList) {
+                        if (i.equals("1") || i.equals("15") || i.equals("16") || i.equals("17")) {
+                            System.out.println(i);
+                            checkFiberCut = "KO";
+                        } else {
+                            checkFiberCut = "OK";
+                        }
+                    }
+                }
+            }
+        } else if (vendeur.equals("HUAWEI")) {
+            oid_ont = "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.24" + "." + index + "." + ontId;
+            target.setCommunity(new OctetString("OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid_ont)));
+            pdu.setType(PDU.GET);
 
-        if (event != null && event.getResponse() != null) {
-            return event.getResponse().get(0).getVariable().toString();
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    String result = varBind.getVariable().toString();
+                    if (result.equals("1") || result.equals("2") || result.equals("3") || result.equals("4")) {
+                        //                    System.out.println("result:" + result);;
+                        checkFiberCut = "KO";
+                    } else {
+                        checkFiberCut = "OK";
+                    }
+                }
+            }
         }
-
-        return "";
+        return checkFiberCut;
     }
 
     private static String getRxOpticalPower(String ip, String index, String ontId, String vendeur) throws IOException {
         String oid_ont = "";
         CommunityTarget target = new CommunityTarget();
-        if (vendeur.equals("Nokia")) {
-            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.14.1.2." + index;
-            target.setCommunity(new OctetString("t1HAI2nai"));
-            target.setAddress(new UdpAddress(ip + "/161"));
-            target.setRetries(20);
-            target.setTimeout(2000);
-            target.setVersion(SnmpConstants.version2c);
-        } else if (vendeur.equals("Huawei")) {
-            oid_ont = "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4." + index + "." + ontId;
-            target.setCommunity(new OctetString("OLT@osn_read"));
-            target.setAddress(new UdpAddress(ip + "/161"));
-            target.setRetries(20);
-            target.setTimeout(2000);
-            target.setVersion(SnmpConstants.version2c);
-        }
+        String ontpower = "";
+        String opticalPower = "";
+
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
         Snmp snmp = new Snmp(transport);
         transport.listen();
+        if (vendeur.equals("NOKIA")) {
+            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index;
+            target.setCommunity(new OctetString("t1HAI2nai"));
+            target.setAddress(new UdpAddress(ip + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid_ont)));
+            pdu.setType(PDU.GET);
 
-        PDU pdu = new PDU();
-        pdu.add(new VariableBinding(new OID(oid_ont)));
-        pdu.setType(PDU.GET);
-        ResponseEvent event = snmp.send(pdu, target);
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    ontpower = varBind.getVariable().toString();
+                    //System.out.println("Ontpower:" + ontpower);
+                    if (ontpower.equals("32768")) {
+                        opticalPower = "KO";
+                    } else {
+                        opticalPower = "OK";
+                    }
+                }
+            }
+        } else if (vendeur.equals("HUAWEI")) {
+            oid_ont = "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + ontId;
+            target.setCommunity(new OctetString("OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid_ont)));
+            pdu.setType(PDU.GET);
 
-        if (event != null && event.getResponse() != null) {
-            return event.getResponse().get(0).getVariable().toString();
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    ontpower = varBind.getVariable().toString();
+                    //System.out.println("Ontpower:" + ontpower);
+                    if (ontpower.equals("2147483647")) {
+                        opticalPower = "KO";
+                    } else {
+                        opticalPower = "OK";
+                    }
+                }
+            }
         }
-
-        return "";
+        return opticalPower;
     }
 }
