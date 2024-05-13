@@ -98,9 +98,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     public String diagnosticFiberCut(String serviceId) {
         try {
-            Optional<ONT> ontOptional = ontRepository.findByServiceId(serviceId);
-            if (ontOptional.isPresent()) {
-                ONT ont = ontOptional.get();
+            ONT ont = ontRepository.findByServiceId(serviceId);
+            if (ont != null) {
                 //Verifer que les elements ne sont pas null
 
                 String index = ont.getIndex();

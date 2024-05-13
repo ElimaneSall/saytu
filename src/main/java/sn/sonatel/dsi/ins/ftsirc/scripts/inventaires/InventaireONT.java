@@ -16,7 +16,7 @@ import org.snmp4j.util.TreeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
+import sn.sonatel.dsi.ins.ftsirc.service.DiagnosticService;
 import sn.sonatel.dsi.ins.ftsirc.service.OLTService;
 import sn.sonatel.dsi.ins.ftsirc.service.ONTService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
@@ -39,15 +39,20 @@ public class InventaireONT implements CommandLineRunner {
     @Autowired
     ONTMapper ontMapper;
 
+    @Autowired
+    DiagnosticService diagnosticService;
+
     @Override
     public void run(String... args) throws Exception {
-        //                                Long id = Long.parseLong("2489");
-        //                                List<ONTDTO> listONTs;
-        //                                Optional<OLTDTO> oltdto = oltService.findOne(id);
-        //                                OLTDTO ontdto = oltdto.orElseThrow();
-        //                                listONTs = getAllONTOnOLT(ontdto);
-        //                                ontService.saveListONT(ontMapper.toEntity(listONTs));
-        //        ontService.updateALLONTS();
+        //        Long id = Long.parseLong("2109");
+        //        List<ONTDTO> listONTs;
+        //        Optional<OLTDTO> oltdto = oltService.findOne(id);
+        //        OLTDTO ontdto = oltdto.orElseThrow();
+        //        listONTs = getAllONTOnOLT(ontdto);
+        //        ontService.saveListONT(ontMapper.toEntity(listONTs));
+        System.out.println("Debut diagnostic:");
+        diagnosticService.diagnosticFiberCut("338331307");
+        System.out.println("Fin diagnostic:");
     }
 
     public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {
