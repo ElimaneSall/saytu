@@ -107,8 +107,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ontId = ont.getOntIP();
                 String vendeur = ont.getOlt().getVendeur();
 
-                String currentAlarmList = getCurrentAlarms(ip, ontId, index, vendeur);
-                String ontpower = getRxOpticalPower(ip, ontId, index, vendeur);
+                String currentAlarmList = getCurrentAlarms(ip, index, ontId, vendeur);
+                String ontpower = getRxOpticalPower(ip, index, ontId, vendeur);
 
                 if (ontpower.equals("KO") && currentAlarmList.equals("KO")) {
                     System.out.println(
@@ -133,7 +133,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
         Snmp snmp = new Snmp(transport);
         transport.listen();
-        if (vendeur.equals("NOKIA")) {
+        if (vendeur.toUpperCase().equals("NOKIA")) {
             oid_ont = "1.3.6.1.4.1.637.61.1.35.10.4.1.2" + "." + index;
             target.setCommunity(new OctetString("t1HAI2nai"));
             target.setAddress(new UdpAddress(ip + "/" + "161"));
@@ -163,7 +163,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                     }
                 }
             }
-        } else if (vendeur.equals("HUAWEI")) {
+        } else if (vendeur.toUpperCase().equals("HUAWEI")) {
             oid_ont = "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.24" + "." + index + "." + ontId;
             target.setCommunity(new OctetString("OLT@osn_read"));
             target.setAddress(new UdpAddress(ip + "/" + "161"));
@@ -179,7 +179,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
                     String result = varBind.getVariable().toString();
                     if (result.equals("1") || result.equals("2") || result.equals("3") || result.equals("4")) {
-                        //                    System.out.println("result:" + result);;
+                        System.out.println("result:" + result);
                         checkFiberCut = "KO";
                     } else {
                         checkFiberCut = "OK";
@@ -199,7 +199,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
         Snmp snmp = new Snmp(transport);
         transport.listen();
-        if (vendeur.equals("NOKIA")) {
+        if (vendeur.toUpperCase().equals("NOKIA")) {
             oid_ont = "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index;
             target.setCommunity(new OctetString("t1HAI2nai"));
             target.setAddress(new UdpAddress(ip + "/" + "161"));
@@ -214,7 +214,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
                     ontpower = varBind.getVariable().toString();
-                    //System.out.println("Ontpower:" + ontpower);
                     if (ontpower.equals("32768")) {
                         opticalPower = "KO";
                     } else {
@@ -222,7 +221,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                     }
                 }
             }
-        } else if (vendeur.equals("HUAWEI")) {
+        } else if (vendeur.toUpperCase().equals("HUAWEI")) {
             oid_ont = "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + ontId;
             target.setCommunity(new OctetString("OLT@osn_read"));
             target.setAddress(new UdpAddress(ip + "/" + "161"));
@@ -237,7 +236,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
                     ontpower = varBind.getVariable().toString();
-                    //System.out.println("Ontpower:" + ontpower);
+                    System.out.println("Ontpower:" + ontpower);
                     if (ontpower.equals("2147483647")) {
                         opticalPower = "KO";
                     } else {
