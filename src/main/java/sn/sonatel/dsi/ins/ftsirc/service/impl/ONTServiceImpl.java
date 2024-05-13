@@ -79,30 +79,36 @@ public class ONTServiceImpl implements ONTService {
     public void updateALLONTS() {
         List<OLT> oltList = oltRepository.findAll();
 
-        for (OLT olt : oltList) {
+        for (OLT olt : oltList.subList(1, 2)) {
             List<ONT> listONTs = new ArrayList<>();
             listONTs = getAllONTOnOLT(olt.getId());
-            //            for (ONT newONT : listONTs.getFirst();) {
-            ONT newONT = listONTs.get(2);
-            ONT oldONT = this.findByServiceId(newONT.getServiceId());
+            for (ONT newONT : listONTs) {
+                System.out.println(newONT.getOlt().getLibelle() + " (" + newONT.getOlt().getIp() + ")");
+                Optional<ONT> oldONTOptional = this.findByServiceId(newONT.getServiceId());
 
-            // check if newONT exist in ONT table
-            if (oldONT == null) {
-                this.save(oNTMapper.toDto(newONT));
-            }
-            // check if oltONT and newONT have a same informations
-            else if (
-                oldONT.getOlt().equals(newONT.getOlt()) ||
-                oldONT.getPonIndex().equals(newONT.getPonIndex()) ||
-                !newONT.getServiceId().startsWith("33")
-            ) {
-                continue;
-            } else {
-                // check good ONT
+                // check if newONT exist in ONT table
+                if (oldONTOptional.isEmpty()) {
+                    System.out.println("ONT saving " + newONT.getServiceId());
+                    this.save(oNTMapper.toDto(newONT));
+                }
+                // check if oltONT and newONT have a same informations
 
-                // update
-                this.update(oNTMapper.toDto(newONT));
-                System.out.println("ONT saving " + newONT.getServiceId());
+                else if (
+                    oldONTOptional.get().getOlt().equals(newONT.getOlt()) ||
+                    oldONTOptional.get().getPonIndex().equals(newONT.getPonIndex()) ||
+                    oldONTOptional.get().getIndex().equals(newONT.getIndex()) ||
+                    oldONTOptional.get().getSlot().equals(newONT.getSlot()) ||
+                    oldONTOptional.get().getPon().equals(newONT.getPon()) ||
+                    !newONT.getServiceId().startsWith("33")
+                ) {
+                    continue;
+                } else {
+                    // check good ONT
+
+                    // update
+                    this.update(oNTMapper.toDto(newONT));
+                    System.out.println("ONT updating " + newONT.getServiceId());
+                }
             }
         }
     }
@@ -200,22 +206,7 @@ public class ONTServiceImpl implements ONTService {
                         String index = String.valueOf(varBinding.getOid().last());
                         long ponIndex = (long) ((slot + 1) * Math.pow(2, 25) + 13 * Math.pow(2, 21) + (pon - 1) * Math.pow(2, 16));
                         String numberPhone = varBinding.getVariable().toString().replace(" ", "");
-                        System.out.println(
-                            "ponIndex: " +
-                            ponIndex +
-                            ", ontId: " +
-                            ontId +
-                            ", index: " +
-                            index +
-                            ", numberPhone: " +
-                            numberPhone +
-                            ", slot: " +
-                            slot +
-                            ", pon: " +
-                            pon +
-                            ", " +
-                            binary_
-                        );
+
                         ont.setOlt(olt);
                         ont.setIndex(index);
                         ont.setServiceId(numberPhone);
@@ -240,25 +231,6 @@ public class ONTServiceImpl implements ONTService {
                             shelf * Math.pow(2, 19) +
                             slot * Math.pow(2, 13) +
                             pon * Math.pow(2, 8));
-
-                        System.out.println(
-                            "ponIndex: " +
-                            ponIndex +
-                            ", shelf: " +
-                            shelf +
-                            ", index: " +
-                            index +
-                            ", IP: " +
-                            olt.getIp() +
-                            ", numberPhone: " +
-                            serviceId +
-                            ", slot: " +
-                            slot +
-                            ", pon: " +
-                            pon +
-                            ", " +
-                            _oid
-                        );
 
                         ont.setOlt(olt);
                         ont.setIndex(String.valueOf(index));
@@ -296,7 +268,7 @@ public class ONTServiceImpl implements ONTService {
 
     @Override
     @Transactional(readOnly = true)
-    public ONT findByServiceId(String serviceId) {
+    public Optional<ONT> findByServiceId(String serviceId) {
         log.debug("Request to get ONT : {}", serviceId);
         return oNTRepository.findByServiceId(serviceId);
     }

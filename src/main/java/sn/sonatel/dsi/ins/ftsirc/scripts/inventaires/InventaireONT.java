@@ -214,4 +214,10 @@ public class InventaireONT implements CommandLineRunner {
         System.out.println("Fin inventaire");
         return listONTs;
     }
+
+    public void getPowerOLT(String serviceId) {
+        ONT ont = ontService.findByServiceId(serviceId).get();
+
+        if (!ont) {}
+    }
 }
