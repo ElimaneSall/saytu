@@ -2,6 +2,7 @@ package sn.sonatel.dsi.ins.ftsirc.scripts.inventaires;
 
 import java.io.IOException;
 import java.util.*;
+import org.hibernate.Session;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
@@ -16,6 +17,8 @@ import org.snmp4j.util.TreeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
+import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.DiagnosticService;
 import sn.sonatel.dsi.ins.ftsirc.service.OLTService;
 import sn.sonatel.dsi.ins.ftsirc.service.ONTService;
@@ -40,6 +43,9 @@ public class InventaireONT implements CommandLineRunner {
     ONTMapper ontMapper;
 
     @Autowired
+    ONTRepository ontRepository;
+
+    @Autowired
     DiagnosticService diagnosticService;
 
     @Override
@@ -51,7 +57,9 @@ public class InventaireONT implements CommandLineRunner {
         //        listONTs = getAllONTOnOLT(ontdto);
         //        ontService.saveListONT(ontMapper.toEntity(listONTs));
         System.out.println("Debut diagnostic:");
-        diagnosticService.diagnosticFiberCut("338331307");
+        //        diagnosticService.diagnosticFiberCut("338331307");
+        this.getPowerOLT("338603573");
+
         System.out.println("Fin diagnostic:");
     }
 
@@ -215,9 +223,31 @@ public class InventaireONT implements CommandLineRunner {
         return listONTs;
     }
 
-    public void getPowerOLT(String serviceId) {
-        ONT ont = ontService.findByServiceId(serviceId).get();
+    public void getPowerOLT(String serviceId) throws IOException {
+        ONT ont = ontRepository.findByServiceId(serviceId).get();
+        String oid_ont = "";
 
-        if (!ont) {}
+        CommunityTarget target = new CommunityTarget();
+        TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
+        Snmp snmp = new Snmp(transport);
+        transport.listen();
+        String vendeur = ont.getOlt().getVendeur();
+        System.out.println(vendeur);
+        if (ont.getOlt().getVendeur().equals("NOKIA")) {
+            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.4.1.2" + "." + ont.getIndex();
+            target.setCommunity(new OctetString("t1HAI2nai"));
+            target.setAddress(new UdpAddress(ont.getOlt().getIp() + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid_ont)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {}
+            }
+        }
     }
 }
