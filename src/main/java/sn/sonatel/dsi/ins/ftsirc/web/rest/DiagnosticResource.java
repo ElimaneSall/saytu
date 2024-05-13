@@ -30,7 +30,7 @@ import tech.jhipster.web.util.ResponseUtil;
  * REST controller for managing {@link sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic}.
  */
 @RestController
-@RequestMapping("/api/diagnostics")
+@RequestMapping("/api/")
 public class DiagnosticResource {
 
     private final Logger log = LoggerFactory.getLogger(DiagnosticResource.class);
@@ -63,7 +63,7 @@ public class DiagnosticResource {
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new diagnosticDTO, or with status {@code 400 (Bad Request)} if the diagnostic has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PostMapping("")
+    @PostMapping("diagnostics")
     public ResponseEntity<DiagnosticDTO> createDiagnostic(@Valid @RequestBody DiagnosticDTO diagnosticDTO) throws URISyntaxException {
         log.debug("REST request to save Diagnostic : {}", diagnosticDTO);
         if (diagnosticDTO.getId() != null) {
@@ -85,7 +85,7 @@ public class DiagnosticResource {
      * or with status {@code 500 (Internal Server Error)} if the diagnosticDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PutMapping("/{id}")
+    @PutMapping("diagnostics/{id}")
     public ResponseEntity<DiagnosticDTO> updateDiagnostic(
         @PathVariable(value = "id", required = false) final Long id,
         @Valid @RequestBody DiagnosticDTO diagnosticDTO
@@ -119,7 +119,7 @@ public class DiagnosticResource {
      * or with status {@code 500 (Internal Server Error)} if the diagnosticDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PatchMapping(value = "diagnostics/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<DiagnosticDTO> partialUpdateDiagnostic(
         @PathVariable(value = "id", required = false) final Long id,
         @NotNull @RequestBody DiagnosticDTO diagnosticDTO
@@ -151,7 +151,7 @@ public class DiagnosticResource {
      * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of diagnostics in body.
      */
-    @GetMapping("")
+    @GetMapping("diagnostics")
     public ResponseEntity<List<DiagnosticDTO>> getAllDiagnostics(
         DiagnosticCriteria criteria,
         @org.springdoc.core.annotations.ParameterObject Pageable pageable
@@ -169,7 +169,7 @@ public class DiagnosticResource {
      * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
-    @GetMapping("/count")
+    @GetMapping("diagnostics/count")
     public ResponseEntity<Long> countDiagnostics(DiagnosticCriteria criteria) {
         log.debug("REST request to count Diagnostics by criteria: {}", criteria);
         return ResponseEntity.ok().body(diagnosticQueryService.countByCriteria(criteria));
@@ -181,11 +181,11 @@ public class DiagnosticResource {
      * @param serviceId the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
-    @GetMapping("/fibre/{serviceId}")
-    public ResponseEntity<String> diagnosticFibre(@PathVariable("serviceId") Long serviceId) {
+    @GetMapping(value = "diagnostics/fibre")
+    public ResponseEntity<String> diagnosticFibre(@RequestParam("serviceId") String serviceId) {
         System.out.println("Elimane Sall");
         log.debug("REST request to diagnose by serviceId: {}", serviceId);
-        return ResponseEntity.ok().body(diagnosticService.diagnosticFiberCut(String.valueOf(serviceId)));
+        return ResponseEntity.ok().body(diagnosticService.diagnosticFiberCut(serviceId));
         //        return ResponseEntity.ok("Hello World! " );
     }
 
@@ -195,7 +195,7 @@ public class DiagnosticResource {
      * @param id the id of the diagnosticDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the diagnosticDTO, or with status {@code 404 (Not Found)}.
      */
-    @GetMapping("/{id}")
+    @GetMapping(value = "diagnostics/{id}")
     public ResponseEntity<DiagnosticDTO> getDiagnostic(@PathVariable("id") Long id) {
         log.debug("REST request to get Diagnostic : {}", id);
         Optional<DiagnosticDTO> diagnosticDTO = diagnosticService.findOne(id);
@@ -208,7 +208,7 @@ public class DiagnosticResource {
      * @param id the id of the diagnosticDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("diagnostics/{id}")
     public ResponseEntity<Void> deleteDiagnostic(@PathVariable("id") Long id) {
         log.debug("REST request to delete Diagnostic : {}", id);
         diagnosticService.delete(id);

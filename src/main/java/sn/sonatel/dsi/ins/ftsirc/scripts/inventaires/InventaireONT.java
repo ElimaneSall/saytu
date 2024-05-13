@@ -16,6 +16,7 @@ import org.snmp4j.util.TreeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.service.OLTService;
 import sn.sonatel.dsi.ins.ftsirc.service.ONTService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
@@ -40,13 +41,13 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //                Long id = Long.parseLong("2109");
-        //                List<ONTDTO> listONTs;
-        //                Optional<OLTDTO> oltdto = oltService.findOne(id);
-        //                OLTDTO ontdto = oltdto.orElseThrow();
-        //                listONTs = getAllONTOnOLT(ontdto);
-        //                ontService.saveListONT(ontMapper.toEntity(listONTs));
-
+        //                                Long id = Long.parseLong("2489");
+        //                                List<ONTDTO> listONTs;
+        //                                Optional<OLTDTO> oltdto = oltService.findOne(id);
+        //                                OLTDTO ontdto = oltdto.orElseThrow();
+        //                                listONTs = getAllONTOnOLT(ontdto);
+        //                                ontService.saveListONT(ontMapper.toEntity(listONTs));
+        //        ontService.updateALLONTS();
     }
 
     public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {
@@ -207,5 +208,11 @@ public class InventaireONT implements CommandLineRunner {
         }
         System.out.println("Fin inventaire");
         return listONTs;
+    }
+
+    public void getPowerOLT(String serviceId) {
+        ONT ont = ontService.findByServiceId(serviceId).get();
+
+        if (!ont) {}
     }
 }
