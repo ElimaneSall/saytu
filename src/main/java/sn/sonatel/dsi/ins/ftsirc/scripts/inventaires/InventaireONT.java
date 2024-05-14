@@ -50,15 +50,15 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //                Long id = Long.parseLong("5232");
-        //                List<ONTDTO> listONTs;
-        //                Optional<OLTDTO> oltdto = oltService.findOne(id);
-        //                OLTDTO ontdto = oltdto.orElseThrow();
-        //                listONTs = getAllONTOnOLT(ontdto);
-        //                ontService.saveListONT(ontMapper.toEntity(listONTs));
+                        Long id = Long.parseLong("2522");
+                        List<ONTDTO> listONTs;
+                        Optional<OLTDTO> oltdto = oltService.findOne(id);
+                        OLTDTO ontdto = oltdto.orElseThrow();
+                        listONTs = getAllONTOnOLT(ontdto);
+                        ontService.saveListONT(ontMapper.toEntity(listONTs));
         System.out.println("Debut diagnostic:");
-        //        diagnosticService.diagnosticFiberCut("338331307");
-        this.getPowerOLT("338603573");
+//                diagnosticService.diagnosticFiberCut("338331307");
+//        this.getPowerONT("339714501");
 
         System.out.println("Fin diagnostic:");
     }
@@ -223,18 +223,19 @@ public class InventaireONT implements CommandLineRunner {
         return listONTs;
     }
 
-    public void getPowerOLT(String serviceId) throws IOException {
-        ONT ont = ontRepository.findByServiceId(serviceId).get();
+    public void getPowerONT(String serviceId) throws IOException {
+        ONT ont = ontRepository.findByServiceId(serviceId);
         String oid_ont = "";
 
         CommunityTarget target = new CommunityTarget();
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
         Snmp snmp = new Snmp(transport);
         transport.listen();
-        String vendeur = ont.getOlt().getVendeur();
-        System.out.println(vendeur);
-        if (ont.getOlt().getVendeur().equals("NOKIA")) {
-            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.4.1.2" + "." + ont.getIndex();
+        String vendeur = ont.getPonIndex();
+        System.out.println("vendeur >>"+ont.getOlt().getVendeur());
+        if (ont.getOlt().getVendeur().toUpperCase().equals("NOKIA")) {
+
+            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + ont.getIndex() ;
             target.setCommunity(new OctetString("t1HAI2nai"));
             target.setAddress(new UdpAddress(ont.getOlt().getIp() + "/" + "161"));
             target.setRetries(20);
@@ -246,7 +247,10 @@ public class InventaireONT implements CommandLineRunner {
 
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
-                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {}
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+
+                    System.out.println("return >>"+ varBind.getVariable());
+                }
             }
         }
     }

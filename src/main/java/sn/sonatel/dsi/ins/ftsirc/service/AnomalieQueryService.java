@@ -8,8 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sn.sonatel.dsi.ins.ftsirc.domain.*; // for static metamodels
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
+import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie_;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic_;
 import sn.sonatel.dsi.ins.ftsirc.repository.AnomalieRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.criteria.AnomalieCriteria;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.AnomalieDTO;

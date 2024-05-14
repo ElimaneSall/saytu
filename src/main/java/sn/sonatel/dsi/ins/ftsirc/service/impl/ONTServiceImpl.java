@@ -84,21 +84,21 @@ public class ONTServiceImpl implements ONTService {
             listONTs = getAllONTOnOLT(olt.getId());
             for (ONT newONT : listONTs) {
                 System.out.println(newONT.getOlt().getLibelle() + " (" + newONT.getOlt().getIp() + ")");
-                Optional<ONT> oldONTOptional = this.findByServiceId(newONT.getServiceId());
+                ONT oldONTOptional = this.findByServiceId(newONT.getServiceId());
 
                 // check if newONT exist in ONT table
-                if (oldONTOptional.isEmpty()) {
+                if (oldONTOptional != null) {
                     System.out.println("ONT saving " + newONT.getServiceId());
                     this.save(oNTMapper.toDto(newONT));
                 }
                 // check if oltONT and newONT have a same informations
 
                 else if (
-                    oldONTOptional.get().getOlt().equals(newONT.getOlt()) ||
-                    oldONTOptional.get().getPonIndex().equals(newONT.getPonIndex()) ||
-                    oldONTOptional.get().getIndex().equals(newONT.getIndex()) ||
-                    oldONTOptional.get().getSlot().equals(newONT.getSlot()) ||
-                    oldONTOptional.get().getPon().equals(newONT.getPon()) ||
+                    oldONTOptional.getOlt().equals(newONT.getOlt()) ||
+                    oldONTOptional.getPonIndex().equals(newONT.getPonIndex()) ||
+                    oldONTOptional.getIndex().equals(newONT.getIndex()) ||
+                    oldONTOptional.getSlot().equals(newONT.getSlot()) ||
+                    oldONTOptional.getPon().equals(newONT.getPon()) ||
                     !newONT.getServiceId().startsWith("33")
                 ) {
                     continue;
@@ -268,7 +268,7 @@ public class ONTServiceImpl implements ONTService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ONT> findByServiceId(String serviceId) {
+    public ONT findByServiceId(String serviceId) {
         log.debug("Request to get ONT : {}", serviceId);
         return oNTRepository.findByServiceId(serviceId);
     }

@@ -67,7 +67,7 @@ public class ONT implements Serializable {
     @JoinColumn(unique = true)
     private Client client;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = { "onts" }, allowSetters = true)
     private OLT olt;
 

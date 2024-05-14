@@ -81,7 +81,7 @@ public interface ONTService {
      * @param serviceId the id of the OLT.
      * @return the entity.
      */
-    Optional<ONT> findByServiceId(String serviceId);
+   ONT findByServiceId(String serviceId);
 
     /**
      * Delete the "id" oNT.
