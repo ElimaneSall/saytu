@@ -1,4 +1,4 @@
-package sn.sonatel.dsi.ins.ftsirc.scripts.inventaires;
+package sn.sonatel.dsi.ins.ftsirc.scripts;
 
 import java.io.IOException;
 import java.util.*;
