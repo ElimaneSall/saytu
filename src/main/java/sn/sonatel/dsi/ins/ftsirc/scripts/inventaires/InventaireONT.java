@@ -50,15 +50,15 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-                        Long id = Long.parseLong("2522");
-                        List<ONTDTO> listONTs;
-                        Optional<OLTDTO> oltdto = oltService.findOne(id);
-                        OLTDTO ontdto = oltdto.orElseThrow();
-                        listONTs = getAllONTOnOLT(ontdto);
-                        ontService.saveListONT(ontMapper.toEntity(listONTs));
+//                        Long id = Long.parseLong("2522");
+//                        List<ONTDTO> listONTs;
+//                        Optional<OLTDTO> oltdto = oltService.findOne(id);
+//                        OLTDTO ontdto = oltdto.orElseThrow();
+//                        listONTs = getAllONTOnOLT(ontdto);
+//                        ontService.saveListONT(ontMapper.toEntity(listONTs));
         System.out.println("Debut diagnostic:");
 //                diagnosticService.diagnosticFiberCut("338331307");
-//        this.getPowerONT("339714501");
+        this.getPowerONT("338243660");
 
         System.out.println("Fin diagnostic:");
     }
@@ -235,7 +235,7 @@ public class InventaireONT implements CommandLineRunner {
         System.out.println("vendeur >>"+ont.getOlt().getVendeur());
         if (ont.getOlt().getVendeur().toUpperCase().equals("NOKIA")) {
 
-            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + ont.getIndex() ;
+            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + ont.getIndex() ;
             target.setCommunity(new OctetString("t1HAI2nai"));
             target.setAddress(new UdpAddress(ont.getOlt().getIp() + "/" + "161"));
             target.setRetries(20);
@@ -249,6 +249,7 @@ public class InventaireONT implements CommandLineRunner {
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
 
+                    System.out.println(varBind);
                     System.out.println("return >>"+ varBind.getVariable());
                 }
             }
