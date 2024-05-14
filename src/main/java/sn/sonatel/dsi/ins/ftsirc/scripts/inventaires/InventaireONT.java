@@ -58,7 +58,6 @@ public class InventaireONT implements CommandLineRunner {
 //                        ontService.saveListONT(ontMapper.toEntity(listONTs));
         System.out.println("Debut diagnostic:");
 //                diagnosticService.diagnosticFiberCut("338331307");
-        this.getPowerONT("338243660");
 
         System.out.println("Fin diagnostic:");
     }
@@ -223,36 +222,37 @@ public class InventaireONT implements CommandLineRunner {
         return listONTs;
     }
 
-    public void getPowerONT(String serviceId) throws IOException {
-        ONT ont = ontRepository.findByServiceId(serviceId);
-        String oid_ont = "";
+    public Variable getPowerONT(String vendeur, String index, String ip, String _ont_) throws IOException {
+        TransportMapping<?> transport = null;
+        try {
 
-        CommunityTarget target = new CommunityTarget();
-        TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
-        Snmp snmp = new Snmp(transport);
-        transport.listen();
-        String vendeur = ont.getPonIndex();
-        System.out.println("vendeur >>"+ont.getOlt().getVendeur());
-        if (ont.getOlt().getVendeur().toUpperCase().equals("NOKIA")) {
+            transport = new DefaultUdpTransportMapping();
+            Snmp snmp = new Snmp(transport);
+            transport.listen();
 
-            oid_ont = "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + ont.getIndex() ;
-            target.setCommunity(new OctetString("t1HAI2nai"));
-            target.setAddress(new UdpAddress(ont.getOlt().getIp() + "/" + "161"));
-            target.setRetries(20);
-            target.setTimeout(2000);
+            CommunityTarget target = new CommunityTarget();
+            target.setCommunity(new OctetString(vendeur.equalsIgnoreCase("NOKIA") ? "t1HAI2nai" : "OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/161"));
+            target.setRetries(2);
+            target.setTimeout(1500);
             target.setVersion(SnmpConstants.version2c);
+
+            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + _ont_ );
             PDU pdu = new PDU();
-            pdu.add(new VariableBinding(new OID(oid_ont)));
+            pdu.add(new VariableBinding(new OID(oid)));
             pdu.setType(PDU.GET);
 
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
 
-                    System.out.println(varBind);
-                    System.out.println("return >>"+ varBind.getVariable());
+                    return  varBind.getVariable();
                 }
             }
+        } catch (Exception e) {
+            System.err.println(e);
         }
-    }
-}
+
+        return null;
+
+    }}
