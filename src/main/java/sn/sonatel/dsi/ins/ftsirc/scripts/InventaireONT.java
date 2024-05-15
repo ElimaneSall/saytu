@@ -149,7 +149,7 @@ public class InventaireONT implements CommandLineRunner {
                         ontdto.setSlot(String.valueOf(slot));
                         ontdto.setPon(String.valueOf(pon));
                         ontdto.setPonIndex(String.valueOf(ponIndex));
-                        ontdto.setOntIP(String.valueOf(ontId));
+                        ontdto.setOntID(String.valueOf(ontId));
                         listONTs.add(ontdto);
                     } else if (olt.getVendeur().equals("HUAWEI")) {
                         String _oid = String.valueOf(varBinding.getOid());
@@ -193,7 +193,7 @@ public class InventaireONT implements CommandLineRunner {
                         ontdto.setSlot(String.valueOf(slot));
                         ontdto.setPon(String.valueOf(pon));
                         ontdto.setPonIndex(String.valueOf(ponIndex));
-                        ontdto.setOntIP(String.valueOf(ontId));
+                        ontdto.setOntID(String.valueOf(ontId));
                         listONTs.add(ontdto);
                     } else {
                         System.out.println("La longueur binaire depasse 25 ou n'est pas de Huawei ni de Nokia");

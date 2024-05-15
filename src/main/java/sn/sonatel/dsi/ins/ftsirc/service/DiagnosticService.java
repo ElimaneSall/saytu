@@ -1,8 +1,10 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
+import java.io.IOException;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.DiagnosticDTO;
 
 /**
@@ -63,4 +65,7 @@ public interface DiagnosticService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+    public String diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
+    public String diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
+
 }
