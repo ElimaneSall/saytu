@@ -377,4 +377,9 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         }
         return "";
     }
+
+    @Override
+    public String diagnosticDebit(ONT ont) throws IOException {
+        return null;
+    }
 }

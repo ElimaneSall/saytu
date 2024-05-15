@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.web.rest;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,13 +48,14 @@ public class DiagnosticResource {
     private final DiagnosticRepository diagnosticRepository;
 
     private final DiagnosticQueryService diagnosticQueryService;
-    private  final ONTRepository ontRepository;
+    private final ONTRepository ontRepository;
 
     public DiagnosticResource(
         DiagnosticService diagnosticService,
         DiagnosticRepository diagnosticRepository,
         DiagnosticQueryService diagnosticQueryService,
-        ONTRepository ontRepository) {
+        ONTRepository ontRepository
+    ) {
         this.diagnosticService = diagnosticService;
         this.diagnosticRepository = diagnosticRepository;
         this.diagnosticQueryService = diagnosticQueryService;
@@ -76,8 +76,7 @@ public class DiagnosticResource {
             throw new BadRequestAlertException("A new diagnostic cannot already have an ID", ENTITY_NAME, "idexists");
         }
         DiagnosticDTO result = diagnosticService.save(diagnosticDTO);
-        return ResponseEntity
-            .created(new URI("/api/diagnostics/" + result.getId()))
+        return ResponseEntity.created(new URI("/api/diagnostics/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
@@ -110,8 +109,7 @@ public class DiagnosticResource {
         }
 
         DiagnosticDTO result = diagnosticService.update(diagnosticDTO);
-        return ResponseEntity
-            .ok()
+        return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, diagnosticDTO.getId().toString()))
             .body(result);
     }
@@ -206,8 +204,7 @@ public class DiagnosticResource {
     public ResponseEntity<Void> deleteDiagnostic(@PathVariable("id") Long id) {
         log.debug("REST request to delete Diagnostic : {}", id);
         diagnosticService.delete(id);
-        return ResponseEntity
-            .noContent()
+        return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
@@ -222,10 +219,10 @@ public class DiagnosticResource {
     public ResponseEntity<String> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
         ONT ont = ontRepository.findByServiceId(serviceId);
+        diagnosticService.diagnosticFiberCut(ont);
         diagnosticService.diagnosticOLTPowerUnderLimit(ont);
         diagnosticService.diagnosticOLTPowerUnderLimit(ont);
 
         return ResponseEntity.ok().body("Ok");
     }
-
 }

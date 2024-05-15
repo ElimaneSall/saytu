@@ -70,5 +70,7 @@ public interface DiagnosticService {
 
     public String diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
 
+    public String diagnosticDebit(ONT ont) throws IOException;
+
     public String diagnosticPowerSupply(ONT ont) throws IOException;
 }
