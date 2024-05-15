@@ -73,4 +73,5 @@ public interface DiagnosticService {
     public String diagnosticDebit(ONT ont) throws IOException;
 
     public String diagnosticPowerSupply(ONT ont) throws IOException;
+    public String diagnosticFiberCut(ONT ont);
 }

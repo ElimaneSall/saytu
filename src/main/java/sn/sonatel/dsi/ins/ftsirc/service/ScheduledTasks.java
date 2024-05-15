@@ -18,7 +18,7 @@ public class ScheduledTasks {
         this.ontService = ontService;
     }
 
-    @Scheduled(cron = " 0 14 13 * * *")
+    @Scheduled(cron = " 0 25 16 * * *")
     public void updateOLT() {
         log.debug("Started OLT UPDATE CRON");
         oltService.updateOLT("C:\\Users\\Surface\\Desktop\\Sonatel_2023\\saytou\\saytu-project\\saytu-backend\\OLT_OSN_22.04.24.xlsx");
