@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link Signal} entities in the database.
  * The main input is a {@link SignalCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link SignalDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link SignalDTO} or a {@link Page} of {@link SignalDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +36,18 @@ public class SignalQueryService extends QueryService<Signal> {
     public SignalQueryService(SignalRepository signalRepository, SignalMapper signalMapper) {
         this.signalRepository = signalRepository;
         this.signalMapper = signalMapper;
+    }
+
+    /**
+     * Return a {@link List} of {@link SignalDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<SignalDTO> findByCriteria(SignalCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<Signal> specification = createSpecification(criteria);
+        return signalMapper.toDto(signalRepository.findAll(specification));
     }
 
     /**
@@ -87,12 +100,13 @@ public class SignalQueryService extends QueryService<Signal> {
                 specification = specification.and(buildRangeSpecification(criteria.getSeuilMax(), Signal_.seuilMax));
             }
             if (criteria.getDiagnosticId() != null) {
-                specification = specification.and(
-                    buildSpecification(
-                        criteria.getDiagnosticId(),
-                        root -> root.join(Signal_.diagnostics, JoinType.LEFT).get(Diagnostic_.id)
-                    )
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(
+                            criteria.getDiagnosticId(),
+                            root -> root.join(Signal_.diagnostics, JoinType.LEFT).get(Diagnostic_.id)
+                        )
+                    );
             }
         }
         return specification;

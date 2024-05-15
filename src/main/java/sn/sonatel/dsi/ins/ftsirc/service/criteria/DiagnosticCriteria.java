@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
@@ -83,16 +82,16 @@ public class DiagnosticCriteria implements Serializable, Criteria {
     public DiagnosticCriteria() {}
 
     public DiagnosticCriteria(DiagnosticCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.index = other.optionalIndex().map(StringFilter::copy).orElse(null);
-        this.statutONT = other.optionalStatutONT().map(StatutONTFilter::copy).orElse(null);
-        this.debitUp = other.optionalDebitUp().map(StringFilter::copy).orElse(null);
-        this.debitDown = other.optionalDebitDown().map(StringFilter::copy).orElse(null);
-        this.dateDiagnostic = other.optionalDateDiagnostic().map(LocalDateFilter::copy).orElse(null);
-        this.typeDiagnostic = other.optionalTypeDiagnostic().map(TypeDiagnosticFilter::copy).orElse(null);
-        this.signalId = other.optionalSignalId().map(LongFilter::copy).orElse(null);
-        this.ontId = other.optionalOntId().map(LongFilter::copy).orElse(null);
-        this.anomalieId = other.optionalAnomalieId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.index = other.index == null ? null : other.index.copy();
+        this.statutONT = other.statutONT == null ? null : other.statutONT.copy();
+        this.debitUp = other.debitUp == null ? null : other.debitUp.copy();
+        this.debitDown = other.debitDown == null ? null : other.debitDown.copy();
+        this.dateDiagnostic = other.dateDiagnostic == null ? null : other.dateDiagnostic.copy();
+        this.typeDiagnostic = other.typeDiagnostic == null ? null : other.typeDiagnostic.copy();
+        this.signalId = other.signalId == null ? null : other.signalId.copy();
+        this.ontId = other.ontId == null ? null : other.ontId.copy();
+        this.anomalieId = other.anomalieId == null ? null : other.anomalieId.copy();
         this.distinct = other.distinct;
     }
 
@@ -105,13 +104,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -124,13 +119,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return index;
     }
 
-    public Optional<StringFilter> optionalIndex() {
-        return Optional.ofNullable(index);
-    }
-
     public StringFilter index() {
         if (index == null) {
-            setIndex(new StringFilter());
+            index = new StringFilter();
         }
         return index;
     }
@@ -143,13 +134,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return statutONT;
     }
 
-    public Optional<StatutONTFilter> optionalStatutONT() {
-        return Optional.ofNullable(statutONT);
-    }
-
     public StatutONTFilter statutONT() {
         if (statutONT == null) {
-            setStatutONT(new StatutONTFilter());
+            statutONT = new StatutONTFilter();
         }
         return statutONT;
     }
@@ -162,13 +149,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return debitUp;
     }
 
-    public Optional<StringFilter> optionalDebitUp() {
-        return Optional.ofNullable(debitUp);
-    }
-
     public StringFilter debitUp() {
         if (debitUp == null) {
-            setDebitUp(new StringFilter());
+            debitUp = new StringFilter();
         }
         return debitUp;
     }
@@ -181,13 +164,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return debitDown;
     }
 
-    public Optional<StringFilter> optionalDebitDown() {
-        return Optional.ofNullable(debitDown);
-    }
-
     public StringFilter debitDown() {
         if (debitDown == null) {
-            setDebitDown(new StringFilter());
+            debitDown = new StringFilter();
         }
         return debitDown;
     }
@@ -200,13 +179,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return dateDiagnostic;
     }
 
-    public Optional<LocalDateFilter> optionalDateDiagnostic() {
-        return Optional.ofNullable(dateDiagnostic);
-    }
-
     public LocalDateFilter dateDiagnostic() {
         if (dateDiagnostic == null) {
-            setDateDiagnostic(new LocalDateFilter());
+            dateDiagnostic = new LocalDateFilter();
         }
         return dateDiagnostic;
     }
@@ -219,13 +194,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return typeDiagnostic;
     }
 
-    public Optional<TypeDiagnosticFilter> optionalTypeDiagnostic() {
-        return Optional.ofNullable(typeDiagnostic);
-    }
-
     public TypeDiagnosticFilter typeDiagnostic() {
         if (typeDiagnostic == null) {
-            setTypeDiagnostic(new TypeDiagnosticFilter());
+            typeDiagnostic = new TypeDiagnosticFilter();
         }
         return typeDiagnostic;
     }
@@ -238,13 +209,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return signalId;
     }
 
-    public Optional<LongFilter> optionalSignalId() {
-        return Optional.ofNullable(signalId);
-    }
-
     public LongFilter signalId() {
         if (signalId == null) {
-            setSignalId(new LongFilter());
+            signalId = new LongFilter();
         }
         return signalId;
     }
@@ -257,13 +224,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return ontId;
     }
 
-    public Optional<LongFilter> optionalOntId() {
-        return Optional.ofNullable(ontId);
-    }
-
     public LongFilter ontId() {
         if (ontId == null) {
-            setOntId(new LongFilter());
+            ontId = new LongFilter();
         }
         return ontId;
     }
@@ -276,13 +239,9 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         return anomalieId;
     }
 
-    public Optional<LongFilter> optionalAnomalieId() {
-        return Optional.ofNullable(anomalieId);
-    }
-
     public LongFilter anomalieId() {
         if (anomalieId == null) {
-            setAnomalieId(new LongFilter());
+            anomalieId = new LongFilter();
         }
         return anomalieId;
     }
@@ -292,17 +251,6 @@ public class DiagnosticCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -355,17 +303,17 @@ public class DiagnosticCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "DiagnosticCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalIndex().map(f -> "index=" + f + ", ").orElse("") +
-            optionalStatutONT().map(f -> "statutONT=" + f + ", ").orElse("") +
-            optionalDebitUp().map(f -> "debitUp=" + f + ", ").orElse("") +
-            optionalDebitDown().map(f -> "debitDown=" + f + ", ").orElse("") +
-            optionalDateDiagnostic().map(f -> "dateDiagnostic=" + f + ", ").orElse("") +
-            optionalTypeDiagnostic().map(f -> "typeDiagnostic=" + f + ", ").orElse("") +
-            optionalSignalId().map(f -> "signalId=" + f + ", ").orElse("") +
-            optionalOntId().map(f -> "ontId=" + f + ", ").orElse("") +
-            optionalAnomalieId().map(f -> "anomalieId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (index != null ? "index=" + index + ", " : "") +
+            (statutONT != null ? "statutONT=" + statutONT + ", " : "") +
+            (debitUp != null ? "debitUp=" + debitUp + ", " : "") +
+            (debitDown != null ? "debitDown=" + debitDown + ", " : "") +
+            (dateDiagnostic != null ? "dateDiagnostic=" + dateDiagnostic + ", " : "") +
+            (typeDiagnostic != null ? "typeDiagnostic=" + typeDiagnostic + ", " : "") +
+            (signalId != null ? "signalId=" + signalId + ", " : "") +
+            (ontId != null ? "ontId=" + ontId + ", " : "") +
+            (anomalieId != null ? "anomalieId=" + anomalieId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

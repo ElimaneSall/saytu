@@ -6,14 +6,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.DiagnosticAsserts.*;
-import static sn.sonatel.dsi.ins.ftsirc.web.rest.TestUtil.createUpdateProxyForBean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,9 +72,6 @@ class DiagnosticResourceIT {
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
-    @Autowired
-    private ObjectMapper om;
 
     @Autowired
     private DiagnosticRepository diagnosticRepository;
@@ -140,25 +135,28 @@ class DiagnosticResourceIT {
     @Test
     @Transactional
     void createDiagnostic() throws Exception {
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = diagnosticRepository.findAll().size();
         // Create the Diagnostic
         DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(diagnostic);
-        var returnedDiagnosticDTO = om.readValue(
-            restDiagnosticMockMvc
-                .perform(
-                    post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(diagnosticDTO))
-                )
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            DiagnosticDTO.class
-        );
+        restDiagnosticMockMvc
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
+            )
+            .andExpect(status().isCreated());
 
         // Validate the Diagnostic in the database
-        assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
-        var returnedDiagnostic = diagnosticMapper.toEntity(returnedDiagnosticDTO);
-        assertDiagnosticUpdatableFieldsEquals(returnedDiagnostic, getPersistedDiagnostic(returnedDiagnostic));
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeCreate + 1);
+        Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
+        assertThat(testDiagnostic.getIndex()).isEqualTo(DEFAULT_INDEX);
+        assertThat(testDiagnostic.getStatutONT()).isEqualTo(DEFAULT_STATUT_ONT);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(DEFAULT_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(DEFAULT_DEBIT_DOWN);
+        assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(DEFAULT_DATE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(DEFAULT_TYPE_DIAGNOSTIC);
     }
 
     @Test
@@ -168,21 +166,27 @@ class DiagnosticResourceIT {
         diagnostic.setId(1L);
         DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(diagnostic);
 
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = diagnosticRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restDiagnosticMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(diagnosticDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeCreate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
     @Transactional
     void checkIndexIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = diagnosticRepository.findAll().size();
         // set the field null
         diagnostic.setIndex(null);
 
@@ -190,10 +194,16 @@ class DiagnosticResourceIT {
         DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(diagnostic);
 
         restDiagnosticMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(diagnosticDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -261,11 +271,14 @@ class DiagnosticResourceIT {
 
         Long id = diagnostic.getId();
 
-        defaultDiagnosticFiltering("id.equals=" + id, "id.notEquals=" + id);
+        defaultDiagnosticShouldBeFound("id.equals=" + id);
+        defaultDiagnosticShouldNotBeFound("id.notEquals=" + id);
 
-        defaultDiagnosticFiltering("id.greaterThanOrEqual=" + id, "id.greaterThan=" + id);
+        defaultDiagnosticShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultDiagnosticShouldNotBeFound("id.greaterThan=" + id);
 
-        defaultDiagnosticFiltering("id.lessThanOrEqual=" + id, "id.lessThan=" + id);
+        defaultDiagnosticShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultDiagnosticShouldNotBeFound("id.lessThan=" + id);
     }
 
     @Test
@@ -274,8 +287,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where index equals to
-        defaultDiagnosticFiltering("index.equals=" + DEFAULT_INDEX, "index.equals=" + UPDATED_INDEX);
+        // Get all the diagnosticList where index equals to DEFAULT_INDEX
+        defaultDiagnosticShouldBeFound("index.equals=" + DEFAULT_INDEX);
+
+        // Get all the diagnosticList where index equals to UPDATED_INDEX
+        defaultDiagnosticShouldNotBeFound("index.equals=" + UPDATED_INDEX);
     }
 
     @Test
@@ -284,8 +300,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where index in
-        defaultDiagnosticFiltering("index.in=" + DEFAULT_INDEX + "," + UPDATED_INDEX, "index.in=" + UPDATED_INDEX);
+        // Get all the diagnosticList where index in DEFAULT_INDEX or UPDATED_INDEX
+        defaultDiagnosticShouldBeFound("index.in=" + DEFAULT_INDEX + "," + UPDATED_INDEX);
+
+        // Get all the diagnosticList where index equals to UPDATED_INDEX
+        defaultDiagnosticShouldNotBeFound("index.in=" + UPDATED_INDEX);
     }
 
     @Test
@@ -295,7 +314,10 @@ class DiagnosticResourceIT {
         diagnosticRepository.saveAndFlush(diagnostic);
 
         // Get all the diagnosticList where index is not null
-        defaultDiagnosticFiltering("index.specified=true", "index.specified=false");
+        defaultDiagnosticShouldBeFound("index.specified=true");
+
+        // Get all the diagnosticList where index is null
+        defaultDiagnosticShouldNotBeFound("index.specified=false");
     }
 
     @Test
@@ -304,8 +326,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where index contains
-        defaultDiagnosticFiltering("index.contains=" + DEFAULT_INDEX, "index.contains=" + UPDATED_INDEX);
+        // Get all the diagnosticList where index contains DEFAULT_INDEX
+        defaultDiagnosticShouldBeFound("index.contains=" + DEFAULT_INDEX);
+
+        // Get all the diagnosticList where index contains UPDATED_INDEX
+        defaultDiagnosticShouldNotBeFound("index.contains=" + UPDATED_INDEX);
     }
 
     @Test
@@ -314,8 +339,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where index does not contain
-        defaultDiagnosticFiltering("index.doesNotContain=" + UPDATED_INDEX, "index.doesNotContain=" + DEFAULT_INDEX);
+        // Get all the diagnosticList where index does not contain DEFAULT_INDEX
+        defaultDiagnosticShouldNotBeFound("index.doesNotContain=" + DEFAULT_INDEX);
+
+        // Get all the diagnosticList where index does not contain UPDATED_INDEX
+        defaultDiagnosticShouldBeFound("index.doesNotContain=" + UPDATED_INDEX);
     }
 
     @Test
@@ -324,8 +352,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where statutONT equals to
-        defaultDiagnosticFiltering("statutONT.equals=" + DEFAULT_STATUT_ONT, "statutONT.equals=" + UPDATED_STATUT_ONT);
+        // Get all the diagnosticList where statutONT equals to DEFAULT_STATUT_ONT
+        defaultDiagnosticShouldBeFound("statutONT.equals=" + DEFAULT_STATUT_ONT);
+
+        // Get all the diagnosticList where statutONT equals to UPDATED_STATUT_ONT
+        defaultDiagnosticShouldNotBeFound("statutONT.equals=" + UPDATED_STATUT_ONT);
     }
 
     @Test
@@ -334,8 +365,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where statutONT in
-        defaultDiagnosticFiltering("statutONT.in=" + DEFAULT_STATUT_ONT + "," + UPDATED_STATUT_ONT, "statutONT.in=" + UPDATED_STATUT_ONT);
+        // Get all the diagnosticList where statutONT in DEFAULT_STATUT_ONT or UPDATED_STATUT_ONT
+        defaultDiagnosticShouldBeFound("statutONT.in=" + DEFAULT_STATUT_ONT + "," + UPDATED_STATUT_ONT);
+
+        // Get all the diagnosticList where statutONT equals to UPDATED_STATUT_ONT
+        defaultDiagnosticShouldNotBeFound("statutONT.in=" + UPDATED_STATUT_ONT);
     }
 
     @Test
@@ -345,7 +379,10 @@ class DiagnosticResourceIT {
         diagnosticRepository.saveAndFlush(diagnostic);
 
         // Get all the diagnosticList where statutONT is not null
-        defaultDiagnosticFiltering("statutONT.specified=true", "statutONT.specified=false");
+        defaultDiagnosticShouldBeFound("statutONT.specified=true");
+
+        // Get all the diagnosticList where statutONT is null
+        defaultDiagnosticShouldNotBeFound("statutONT.specified=false");
     }
 
     @Test
@@ -354,8 +391,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitUp equals to
-        defaultDiagnosticFiltering("debitUp.equals=" + DEFAULT_DEBIT_UP, "debitUp.equals=" + UPDATED_DEBIT_UP);
+        // Get all the diagnosticList where debitUp equals to DEFAULT_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.equals=" + DEFAULT_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp equals to UPDATED_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.equals=" + UPDATED_DEBIT_UP);
     }
 
     @Test
@@ -364,8 +404,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitUp in
-        defaultDiagnosticFiltering("debitUp.in=" + DEFAULT_DEBIT_UP + "," + UPDATED_DEBIT_UP, "debitUp.in=" + UPDATED_DEBIT_UP);
+        // Get all the diagnosticList where debitUp in DEFAULT_DEBIT_UP or UPDATED_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.in=" + DEFAULT_DEBIT_UP + "," + UPDATED_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp equals to UPDATED_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.in=" + UPDATED_DEBIT_UP);
     }
 
     @Test
@@ -375,7 +418,10 @@ class DiagnosticResourceIT {
         diagnosticRepository.saveAndFlush(diagnostic);
 
         // Get all the diagnosticList where debitUp is not null
-        defaultDiagnosticFiltering("debitUp.specified=true", "debitUp.specified=false");
+        defaultDiagnosticShouldBeFound("debitUp.specified=true");
+
+        // Get all the diagnosticList where debitUp is null
+        defaultDiagnosticShouldNotBeFound("debitUp.specified=false");
     }
 
     @Test
@@ -384,8 +430,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitUp contains
-        defaultDiagnosticFiltering("debitUp.contains=" + DEFAULT_DEBIT_UP, "debitUp.contains=" + UPDATED_DEBIT_UP);
+        // Get all the diagnosticList where debitUp contains DEFAULT_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.contains=" + DEFAULT_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp contains UPDATED_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.contains=" + UPDATED_DEBIT_UP);
     }
 
     @Test
@@ -394,8 +443,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitUp does not contain
-        defaultDiagnosticFiltering("debitUp.doesNotContain=" + UPDATED_DEBIT_UP, "debitUp.doesNotContain=" + DEFAULT_DEBIT_UP);
+        // Get all the diagnosticList where debitUp does not contain DEFAULT_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.doesNotContain=" + DEFAULT_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp does not contain UPDATED_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.doesNotContain=" + UPDATED_DEBIT_UP);
     }
 
     @Test
@@ -404,8 +456,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitDown equals to
-        defaultDiagnosticFiltering("debitDown.equals=" + DEFAULT_DEBIT_DOWN, "debitDown.equals=" + UPDATED_DEBIT_DOWN);
+        // Get all the diagnosticList where debitDown equals to DEFAULT_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.equals=" + DEFAULT_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown equals to UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.equals=" + UPDATED_DEBIT_DOWN);
     }
 
     @Test
@@ -414,8 +469,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitDown in
-        defaultDiagnosticFiltering("debitDown.in=" + DEFAULT_DEBIT_DOWN + "," + UPDATED_DEBIT_DOWN, "debitDown.in=" + UPDATED_DEBIT_DOWN);
+        // Get all the diagnosticList where debitDown in DEFAULT_DEBIT_DOWN or UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.in=" + DEFAULT_DEBIT_DOWN + "," + UPDATED_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown equals to UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.in=" + UPDATED_DEBIT_DOWN);
     }
 
     @Test
@@ -425,7 +483,10 @@ class DiagnosticResourceIT {
         diagnosticRepository.saveAndFlush(diagnostic);
 
         // Get all the diagnosticList where debitDown is not null
-        defaultDiagnosticFiltering("debitDown.specified=true", "debitDown.specified=false");
+        defaultDiagnosticShouldBeFound("debitDown.specified=true");
+
+        // Get all the diagnosticList where debitDown is null
+        defaultDiagnosticShouldNotBeFound("debitDown.specified=false");
     }
 
     @Test
@@ -434,8 +495,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitDown contains
-        defaultDiagnosticFiltering("debitDown.contains=" + DEFAULT_DEBIT_DOWN, "debitDown.contains=" + UPDATED_DEBIT_DOWN);
+        // Get all the diagnosticList where debitDown contains DEFAULT_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.contains=" + DEFAULT_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown contains UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.contains=" + UPDATED_DEBIT_DOWN);
     }
 
     @Test
@@ -444,8 +508,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where debitDown does not contain
-        defaultDiagnosticFiltering("debitDown.doesNotContain=" + UPDATED_DEBIT_DOWN, "debitDown.doesNotContain=" + DEFAULT_DEBIT_DOWN);
+        // Get all the diagnosticList where debitDown does not contain DEFAULT_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.doesNotContain=" + DEFAULT_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown does not contain UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.doesNotContain=" + UPDATED_DEBIT_DOWN);
     }
 
     @Test
@@ -454,8 +521,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where dateDiagnostic equals to
-        defaultDiagnosticFiltering("dateDiagnostic.equals=" + DEFAULT_DATE_DIAGNOSTIC, "dateDiagnostic.equals=" + UPDATED_DATE_DIAGNOSTIC);
+        // Get all the diagnosticList where dateDiagnostic equals to DEFAULT_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("dateDiagnostic.equals=" + DEFAULT_DATE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where dateDiagnostic equals to UPDATED_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.equals=" + UPDATED_DATE_DIAGNOSTIC);
     }
 
     @Test
@@ -464,11 +534,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where dateDiagnostic in
-        defaultDiagnosticFiltering(
-            "dateDiagnostic.in=" + DEFAULT_DATE_DIAGNOSTIC + "," + UPDATED_DATE_DIAGNOSTIC,
-            "dateDiagnostic.in=" + UPDATED_DATE_DIAGNOSTIC
-        );
+        // Get all the diagnosticList where dateDiagnostic in DEFAULT_DATE_DIAGNOSTIC or UPDATED_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("dateDiagnostic.in=" + DEFAULT_DATE_DIAGNOSTIC + "," + UPDATED_DATE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where dateDiagnostic equals to UPDATED_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.in=" + UPDATED_DATE_DIAGNOSTIC);
     }
 
     @Test
@@ -478,7 +548,10 @@ class DiagnosticResourceIT {
         diagnosticRepository.saveAndFlush(diagnostic);
 
         // Get all the diagnosticList where dateDiagnostic is not null
-        defaultDiagnosticFiltering("dateDiagnostic.specified=true", "dateDiagnostic.specified=false");
+        defaultDiagnosticShouldBeFound("dateDiagnostic.specified=true");
+
+        // Get all the diagnosticList where dateDiagnostic is null
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.specified=false");
     }
 
     @Test
@@ -487,11 +560,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where dateDiagnostic is greater than or equal to
-        defaultDiagnosticFiltering(
-            "dateDiagnostic.greaterThanOrEqual=" + DEFAULT_DATE_DIAGNOSTIC,
-            "dateDiagnostic.greaterThanOrEqual=" + UPDATED_DATE_DIAGNOSTIC
-        );
+        // Get all the diagnosticList where dateDiagnostic is greater than or equal to DEFAULT_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("dateDiagnostic.greaterThanOrEqual=" + DEFAULT_DATE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where dateDiagnostic is greater than or equal to UPDATED_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.greaterThanOrEqual=" + UPDATED_DATE_DIAGNOSTIC);
     }
 
     @Test
@@ -500,11 +573,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where dateDiagnostic is less than or equal to
-        defaultDiagnosticFiltering(
-            "dateDiagnostic.lessThanOrEqual=" + DEFAULT_DATE_DIAGNOSTIC,
-            "dateDiagnostic.lessThanOrEqual=" + SMALLER_DATE_DIAGNOSTIC
-        );
+        // Get all the diagnosticList where dateDiagnostic is less than or equal to DEFAULT_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("dateDiagnostic.lessThanOrEqual=" + DEFAULT_DATE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where dateDiagnostic is less than or equal to SMALLER_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.lessThanOrEqual=" + SMALLER_DATE_DIAGNOSTIC);
     }
 
     @Test
@@ -513,11 +586,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where dateDiagnostic is less than
-        defaultDiagnosticFiltering(
-            "dateDiagnostic.lessThan=" + UPDATED_DATE_DIAGNOSTIC,
-            "dateDiagnostic.lessThan=" + DEFAULT_DATE_DIAGNOSTIC
-        );
+        // Get all the diagnosticList where dateDiagnostic is less than DEFAULT_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.lessThan=" + DEFAULT_DATE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where dateDiagnostic is less than UPDATED_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("dateDiagnostic.lessThan=" + UPDATED_DATE_DIAGNOSTIC);
     }
 
     @Test
@@ -526,11 +599,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where dateDiagnostic is greater than
-        defaultDiagnosticFiltering(
-            "dateDiagnostic.greaterThan=" + SMALLER_DATE_DIAGNOSTIC,
-            "dateDiagnostic.greaterThan=" + DEFAULT_DATE_DIAGNOSTIC
-        );
+        // Get all the diagnosticList where dateDiagnostic is greater than DEFAULT_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("dateDiagnostic.greaterThan=" + DEFAULT_DATE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where dateDiagnostic is greater than SMALLER_DATE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("dateDiagnostic.greaterThan=" + SMALLER_DATE_DIAGNOSTIC);
     }
 
     @Test
@@ -539,8 +612,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where typeDiagnostic equals to
-        defaultDiagnosticFiltering("typeDiagnostic.equals=" + DEFAULT_TYPE_DIAGNOSTIC, "typeDiagnostic.equals=" + UPDATED_TYPE_DIAGNOSTIC);
+        // Get all the diagnosticList where typeDiagnostic equals to DEFAULT_TYPE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("typeDiagnostic.equals=" + DEFAULT_TYPE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where typeDiagnostic equals to UPDATED_TYPE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("typeDiagnostic.equals=" + UPDATED_TYPE_DIAGNOSTIC);
     }
 
     @Test
@@ -549,11 +625,11 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        // Get all the diagnosticList where typeDiagnostic in
-        defaultDiagnosticFiltering(
-            "typeDiagnostic.in=" + DEFAULT_TYPE_DIAGNOSTIC + "," + UPDATED_TYPE_DIAGNOSTIC,
-            "typeDiagnostic.in=" + UPDATED_TYPE_DIAGNOSTIC
-        );
+        // Get all the diagnosticList where typeDiagnostic in DEFAULT_TYPE_DIAGNOSTIC or UPDATED_TYPE_DIAGNOSTIC
+        defaultDiagnosticShouldBeFound("typeDiagnostic.in=" + DEFAULT_TYPE_DIAGNOSTIC + "," + UPDATED_TYPE_DIAGNOSTIC);
+
+        // Get all the diagnosticList where typeDiagnostic equals to UPDATED_TYPE_DIAGNOSTIC
+        defaultDiagnosticShouldNotBeFound("typeDiagnostic.in=" + UPDATED_TYPE_DIAGNOSTIC);
     }
 
     @Test
@@ -563,7 +639,10 @@ class DiagnosticResourceIT {
         diagnosticRepository.saveAndFlush(diagnostic);
 
         // Get all the diagnosticList where typeDiagnostic is not null
-        defaultDiagnosticFiltering("typeDiagnostic.specified=true", "typeDiagnostic.specified=false");
+        defaultDiagnosticShouldBeFound("typeDiagnostic.specified=true");
+
+        // Get all the diagnosticList where typeDiagnostic is null
+        defaultDiagnosticShouldNotBeFound("typeDiagnostic.specified=false");
     }
 
     @Test
@@ -632,11 +711,6 @@ class DiagnosticResourceIT {
         defaultDiagnosticShouldNotBeFound("anomalieId.equals=" + (anomalieId + 1));
     }
 
-    private void defaultDiagnosticFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
-        defaultDiagnosticShouldBeFound(shouldBeFound);
-        defaultDiagnosticShouldNotBeFound(shouldNotBeFound);
-    }
-
     /**
      * Executes the search, and checks that the default entity is returned.
      */
@@ -693,7 +767,7 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
 
         // Update the diagnostic
         Diagnostic updatedDiagnostic = diagnosticRepository.findById(diagnostic.getId()).orElseThrow();
@@ -713,19 +787,26 @@ class DiagnosticResourceIT {
                 put(ENTITY_API_URL_ID, diagnosticDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(diagnosticDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
             )
             .andExpect(status().isOk());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertPersistedDiagnosticToMatchAllProperties(updatedDiagnostic);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
+        Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
+        assertThat(testDiagnostic.getIndex()).isEqualTo(UPDATED_INDEX);
+        assertThat(testDiagnostic.getStatutONT()).isEqualTo(UPDATED_STATUT_ONT);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(UPDATED_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
+        assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(UPDATED_DATE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(UPDATED_TYPE_DIAGNOSTIC);
     }
 
     @Test
     @Transactional
     void putNonExistingDiagnostic() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
         diagnostic.setId(longCount.incrementAndGet());
 
         // Create the Diagnostic
@@ -737,18 +818,19 @@ class DiagnosticResourceIT {
                 put(ENTITY_API_URL_ID, diagnosticDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(diagnosticDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithIdMismatchDiagnostic() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
         diagnostic.setId(longCount.incrementAndGet());
 
         // Create the Diagnostic
@@ -760,18 +842,19 @@ class DiagnosticResourceIT {
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(diagnosticDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithMissingIdPathParamDiagnostic() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
         diagnostic.setId(longCount.incrementAndGet());
 
         // Create the Diagnostic
@@ -779,11 +862,17 @@ class DiagnosticResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restDiagnosticMockMvc
-            .perform(put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(diagnosticDTO)))
+            .perform(
+                put(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -792,7 +881,7 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
 
         // Update the diagnostic using partial update
         Diagnostic partialUpdatedDiagnostic = new Diagnostic();
@@ -805,17 +894,20 @@ class DiagnosticResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedDiagnostic.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedDiagnostic))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedDiagnostic))
             )
             .andExpect(status().isOk());
 
         // Validate the Diagnostic in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertDiagnosticUpdatableFieldsEquals(
-            createUpdateProxyForBean(partialUpdatedDiagnostic, diagnostic),
-            getPersistedDiagnostic(diagnostic)
-        );
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
+        Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
+        assertThat(testDiagnostic.getIndex()).isEqualTo(UPDATED_INDEX);
+        assertThat(testDiagnostic.getStatutONT()).isEqualTo(UPDATED_STATUT_ONT);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(DEFAULT_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(DEFAULT_DEBIT_DOWN);
+        assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(UPDATED_DATE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(DEFAULT_TYPE_DIAGNOSTIC);
     }
 
     @Test
@@ -824,7 +916,7 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
 
         // Update the diagnostic using partial update
         Diagnostic partialUpdatedDiagnostic = new Diagnostic();
@@ -843,20 +935,26 @@ class DiagnosticResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedDiagnostic.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedDiagnostic))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedDiagnostic))
             )
             .andExpect(status().isOk());
 
         // Validate the Diagnostic in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertDiagnosticUpdatableFieldsEquals(partialUpdatedDiagnostic, getPersistedDiagnostic(partialUpdatedDiagnostic));
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
+        Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
+        assertThat(testDiagnostic.getIndex()).isEqualTo(UPDATED_INDEX);
+        assertThat(testDiagnostic.getStatutONT()).isEqualTo(UPDATED_STATUT_ONT);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(UPDATED_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
+        assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(UPDATED_DATE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(UPDATED_TYPE_DIAGNOSTIC);
     }
 
     @Test
     @Transactional
     void patchNonExistingDiagnostic() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
         diagnostic.setId(longCount.incrementAndGet());
 
         // Create the Diagnostic
@@ -868,18 +966,19 @@ class DiagnosticResourceIT {
                 patch(ENTITY_API_URL_ID, diagnosticDTO.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(diagnosticDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithIdMismatchDiagnostic() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
         diagnostic.setId(longCount.incrementAndGet());
 
         // Create the Diagnostic
@@ -891,18 +990,19 @@ class DiagnosticResourceIT {
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(diagnosticDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithMissingIdPathParamDiagnostic() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = diagnosticRepository.findAll().size();
         diagnostic.setId(longCount.incrementAndGet());
 
         // Create the Diagnostic
@@ -911,12 +1011,16 @@ class DiagnosticResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restDiagnosticMockMvc
             .perform(
-                patch(ENTITY_API_URL).with(csrf()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(diagnosticDTO))
+                patch(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
             )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Diagnostic in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -925,7 +1029,7 @@ class DiagnosticResourceIT {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
 
-        long databaseSizeBeforeDelete = getRepositoryCount();
+        int databaseSizeBeforeDelete = diagnosticRepository.findAll().size();
 
         // Delete the diagnostic
         restDiagnosticMockMvc
@@ -933,34 +1037,7 @@ class DiagnosticResourceIT {
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        assertDecrementedRepositoryCount(databaseSizeBeforeDelete);
-    }
-
-    protected long getRepositoryCount() {
-        return diagnosticRepository.count();
-    }
-
-    protected void assertIncrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore + 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertDecrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore - 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertSameRepositoryCount(long countBefore) {
-        assertThat(countBefore).isEqualTo(getRepositoryCount());
-    }
-
-    protected Diagnostic getPersistedDiagnostic(Diagnostic diagnostic) {
-        return diagnosticRepository.findById(diagnostic.getId()).orElseThrow();
-    }
-
-    protected void assertPersistedDiagnosticToMatchAllProperties(Diagnostic expectedDiagnostic) {
-        assertDiagnosticAllPropertiesEquals(expectedDiagnostic, getPersistedDiagnostic(expectedDiagnostic));
-    }
-
-    protected void assertPersistedDiagnosticToMatchUpdatableProperties(Diagnostic expectedDiagnostic) {
-        assertDiagnosticAllUpdatablePropertiesEquals(expectedDiagnostic, getPersistedDiagnostic(expectedDiagnostic));
+        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
+        assertThat(diagnosticList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

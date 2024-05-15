@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link Metrique} entities in the database.
  * The main input is a {@link MetriqueCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link MetriqueDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link MetriqueDTO} or a {@link Page} of {@link MetriqueDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +36,18 @@ public class MetriqueQueryService extends QueryService<Metrique> {
     public MetriqueQueryService(MetriqueRepository metriqueRepository, MetriqueMapper metriqueMapper) {
         this.metriqueRepository = metriqueRepository;
         this.metriqueMapper = metriqueMapper;
+    }
+
+    /**
+     * Return a {@link List} of {@link MetriqueDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<MetriqueDTO> findByCriteria(MetriqueCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<Metrique> specification = createSpecification(criteria);
+        return metriqueMapper.toDto(metriqueRepository.findAll(specification));
     }
 
     /**
@@ -87,9 +100,10 @@ public class MetriqueQueryService extends QueryService<Metrique> {
                 specification = specification.and(buildRangeSpecification(criteria.getCreatedAt(), Metrique_.createdAt));
             }
             if (criteria.getOntId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getOntId(), root -> root.join(Metrique_.ont, JoinType.LEFT).get(ONT_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(criteria.getOntId(), root -> root.join(Metrique_.ont, JoinType.LEFT).get(ONT_.id))
+                    );
             }
         }
         return specification;

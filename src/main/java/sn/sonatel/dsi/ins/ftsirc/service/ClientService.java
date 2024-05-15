@@ -2,6 +2,8 @@ package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.ClientDTO;
 
 /**
@@ -31,6 +33,14 @@ public interface ClientService {
      * @return the persisted entity.
      */
     Optional<ClientDTO> partialUpdate(ClientDTO clientDTO);
+
+    /**
+     * Get all the clients.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<ClientDTO> findAll(Pageable pageable);
 
     /**
      * Get all the ClientDTO where Ont is {@code null}.

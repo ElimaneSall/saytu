@@ -31,8 +31,8 @@ public class ONT implements Serializable {
     private String index;
 
     @NotNull
-    @Column(name = "ont_ip", nullable = false)
-    private String ontIP;
+    @Column(name = "ont_id", nullable = false)
+    private String ontID;
 
     @NotNull
     @Column(name = "service_id", nullable = false)
@@ -67,7 +67,7 @@ public class ONT implements Serializable {
     @JoinColumn(unique = true)
     private Client client;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "onts" }, allowSetters = true)
     private OLT olt;
 
@@ -109,17 +109,17 @@ public class ONT implements Serializable {
         this.index = index;
     }
 
-    public String getOntIP() {
-        return this.ontIP;
+    public String getOntID() {
+        return this.ontID;
     }
 
-    public ONT ontIP(String ontIP) {
-        this.setOntIP(ontIP);
+    public ONT ontID(String ontID) {
+        this.setOntID(ontID);
         return this;
     }
 
-    public void setOntIP(String ontIP) {
-        this.ontIP = ontIP;
+    public void setOntID(String ontID) {
+        this.ontID = ontID;
     }
 
     public String getServiceId() {
@@ -339,7 +339,7 @@ public class ONT implements Serializable {
         return "ONT{" +
             "id=" + getId() +
             ", index='" + getIndex() + "'" +
-            ", ontIP='" + getOntIP() + "'" +
+            ", ontID='" + getOntID() + "'" +
             ", serviceId='" + getServiceId() + "'" +
             ", slot='" + getSlot() + "'" +
             ", pon='" + getPon() + "'" +

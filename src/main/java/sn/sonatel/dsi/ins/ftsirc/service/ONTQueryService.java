@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link ONT} entities in the database.
  * The main input is a {@link ONTCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link ONTDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link ONTDTO} or a {@link Page} of {@link ONTDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +36,18 @@ public class ONTQueryService extends QueryService<ONT> {
     public ONTQueryService(ONTRepository oNTRepository, ONTMapper oNTMapper) {
         this.oNTRepository = oNTRepository;
         this.oNTMapper = oNTMapper;
+    }
+
+    /**
+     * Return a {@link List} of {@link ONTDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<ONTDTO> findByCriteria(ONTCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<ONT> specification = createSpecification(criteria);
+        return oNTMapper.toDto(oNTRepository.findAll(specification));
     }
 
     /**
@@ -80,8 +93,8 @@ public class ONTQueryService extends QueryService<ONT> {
             if (criteria.getIndex() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getIndex(), ONT_.index));
             }
-            if (criteria.getOntIP() != null) {
-                specification = specification.and(buildStringSpecification(criteria.getOntIP(), ONT_.ontIP));
+            if (criteria.getOntID() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getOntID(), ONT_.ontID));
             }
             if (criteria.getServiceId() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getServiceId(), ONT_.serviceId));
@@ -108,24 +121,29 @@ public class ONTQueryService extends QueryService<ONT> {
                 specification = specification.and(buildRangeSpecification(criteria.getUpdatedAt(), ONT_.updatedAt));
             }
             if (criteria.getClientId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getClientId(), root -> root.join(ONT_.client, JoinType.LEFT).get(Client_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(criteria.getClientId(), root -> root.join(ONT_.client, JoinType.LEFT).get(Client_.id))
+                    );
             }
             if (criteria.getOltId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getOltId(), root -> root.join(ONT_.olt, JoinType.LEFT).get(OLT_.id))
-                );
+                specification =
+                    specification.and(buildSpecification(criteria.getOltId(), root -> root.join(ONT_.olt, JoinType.LEFT).get(OLT_.id)));
             }
             if (criteria.getDiagnosticId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getDiagnosticId(), root -> root.join(ONT_.diagnostics, JoinType.LEFT).get(Diagnostic_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(
+                            criteria.getDiagnosticId(),
+                            root -> root.join(ONT_.diagnostics, JoinType.LEFT).get(Diagnostic_.id)
+                        )
+                    );
             }
             if (criteria.getMetriqueId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getMetriqueId(), root -> root.join(ONT_.metriques, JoinType.LEFT).get(Metrique_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(criteria.getMetriqueId(), root -> root.join(ONT_.metriques, JoinType.LEFT).get(Metrique_.id))
+                    );
             }
         }
         return specification;

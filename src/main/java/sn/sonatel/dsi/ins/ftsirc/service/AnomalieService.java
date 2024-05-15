@@ -1,6 +1,8 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.AnomalieDTO;
 
 /**
@@ -30,6 +32,14 @@ public interface AnomalieService {
      * @return the persisted entity.
      */
     Optional<AnomalieDTO> partialUpdate(AnomalieDTO anomalieDTO);
+
+    /**
+     * Get all the anomalies.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<AnomalieDTO> findAll(Pageable pageable);
 
     /**
      * Get the "id" anomalie.

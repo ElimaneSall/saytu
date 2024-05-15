@@ -1,6 +1,8 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.MetriqueDTO;
 
 /**
@@ -30,6 +32,14 @@ public interface MetriqueService {
      * @return the persisted entity.
      */
     Optional<MetriqueDTO> partialUpdate(MetriqueDTO metriqueDTO);
+
+    /**
+     * Get all the metriques.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<MetriqueDTO> findAll(Pageable pageable);
 
     /**
      * Get the "id" metrique.

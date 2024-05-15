@@ -65,10 +65,11 @@ public class OLTResource {
         if (oLTDTO.getId() != null) {
             throw new BadRequestAlertException("A new oLT cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        oLTDTO = oLTService.save(oLTDTO);
-        return ResponseEntity.created(new URI("/api/olts/" + oLTDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, oLTDTO.getId().toString()))
-            .body(oLTDTO);
+        OLTDTO result = oLTService.save(oLTDTO);
+        return ResponseEntity
+            .created(new URI("/api/olts/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -96,10 +97,11 @@ public class OLTResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        oLTDTO = oLTService.update(oLTDTO);
-        return ResponseEntity.ok()
+        OLTDTO result = oLTService.update(oLTDTO);
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, oLTDTO.getId().toString()))
-            .body(oLTDTO);
+            .body(result);
     }
 
     /**
@@ -192,7 +194,8 @@ public class OLTResource {
     public ResponseEntity<Void> deleteOLT(@PathVariable("id") Long id) {
         log.debug("REST request to delete OLT : {}", id);
         oLTService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

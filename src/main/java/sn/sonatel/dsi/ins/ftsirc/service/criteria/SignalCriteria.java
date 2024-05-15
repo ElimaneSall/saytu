@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
@@ -37,11 +36,11 @@ public class SignalCriteria implements Serializable, Criteria {
     public SignalCriteria() {}
 
     public SignalCriteria(SignalCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.libelle = other.optionalLibelle().map(StringFilter::copy).orElse(null);
-        this.seuilMin = other.optionalSeuilMin().map(DoubleFilter::copy).orElse(null);
-        this.seuilMax = other.optionalSeuilMax().map(DoubleFilter::copy).orElse(null);
-        this.diagnosticId = other.optionalDiagnosticId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.libelle = other.libelle == null ? null : other.libelle.copy();
+        this.seuilMin = other.seuilMin == null ? null : other.seuilMin.copy();
+        this.seuilMax = other.seuilMax == null ? null : other.seuilMax.copy();
+        this.diagnosticId = other.diagnosticId == null ? null : other.diagnosticId.copy();
         this.distinct = other.distinct;
     }
 
@@ -54,13 +53,9 @@ public class SignalCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -73,13 +68,9 @@ public class SignalCriteria implements Serializable, Criteria {
         return libelle;
     }
 
-    public Optional<StringFilter> optionalLibelle() {
-        return Optional.ofNullable(libelle);
-    }
-
     public StringFilter libelle() {
         if (libelle == null) {
-            setLibelle(new StringFilter());
+            libelle = new StringFilter();
         }
         return libelle;
     }
@@ -92,13 +83,9 @@ public class SignalCriteria implements Serializable, Criteria {
         return seuilMin;
     }
 
-    public Optional<DoubleFilter> optionalSeuilMin() {
-        return Optional.ofNullable(seuilMin);
-    }
-
     public DoubleFilter seuilMin() {
         if (seuilMin == null) {
-            setSeuilMin(new DoubleFilter());
+            seuilMin = new DoubleFilter();
         }
         return seuilMin;
     }
@@ -111,13 +98,9 @@ public class SignalCriteria implements Serializable, Criteria {
         return seuilMax;
     }
 
-    public Optional<DoubleFilter> optionalSeuilMax() {
-        return Optional.ofNullable(seuilMax);
-    }
-
     public DoubleFilter seuilMax() {
         if (seuilMax == null) {
-            setSeuilMax(new DoubleFilter());
+            seuilMax = new DoubleFilter();
         }
         return seuilMax;
     }
@@ -130,13 +113,9 @@ public class SignalCriteria implements Serializable, Criteria {
         return diagnosticId;
     }
 
-    public Optional<LongFilter> optionalDiagnosticId() {
-        return Optional.ofNullable(diagnosticId);
-    }
-
     public LongFilter diagnosticId() {
         if (diagnosticId == null) {
-            setDiagnosticId(new LongFilter());
+            diagnosticId = new LongFilter();
         }
         return diagnosticId;
     }
@@ -146,17 +125,6 @@ public class SignalCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -192,12 +160,12 @@ public class SignalCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "SignalCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalLibelle().map(f -> "libelle=" + f + ", ").orElse("") +
-            optionalSeuilMin().map(f -> "seuilMin=" + f + ", ").orElse("") +
-            optionalSeuilMax().map(f -> "seuilMax=" + f + ", ").orElse("") +
-            optionalDiagnosticId().map(f -> "diagnosticId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (libelle != null ? "libelle=" + libelle + ", " : "") +
+            (seuilMin != null ? "seuilMin=" + seuilMin + ", " : "") +
+            (seuilMax != null ? "seuilMax=" + seuilMax + ", " : "") +
+            (diagnosticId != null ? "diagnosticId=" + diagnosticId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

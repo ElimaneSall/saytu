@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
@@ -59,22 +58,22 @@ public class OLTCriteria implements Serializable, Criteria {
     public OLTCriteria() {}
 
     public OLTCriteria(OLTCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.libelle = other.optionalLibelle().map(StringFilter::copy).orElse(null);
-        this.ip = other.optionalIp().map(StringFilter::copy).orElse(null);
-        this.vendeur = other.optionalVendeur().map(StringFilter::copy).orElse(null);
-        this.typeEquipment = other.optionalTypeEquipment().map(StringFilter::copy).orElse(null);
-        this.codeEquipment = other.optionalCodeEquipment().map(StringFilter::copy).orElse(null);
-        this.adresse = other.optionalAdresse().map(StringFilter::copy).orElse(null);
-        this.emplacement = other.optionalEmplacement().map(StringFilter::copy).orElse(null);
-        this.typeCarte = other.optionalTypeCarte().map(StringFilter::copy).orElse(null);
-        this.latitude = other.optionalLatitude().map(StringFilter::copy).orElse(null);
-        this.longitude = other.optionalLongitude().map(StringFilter::copy).orElse(null);
-        this.capacite = other.optionalCapacite().map(StringFilter::copy).orElse(null);
-        this.etat = other.optionalEtat().map(StringFilter::copy).orElse(null);
-        this.createdAt = other.optionalCreatedAt().map(LocalDateFilter::copy).orElse(null);
-        this.updatedAt = other.optionalUpdatedAt().map(LocalDateFilter::copy).orElse(null);
-        this.ontId = other.optionalOntId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.libelle = other.libelle == null ? null : other.libelle.copy();
+        this.ip = other.ip == null ? null : other.ip.copy();
+        this.vendeur = other.vendeur == null ? null : other.vendeur.copy();
+        this.typeEquipment = other.typeEquipment == null ? null : other.typeEquipment.copy();
+        this.codeEquipment = other.codeEquipment == null ? null : other.codeEquipment.copy();
+        this.adresse = other.adresse == null ? null : other.adresse.copy();
+        this.emplacement = other.emplacement == null ? null : other.emplacement.copy();
+        this.typeCarte = other.typeCarte == null ? null : other.typeCarte.copy();
+        this.latitude = other.latitude == null ? null : other.latitude.copy();
+        this.longitude = other.longitude == null ? null : other.longitude.copy();
+        this.capacite = other.capacite == null ? null : other.capacite.copy();
+        this.etat = other.etat == null ? null : other.etat.copy();
+        this.createdAt = other.createdAt == null ? null : other.createdAt.copy();
+        this.updatedAt = other.updatedAt == null ? null : other.updatedAt.copy();
+        this.ontId = other.ontId == null ? null : other.ontId.copy();
         this.distinct = other.distinct;
     }
 
@@ -87,13 +86,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -106,13 +101,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return libelle;
     }
 
-    public Optional<StringFilter> optionalLibelle() {
-        return Optional.ofNullable(libelle);
-    }
-
     public StringFilter libelle() {
         if (libelle == null) {
-            setLibelle(new StringFilter());
+            libelle = new StringFilter();
         }
         return libelle;
     }
@@ -125,13 +116,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return ip;
     }
 
-    public Optional<StringFilter> optionalIp() {
-        return Optional.ofNullable(ip);
-    }
-
     public StringFilter ip() {
         if (ip == null) {
-            setIp(new StringFilter());
+            ip = new StringFilter();
         }
         return ip;
     }
@@ -144,13 +131,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return vendeur;
     }
 
-    public Optional<StringFilter> optionalVendeur() {
-        return Optional.ofNullable(vendeur);
-    }
-
     public StringFilter vendeur() {
         if (vendeur == null) {
-            setVendeur(new StringFilter());
+            vendeur = new StringFilter();
         }
         return vendeur;
     }
@@ -163,13 +146,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return typeEquipment;
     }
 
-    public Optional<StringFilter> optionalTypeEquipment() {
-        return Optional.ofNullable(typeEquipment);
-    }
-
     public StringFilter typeEquipment() {
         if (typeEquipment == null) {
-            setTypeEquipment(new StringFilter());
+            typeEquipment = new StringFilter();
         }
         return typeEquipment;
     }
@@ -182,13 +161,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return codeEquipment;
     }
 
-    public Optional<StringFilter> optionalCodeEquipment() {
-        return Optional.ofNullable(codeEquipment);
-    }
-
     public StringFilter codeEquipment() {
         if (codeEquipment == null) {
-            setCodeEquipment(new StringFilter());
+            codeEquipment = new StringFilter();
         }
         return codeEquipment;
     }
@@ -201,13 +176,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return adresse;
     }
 
-    public Optional<StringFilter> optionalAdresse() {
-        return Optional.ofNullable(adresse);
-    }
-
     public StringFilter adresse() {
         if (adresse == null) {
-            setAdresse(new StringFilter());
+            adresse = new StringFilter();
         }
         return adresse;
     }
@@ -220,13 +191,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return emplacement;
     }
 
-    public Optional<StringFilter> optionalEmplacement() {
-        return Optional.ofNullable(emplacement);
-    }
-
     public StringFilter emplacement() {
         if (emplacement == null) {
-            setEmplacement(new StringFilter());
+            emplacement = new StringFilter();
         }
         return emplacement;
     }
@@ -239,13 +206,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return typeCarte;
     }
 
-    public Optional<StringFilter> optionalTypeCarte() {
-        return Optional.ofNullable(typeCarte);
-    }
-
     public StringFilter typeCarte() {
         if (typeCarte == null) {
-            setTypeCarte(new StringFilter());
+            typeCarte = new StringFilter();
         }
         return typeCarte;
     }
@@ -258,13 +221,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return latitude;
     }
 
-    public Optional<StringFilter> optionalLatitude() {
-        return Optional.ofNullable(latitude);
-    }
-
     public StringFilter latitude() {
         if (latitude == null) {
-            setLatitude(new StringFilter());
+            latitude = new StringFilter();
         }
         return latitude;
     }
@@ -277,13 +236,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return longitude;
     }
 
-    public Optional<StringFilter> optionalLongitude() {
-        return Optional.ofNullable(longitude);
-    }
-
     public StringFilter longitude() {
         if (longitude == null) {
-            setLongitude(new StringFilter());
+            longitude = new StringFilter();
         }
         return longitude;
     }
@@ -296,13 +251,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return capacite;
     }
 
-    public Optional<StringFilter> optionalCapacite() {
-        return Optional.ofNullable(capacite);
-    }
-
     public StringFilter capacite() {
         if (capacite == null) {
-            setCapacite(new StringFilter());
+            capacite = new StringFilter();
         }
         return capacite;
     }
@@ -315,13 +266,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return etat;
     }
 
-    public Optional<StringFilter> optionalEtat() {
-        return Optional.ofNullable(etat);
-    }
-
     public StringFilter etat() {
         if (etat == null) {
-            setEtat(new StringFilter());
+            etat = new StringFilter();
         }
         return etat;
     }
@@ -334,13 +281,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return createdAt;
     }
 
-    public Optional<LocalDateFilter> optionalCreatedAt() {
-        return Optional.ofNullable(createdAt);
-    }
-
     public LocalDateFilter createdAt() {
         if (createdAt == null) {
-            setCreatedAt(new LocalDateFilter());
+            createdAt = new LocalDateFilter();
         }
         return createdAt;
     }
@@ -353,13 +296,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return updatedAt;
     }
 
-    public Optional<LocalDateFilter> optionalUpdatedAt() {
-        return Optional.ofNullable(updatedAt);
-    }
-
     public LocalDateFilter updatedAt() {
         if (updatedAt == null) {
-            setUpdatedAt(new LocalDateFilter());
+            updatedAt = new LocalDateFilter();
         }
         return updatedAt;
     }
@@ -372,13 +311,9 @@ public class OLTCriteria implements Serializable, Criteria {
         return ontId;
     }
 
-    public Optional<LongFilter> optionalOntId() {
-        return Optional.ofNullable(ontId);
-    }
-
     public LongFilter ontId() {
         if (ontId == null) {
-            setOntId(new LongFilter());
+            ontId = new LongFilter();
         }
         return ontId;
     }
@@ -388,17 +323,6 @@ public class OLTCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -463,23 +387,23 @@ public class OLTCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "OLTCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalLibelle().map(f -> "libelle=" + f + ", ").orElse("") +
-            optionalIp().map(f -> "ip=" + f + ", ").orElse("") +
-            optionalVendeur().map(f -> "vendeur=" + f + ", ").orElse("") +
-            optionalTypeEquipment().map(f -> "typeEquipment=" + f + ", ").orElse("") +
-            optionalCodeEquipment().map(f -> "codeEquipment=" + f + ", ").orElse("") +
-            optionalAdresse().map(f -> "adresse=" + f + ", ").orElse("") +
-            optionalEmplacement().map(f -> "emplacement=" + f + ", ").orElse("") +
-            optionalTypeCarte().map(f -> "typeCarte=" + f + ", ").orElse("") +
-            optionalLatitude().map(f -> "latitude=" + f + ", ").orElse("") +
-            optionalLongitude().map(f -> "longitude=" + f + ", ").orElse("") +
-            optionalCapacite().map(f -> "capacite=" + f + ", ").orElse("") +
-            optionalEtat().map(f -> "etat=" + f + ", ").orElse("") +
-            optionalCreatedAt().map(f -> "createdAt=" + f + ", ").orElse("") +
-            optionalUpdatedAt().map(f -> "updatedAt=" + f + ", ").orElse("") +
-            optionalOntId().map(f -> "ontId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (libelle != null ? "libelle=" + libelle + ", " : "") +
+            (ip != null ? "ip=" + ip + ", " : "") +
+            (vendeur != null ? "vendeur=" + vendeur + ", " : "") +
+            (typeEquipment != null ? "typeEquipment=" + typeEquipment + ", " : "") +
+            (codeEquipment != null ? "codeEquipment=" + codeEquipment + ", " : "") +
+            (adresse != null ? "adresse=" + adresse + ", " : "") +
+            (emplacement != null ? "emplacement=" + emplacement + ", " : "") +
+            (typeCarte != null ? "typeCarte=" + typeCarte + ", " : "") +
+            (latitude != null ? "latitude=" + latitude + ", " : "") +
+            (longitude != null ? "longitude=" + longitude + ", " : "") +
+            (capacite != null ? "capacite=" + capacite + ", " : "") +
+            (etat != null ? "etat=" + etat + ", " : "") +
+            (createdAt != null ? "createdAt=" + createdAt + ", " : "") +
+            (updatedAt != null ? "updatedAt=" + updatedAt + ", " : "") +
+            (ontId != null ? "ontId=" + ontId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

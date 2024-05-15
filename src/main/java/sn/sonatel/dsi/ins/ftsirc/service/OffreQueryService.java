@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link Offre} entities in the database.
  * The main input is a {@link OffreCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link OffreDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link OffreDTO} or a {@link Page} of {@link OffreDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +36,18 @@ public class OffreQueryService extends QueryService<Offre> {
     public OffreQueryService(OffreRepository offreRepository, OffreMapper offreMapper) {
         this.offreRepository = offreRepository;
         this.offreMapper = offreMapper;
+    }
+
+    /**
+     * Return a {@link List} of {@link OffreDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<OffreDTO> findByCriteria(OffreCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<Offre> specification = createSpecification(criteria);
+        return offreMapper.toDto(offreRepository.findAll(specification));
     }
 
     /**
@@ -84,9 +97,10 @@ public class OffreQueryService extends QueryService<Offre> {
                 specification = specification.and(buildStringSpecification(criteria.getDebitMax(), Offre_.debitMax));
             }
             if (criteria.getClientId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getClientId(), root -> root.join(Offre_.clients, JoinType.LEFT).get(Client_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(criteria.getClientId(), root -> root.join(Offre_.clients, JoinType.LEFT).get(Client_.id))
+                    );
             }
         }
         return specification;

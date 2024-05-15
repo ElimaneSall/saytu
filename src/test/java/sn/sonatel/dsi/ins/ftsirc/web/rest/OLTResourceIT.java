@@ -5,13 +5,11 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.OLTAsserts.*;
-import static sn.sonatel.dsi.ins.ftsirc.web.rest.TestUtil.createUpdateProxyForBean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.IntegrationTest;
 import sn.sonatel.dsi.ins.ftsirc.domain.OLT;
+import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.OLTRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
 import sn.sonatel.dsi.ins.ftsirc.service.mapper.OLTMapper;
@@ -85,9 +84,6 @@ class OLTResourceIT {
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
-    @Autowired
-    private ObjectMapper om;
 
     @Autowired
     private OLTRepository oLTRepository;
@@ -161,23 +157,33 @@ class OLTResourceIT {
     @Test
     @Transactional
     void createOLT() throws Exception {
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = oLTRepository.findAll().size();
         // Create the OLT
         OLTDTO oLTDTO = oLTMapper.toDto(oLT);
-        var returnedOLTDTO = om.readValue(
-            restOLTMockMvc
-                .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            OLTDTO.class
-        );
+        restOLTMockMvc
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
+            .andExpect(status().isCreated());
 
         // Validate the OLT in the database
-        assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
-        var returnedOLT = oLTMapper.toEntity(returnedOLTDTO);
-        assertOLTUpdatableFieldsEquals(returnedOLT, getPersistedOLT(returnedOLT));
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeCreate + 1);
+        OLT testOLT = oLTList.get(oLTList.size() - 1);
+        assertThat(testOLT.getLibelle()).isEqualTo(DEFAULT_LIBELLE);
+        assertThat(testOLT.getIp()).isEqualTo(DEFAULT_IP);
+        assertThat(testOLT.getVendeur()).isEqualTo(DEFAULT_VENDEUR);
+        assertThat(testOLT.getTypeEquipment()).isEqualTo(DEFAULT_TYPE_EQUIPMENT);
+        assertThat(testOLT.getCodeEquipment()).isEqualTo(DEFAULT_CODE_EQUIPMENT);
+        assertThat(testOLT.getAdresse()).isEqualTo(DEFAULT_ADRESSE);
+        assertThat(testOLT.getEmplacement()).isEqualTo(DEFAULT_EMPLACEMENT);
+        assertThat(testOLT.getTypeCarte()).isEqualTo(DEFAULT_TYPE_CARTE);
+        assertThat(testOLT.getLatitude()).isEqualTo(DEFAULT_LATITUDE);
+        assertThat(testOLT.getLongitude()).isEqualTo(DEFAULT_LONGITUDE);
+        assertThat(testOLT.getCapacite()).isEqualTo(DEFAULT_CAPACITE);
+        assertThat(testOLT.getEtat()).isEqualTo(DEFAULT_ETAT);
+        assertThat(testOLT.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
+        assertThat(testOLT.getUpdatedAt()).isEqualTo(DEFAULT_UPDATED_AT);
     }
 
     @Test
@@ -187,21 +193,24 @@ class OLTResourceIT {
         oLT.setId(1L);
         OLTDTO oLTDTO = oLTMapper.toDto(oLT);
 
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = oLTRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restOLTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeCreate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
     @Transactional
     void checkLibelleIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oLTRepository.findAll().size();
         // set the field null
         oLT.setLibelle(null);
 
@@ -209,16 +218,19 @@ class OLTResourceIT {
         OLTDTO oLTDTO = oLTMapper.toDto(oLT);
 
         restOLTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkIpIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oLTRepository.findAll().size();
         // set the field null
         oLT.setIp(null);
 
@@ -226,16 +238,19 @@ class OLTResourceIT {
         OLTDTO oLTDTO = oLTMapper.toDto(oLT);
 
         restOLTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkVendeurIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oLTRepository.findAll().size();
         // set the field null
         oLT.setVendeur(null);
 
@@ -243,10 +258,13 @@ class OLTResourceIT {
         OLTDTO oLTDTO = oLTMapper.toDto(oLT);
 
         restOLTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -313,11 +331,14 @@ class OLTResourceIT {
 
         Long id = oLT.getId();
 
-        defaultOLTFiltering("id.equals=" + id, "id.notEquals=" + id);
+        defaultOLTShouldBeFound("id.equals=" + id);
+        defaultOLTShouldNotBeFound("id.notEquals=" + id);
 
-        defaultOLTFiltering("id.greaterThanOrEqual=" + id, "id.greaterThan=" + id);
+        defaultOLTShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultOLTShouldNotBeFound("id.greaterThan=" + id);
 
-        defaultOLTFiltering("id.lessThanOrEqual=" + id, "id.lessThan=" + id);
+        defaultOLTShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultOLTShouldNotBeFound("id.lessThan=" + id);
     }
 
     @Test
@@ -326,8 +347,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where libelle equals to
-        defaultOLTFiltering("libelle.equals=" + DEFAULT_LIBELLE, "libelle.equals=" + UPDATED_LIBELLE);
+        // Get all the oLTList where libelle equals to DEFAULT_LIBELLE
+        defaultOLTShouldBeFound("libelle.equals=" + DEFAULT_LIBELLE);
+
+        // Get all the oLTList where libelle equals to UPDATED_LIBELLE
+        defaultOLTShouldNotBeFound("libelle.equals=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -336,8 +360,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where libelle in
-        defaultOLTFiltering("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE, "libelle.in=" + UPDATED_LIBELLE);
+        // Get all the oLTList where libelle in DEFAULT_LIBELLE or UPDATED_LIBELLE
+        defaultOLTShouldBeFound("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE);
+
+        // Get all the oLTList where libelle equals to UPDATED_LIBELLE
+        defaultOLTShouldNotBeFound("libelle.in=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -347,7 +374,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where libelle is not null
-        defaultOLTFiltering("libelle.specified=true", "libelle.specified=false");
+        defaultOLTShouldBeFound("libelle.specified=true");
+
+        // Get all the oLTList where libelle is null
+        defaultOLTShouldNotBeFound("libelle.specified=false");
     }
 
     @Test
@@ -356,8 +386,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where libelle contains
-        defaultOLTFiltering("libelle.contains=" + DEFAULT_LIBELLE, "libelle.contains=" + UPDATED_LIBELLE);
+        // Get all the oLTList where libelle contains DEFAULT_LIBELLE
+        defaultOLTShouldBeFound("libelle.contains=" + DEFAULT_LIBELLE);
+
+        // Get all the oLTList where libelle contains UPDATED_LIBELLE
+        defaultOLTShouldNotBeFound("libelle.contains=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -366,8 +399,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where libelle does not contain
-        defaultOLTFiltering("libelle.doesNotContain=" + UPDATED_LIBELLE, "libelle.doesNotContain=" + DEFAULT_LIBELLE);
+        // Get all the oLTList where libelle does not contain DEFAULT_LIBELLE
+        defaultOLTShouldNotBeFound("libelle.doesNotContain=" + DEFAULT_LIBELLE);
+
+        // Get all the oLTList where libelle does not contain UPDATED_LIBELLE
+        defaultOLTShouldBeFound("libelle.doesNotContain=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -376,8 +412,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where ip equals to
-        defaultOLTFiltering("ip.equals=" + DEFAULT_IP, "ip.equals=" + UPDATED_IP);
+        // Get all the oLTList where ip equals to DEFAULT_IP
+        defaultOLTShouldBeFound("ip.equals=" + DEFAULT_IP);
+
+        // Get all the oLTList where ip equals to UPDATED_IP
+        defaultOLTShouldNotBeFound("ip.equals=" + UPDATED_IP);
     }
 
     @Test
@@ -386,8 +425,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where ip in
-        defaultOLTFiltering("ip.in=" + DEFAULT_IP + "," + UPDATED_IP, "ip.in=" + UPDATED_IP);
+        // Get all the oLTList where ip in DEFAULT_IP or UPDATED_IP
+        defaultOLTShouldBeFound("ip.in=" + DEFAULT_IP + "," + UPDATED_IP);
+
+        // Get all the oLTList where ip equals to UPDATED_IP
+        defaultOLTShouldNotBeFound("ip.in=" + UPDATED_IP);
     }
 
     @Test
@@ -397,7 +439,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where ip is not null
-        defaultOLTFiltering("ip.specified=true", "ip.specified=false");
+        defaultOLTShouldBeFound("ip.specified=true");
+
+        // Get all the oLTList where ip is null
+        defaultOLTShouldNotBeFound("ip.specified=false");
     }
 
     @Test
@@ -406,8 +451,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where ip contains
-        defaultOLTFiltering("ip.contains=" + DEFAULT_IP, "ip.contains=" + UPDATED_IP);
+        // Get all the oLTList where ip contains DEFAULT_IP
+        defaultOLTShouldBeFound("ip.contains=" + DEFAULT_IP);
+
+        // Get all the oLTList where ip contains UPDATED_IP
+        defaultOLTShouldNotBeFound("ip.contains=" + UPDATED_IP);
     }
 
     @Test
@@ -416,8 +464,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where ip does not contain
-        defaultOLTFiltering("ip.doesNotContain=" + UPDATED_IP, "ip.doesNotContain=" + DEFAULT_IP);
+        // Get all the oLTList where ip does not contain DEFAULT_IP
+        defaultOLTShouldNotBeFound("ip.doesNotContain=" + DEFAULT_IP);
+
+        // Get all the oLTList where ip does not contain UPDATED_IP
+        defaultOLTShouldBeFound("ip.doesNotContain=" + UPDATED_IP);
     }
 
     @Test
@@ -426,8 +477,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where vendeur equals to
-        defaultOLTFiltering("vendeur.equals=" + DEFAULT_VENDEUR, "vendeur.equals=" + UPDATED_VENDEUR);
+        // Get all the oLTList where vendeur equals to DEFAULT_VENDEUR
+        defaultOLTShouldBeFound("vendeur.equals=" + DEFAULT_VENDEUR);
+
+        // Get all the oLTList where vendeur equals to UPDATED_VENDEUR
+        defaultOLTShouldNotBeFound("vendeur.equals=" + UPDATED_VENDEUR);
     }
 
     @Test
@@ -436,8 +490,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where vendeur in
-        defaultOLTFiltering("vendeur.in=" + DEFAULT_VENDEUR + "," + UPDATED_VENDEUR, "vendeur.in=" + UPDATED_VENDEUR);
+        // Get all the oLTList where vendeur in DEFAULT_VENDEUR or UPDATED_VENDEUR
+        defaultOLTShouldBeFound("vendeur.in=" + DEFAULT_VENDEUR + "," + UPDATED_VENDEUR);
+
+        // Get all the oLTList where vendeur equals to UPDATED_VENDEUR
+        defaultOLTShouldNotBeFound("vendeur.in=" + UPDATED_VENDEUR);
     }
 
     @Test
@@ -447,7 +504,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where vendeur is not null
-        defaultOLTFiltering("vendeur.specified=true", "vendeur.specified=false");
+        defaultOLTShouldBeFound("vendeur.specified=true");
+
+        // Get all the oLTList where vendeur is null
+        defaultOLTShouldNotBeFound("vendeur.specified=false");
     }
 
     @Test
@@ -456,8 +516,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where vendeur contains
-        defaultOLTFiltering("vendeur.contains=" + DEFAULT_VENDEUR, "vendeur.contains=" + UPDATED_VENDEUR);
+        // Get all the oLTList where vendeur contains DEFAULT_VENDEUR
+        defaultOLTShouldBeFound("vendeur.contains=" + DEFAULT_VENDEUR);
+
+        // Get all the oLTList where vendeur contains UPDATED_VENDEUR
+        defaultOLTShouldNotBeFound("vendeur.contains=" + UPDATED_VENDEUR);
     }
 
     @Test
@@ -466,8 +529,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where vendeur does not contain
-        defaultOLTFiltering("vendeur.doesNotContain=" + UPDATED_VENDEUR, "vendeur.doesNotContain=" + DEFAULT_VENDEUR);
+        // Get all the oLTList where vendeur does not contain DEFAULT_VENDEUR
+        defaultOLTShouldNotBeFound("vendeur.doesNotContain=" + DEFAULT_VENDEUR);
+
+        // Get all the oLTList where vendeur does not contain UPDATED_VENDEUR
+        defaultOLTShouldBeFound("vendeur.doesNotContain=" + UPDATED_VENDEUR);
     }
 
     @Test
@@ -476,8 +542,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeEquipment equals to
-        defaultOLTFiltering("typeEquipment.equals=" + DEFAULT_TYPE_EQUIPMENT, "typeEquipment.equals=" + UPDATED_TYPE_EQUIPMENT);
+        // Get all the oLTList where typeEquipment equals to DEFAULT_TYPE_EQUIPMENT
+        defaultOLTShouldBeFound("typeEquipment.equals=" + DEFAULT_TYPE_EQUIPMENT);
+
+        // Get all the oLTList where typeEquipment equals to UPDATED_TYPE_EQUIPMENT
+        defaultOLTShouldNotBeFound("typeEquipment.equals=" + UPDATED_TYPE_EQUIPMENT);
     }
 
     @Test
@@ -486,11 +555,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeEquipment in
-        defaultOLTFiltering(
-            "typeEquipment.in=" + DEFAULT_TYPE_EQUIPMENT + "," + UPDATED_TYPE_EQUIPMENT,
-            "typeEquipment.in=" + UPDATED_TYPE_EQUIPMENT
-        );
+        // Get all the oLTList where typeEquipment in DEFAULT_TYPE_EQUIPMENT or UPDATED_TYPE_EQUIPMENT
+        defaultOLTShouldBeFound("typeEquipment.in=" + DEFAULT_TYPE_EQUIPMENT + "," + UPDATED_TYPE_EQUIPMENT);
+
+        // Get all the oLTList where typeEquipment equals to UPDATED_TYPE_EQUIPMENT
+        defaultOLTShouldNotBeFound("typeEquipment.in=" + UPDATED_TYPE_EQUIPMENT);
     }
 
     @Test
@@ -500,7 +569,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where typeEquipment is not null
-        defaultOLTFiltering("typeEquipment.specified=true", "typeEquipment.specified=false");
+        defaultOLTShouldBeFound("typeEquipment.specified=true");
+
+        // Get all the oLTList where typeEquipment is null
+        defaultOLTShouldNotBeFound("typeEquipment.specified=false");
     }
 
     @Test
@@ -509,8 +581,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeEquipment contains
-        defaultOLTFiltering("typeEquipment.contains=" + DEFAULT_TYPE_EQUIPMENT, "typeEquipment.contains=" + UPDATED_TYPE_EQUIPMENT);
+        // Get all the oLTList where typeEquipment contains DEFAULT_TYPE_EQUIPMENT
+        defaultOLTShouldBeFound("typeEquipment.contains=" + DEFAULT_TYPE_EQUIPMENT);
+
+        // Get all the oLTList where typeEquipment contains UPDATED_TYPE_EQUIPMENT
+        defaultOLTShouldNotBeFound("typeEquipment.contains=" + UPDATED_TYPE_EQUIPMENT);
     }
 
     @Test
@@ -519,11 +594,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeEquipment does not contain
-        defaultOLTFiltering(
-            "typeEquipment.doesNotContain=" + UPDATED_TYPE_EQUIPMENT,
-            "typeEquipment.doesNotContain=" + DEFAULT_TYPE_EQUIPMENT
-        );
+        // Get all the oLTList where typeEquipment does not contain DEFAULT_TYPE_EQUIPMENT
+        defaultOLTShouldNotBeFound("typeEquipment.doesNotContain=" + DEFAULT_TYPE_EQUIPMENT);
+
+        // Get all the oLTList where typeEquipment does not contain UPDATED_TYPE_EQUIPMENT
+        defaultOLTShouldBeFound("typeEquipment.doesNotContain=" + UPDATED_TYPE_EQUIPMENT);
     }
 
     @Test
@@ -532,8 +607,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where codeEquipment equals to
-        defaultOLTFiltering("codeEquipment.equals=" + DEFAULT_CODE_EQUIPMENT, "codeEquipment.equals=" + UPDATED_CODE_EQUIPMENT);
+        // Get all the oLTList where codeEquipment equals to DEFAULT_CODE_EQUIPMENT
+        defaultOLTShouldBeFound("codeEquipment.equals=" + DEFAULT_CODE_EQUIPMENT);
+
+        // Get all the oLTList where codeEquipment equals to UPDATED_CODE_EQUIPMENT
+        defaultOLTShouldNotBeFound("codeEquipment.equals=" + UPDATED_CODE_EQUIPMENT);
     }
 
     @Test
@@ -542,11 +620,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where codeEquipment in
-        defaultOLTFiltering(
-            "codeEquipment.in=" + DEFAULT_CODE_EQUIPMENT + "," + UPDATED_CODE_EQUIPMENT,
-            "codeEquipment.in=" + UPDATED_CODE_EQUIPMENT
-        );
+        // Get all the oLTList where codeEquipment in DEFAULT_CODE_EQUIPMENT or UPDATED_CODE_EQUIPMENT
+        defaultOLTShouldBeFound("codeEquipment.in=" + DEFAULT_CODE_EQUIPMENT + "," + UPDATED_CODE_EQUIPMENT);
+
+        // Get all the oLTList where codeEquipment equals to UPDATED_CODE_EQUIPMENT
+        defaultOLTShouldNotBeFound("codeEquipment.in=" + UPDATED_CODE_EQUIPMENT);
     }
 
     @Test
@@ -556,7 +634,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where codeEquipment is not null
-        defaultOLTFiltering("codeEquipment.specified=true", "codeEquipment.specified=false");
+        defaultOLTShouldBeFound("codeEquipment.specified=true");
+
+        // Get all the oLTList where codeEquipment is null
+        defaultOLTShouldNotBeFound("codeEquipment.specified=false");
     }
 
     @Test
@@ -565,8 +646,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where codeEquipment contains
-        defaultOLTFiltering("codeEquipment.contains=" + DEFAULT_CODE_EQUIPMENT, "codeEquipment.contains=" + UPDATED_CODE_EQUIPMENT);
+        // Get all the oLTList where codeEquipment contains DEFAULT_CODE_EQUIPMENT
+        defaultOLTShouldBeFound("codeEquipment.contains=" + DEFAULT_CODE_EQUIPMENT);
+
+        // Get all the oLTList where codeEquipment contains UPDATED_CODE_EQUIPMENT
+        defaultOLTShouldNotBeFound("codeEquipment.contains=" + UPDATED_CODE_EQUIPMENT);
     }
 
     @Test
@@ -575,11 +659,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where codeEquipment does not contain
-        defaultOLTFiltering(
-            "codeEquipment.doesNotContain=" + UPDATED_CODE_EQUIPMENT,
-            "codeEquipment.doesNotContain=" + DEFAULT_CODE_EQUIPMENT
-        );
+        // Get all the oLTList where codeEquipment does not contain DEFAULT_CODE_EQUIPMENT
+        defaultOLTShouldNotBeFound("codeEquipment.doesNotContain=" + DEFAULT_CODE_EQUIPMENT);
+
+        // Get all the oLTList where codeEquipment does not contain UPDATED_CODE_EQUIPMENT
+        defaultOLTShouldBeFound("codeEquipment.doesNotContain=" + UPDATED_CODE_EQUIPMENT);
     }
 
     @Test
@@ -588,8 +672,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where adresse equals to
-        defaultOLTFiltering("adresse.equals=" + DEFAULT_ADRESSE, "adresse.equals=" + UPDATED_ADRESSE);
+        // Get all the oLTList where adresse equals to DEFAULT_ADRESSE
+        defaultOLTShouldBeFound("adresse.equals=" + DEFAULT_ADRESSE);
+
+        // Get all the oLTList where adresse equals to UPDATED_ADRESSE
+        defaultOLTShouldNotBeFound("adresse.equals=" + UPDATED_ADRESSE);
     }
 
     @Test
@@ -598,8 +685,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where adresse in
-        defaultOLTFiltering("adresse.in=" + DEFAULT_ADRESSE + "," + UPDATED_ADRESSE, "adresse.in=" + UPDATED_ADRESSE);
+        // Get all the oLTList where adresse in DEFAULT_ADRESSE or UPDATED_ADRESSE
+        defaultOLTShouldBeFound("adresse.in=" + DEFAULT_ADRESSE + "," + UPDATED_ADRESSE);
+
+        // Get all the oLTList where adresse equals to UPDATED_ADRESSE
+        defaultOLTShouldNotBeFound("adresse.in=" + UPDATED_ADRESSE);
     }
 
     @Test
@@ -609,7 +699,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where adresse is not null
-        defaultOLTFiltering("adresse.specified=true", "adresse.specified=false");
+        defaultOLTShouldBeFound("adresse.specified=true");
+
+        // Get all the oLTList where adresse is null
+        defaultOLTShouldNotBeFound("adresse.specified=false");
     }
 
     @Test
@@ -618,8 +711,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where adresse contains
-        defaultOLTFiltering("adresse.contains=" + DEFAULT_ADRESSE, "adresse.contains=" + UPDATED_ADRESSE);
+        // Get all the oLTList where adresse contains DEFAULT_ADRESSE
+        defaultOLTShouldBeFound("adresse.contains=" + DEFAULT_ADRESSE);
+
+        // Get all the oLTList where adresse contains UPDATED_ADRESSE
+        defaultOLTShouldNotBeFound("adresse.contains=" + UPDATED_ADRESSE);
     }
 
     @Test
@@ -628,8 +724,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where adresse does not contain
-        defaultOLTFiltering("adresse.doesNotContain=" + UPDATED_ADRESSE, "adresse.doesNotContain=" + DEFAULT_ADRESSE);
+        // Get all the oLTList where adresse does not contain DEFAULT_ADRESSE
+        defaultOLTShouldNotBeFound("adresse.doesNotContain=" + DEFAULT_ADRESSE);
+
+        // Get all the oLTList where adresse does not contain UPDATED_ADRESSE
+        defaultOLTShouldBeFound("adresse.doesNotContain=" + UPDATED_ADRESSE);
     }
 
     @Test
@@ -638,8 +737,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where emplacement equals to
-        defaultOLTFiltering("emplacement.equals=" + DEFAULT_EMPLACEMENT, "emplacement.equals=" + UPDATED_EMPLACEMENT);
+        // Get all the oLTList where emplacement equals to DEFAULT_EMPLACEMENT
+        defaultOLTShouldBeFound("emplacement.equals=" + DEFAULT_EMPLACEMENT);
+
+        // Get all the oLTList where emplacement equals to UPDATED_EMPLACEMENT
+        defaultOLTShouldNotBeFound("emplacement.equals=" + UPDATED_EMPLACEMENT);
     }
 
     @Test
@@ -648,8 +750,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where emplacement in
-        defaultOLTFiltering("emplacement.in=" + DEFAULT_EMPLACEMENT + "," + UPDATED_EMPLACEMENT, "emplacement.in=" + UPDATED_EMPLACEMENT);
+        // Get all the oLTList where emplacement in DEFAULT_EMPLACEMENT or UPDATED_EMPLACEMENT
+        defaultOLTShouldBeFound("emplacement.in=" + DEFAULT_EMPLACEMENT + "," + UPDATED_EMPLACEMENT);
+
+        // Get all the oLTList where emplacement equals to UPDATED_EMPLACEMENT
+        defaultOLTShouldNotBeFound("emplacement.in=" + UPDATED_EMPLACEMENT);
     }
 
     @Test
@@ -659,7 +764,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where emplacement is not null
-        defaultOLTFiltering("emplacement.specified=true", "emplacement.specified=false");
+        defaultOLTShouldBeFound("emplacement.specified=true");
+
+        // Get all the oLTList where emplacement is null
+        defaultOLTShouldNotBeFound("emplacement.specified=false");
     }
 
     @Test
@@ -668,8 +776,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where emplacement contains
-        defaultOLTFiltering("emplacement.contains=" + DEFAULT_EMPLACEMENT, "emplacement.contains=" + UPDATED_EMPLACEMENT);
+        // Get all the oLTList where emplacement contains DEFAULT_EMPLACEMENT
+        defaultOLTShouldBeFound("emplacement.contains=" + DEFAULT_EMPLACEMENT);
+
+        // Get all the oLTList where emplacement contains UPDATED_EMPLACEMENT
+        defaultOLTShouldNotBeFound("emplacement.contains=" + UPDATED_EMPLACEMENT);
     }
 
     @Test
@@ -678,8 +789,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where emplacement does not contain
-        defaultOLTFiltering("emplacement.doesNotContain=" + UPDATED_EMPLACEMENT, "emplacement.doesNotContain=" + DEFAULT_EMPLACEMENT);
+        // Get all the oLTList where emplacement does not contain DEFAULT_EMPLACEMENT
+        defaultOLTShouldNotBeFound("emplacement.doesNotContain=" + DEFAULT_EMPLACEMENT);
+
+        // Get all the oLTList where emplacement does not contain UPDATED_EMPLACEMENT
+        defaultOLTShouldBeFound("emplacement.doesNotContain=" + UPDATED_EMPLACEMENT);
     }
 
     @Test
@@ -688,8 +802,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeCarte equals to
-        defaultOLTFiltering("typeCarte.equals=" + DEFAULT_TYPE_CARTE, "typeCarte.equals=" + UPDATED_TYPE_CARTE);
+        // Get all the oLTList where typeCarte equals to DEFAULT_TYPE_CARTE
+        defaultOLTShouldBeFound("typeCarte.equals=" + DEFAULT_TYPE_CARTE);
+
+        // Get all the oLTList where typeCarte equals to UPDATED_TYPE_CARTE
+        defaultOLTShouldNotBeFound("typeCarte.equals=" + UPDATED_TYPE_CARTE);
     }
 
     @Test
@@ -698,8 +815,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeCarte in
-        defaultOLTFiltering("typeCarte.in=" + DEFAULT_TYPE_CARTE + "," + UPDATED_TYPE_CARTE, "typeCarte.in=" + UPDATED_TYPE_CARTE);
+        // Get all the oLTList where typeCarte in DEFAULT_TYPE_CARTE or UPDATED_TYPE_CARTE
+        defaultOLTShouldBeFound("typeCarte.in=" + DEFAULT_TYPE_CARTE + "," + UPDATED_TYPE_CARTE);
+
+        // Get all the oLTList where typeCarte equals to UPDATED_TYPE_CARTE
+        defaultOLTShouldNotBeFound("typeCarte.in=" + UPDATED_TYPE_CARTE);
     }
 
     @Test
@@ -709,7 +829,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where typeCarte is not null
-        defaultOLTFiltering("typeCarte.specified=true", "typeCarte.specified=false");
+        defaultOLTShouldBeFound("typeCarte.specified=true");
+
+        // Get all the oLTList where typeCarte is null
+        defaultOLTShouldNotBeFound("typeCarte.specified=false");
     }
 
     @Test
@@ -718,8 +841,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeCarte contains
-        defaultOLTFiltering("typeCarte.contains=" + DEFAULT_TYPE_CARTE, "typeCarte.contains=" + UPDATED_TYPE_CARTE);
+        // Get all the oLTList where typeCarte contains DEFAULT_TYPE_CARTE
+        defaultOLTShouldBeFound("typeCarte.contains=" + DEFAULT_TYPE_CARTE);
+
+        // Get all the oLTList where typeCarte contains UPDATED_TYPE_CARTE
+        defaultOLTShouldNotBeFound("typeCarte.contains=" + UPDATED_TYPE_CARTE);
     }
 
     @Test
@@ -728,8 +854,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where typeCarte does not contain
-        defaultOLTFiltering("typeCarte.doesNotContain=" + UPDATED_TYPE_CARTE, "typeCarte.doesNotContain=" + DEFAULT_TYPE_CARTE);
+        // Get all the oLTList where typeCarte does not contain DEFAULT_TYPE_CARTE
+        defaultOLTShouldNotBeFound("typeCarte.doesNotContain=" + DEFAULT_TYPE_CARTE);
+
+        // Get all the oLTList where typeCarte does not contain UPDATED_TYPE_CARTE
+        defaultOLTShouldBeFound("typeCarte.doesNotContain=" + UPDATED_TYPE_CARTE);
     }
 
     @Test
@@ -738,8 +867,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where latitude equals to
-        defaultOLTFiltering("latitude.equals=" + DEFAULT_LATITUDE, "latitude.equals=" + UPDATED_LATITUDE);
+        // Get all the oLTList where latitude equals to DEFAULT_LATITUDE
+        defaultOLTShouldBeFound("latitude.equals=" + DEFAULT_LATITUDE);
+
+        // Get all the oLTList where latitude equals to UPDATED_LATITUDE
+        defaultOLTShouldNotBeFound("latitude.equals=" + UPDATED_LATITUDE);
     }
 
     @Test
@@ -748,8 +880,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where latitude in
-        defaultOLTFiltering("latitude.in=" + DEFAULT_LATITUDE + "," + UPDATED_LATITUDE, "latitude.in=" + UPDATED_LATITUDE);
+        // Get all the oLTList where latitude in DEFAULT_LATITUDE or UPDATED_LATITUDE
+        defaultOLTShouldBeFound("latitude.in=" + DEFAULT_LATITUDE + "," + UPDATED_LATITUDE);
+
+        // Get all the oLTList where latitude equals to UPDATED_LATITUDE
+        defaultOLTShouldNotBeFound("latitude.in=" + UPDATED_LATITUDE);
     }
 
     @Test
@@ -759,7 +894,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where latitude is not null
-        defaultOLTFiltering("latitude.specified=true", "latitude.specified=false");
+        defaultOLTShouldBeFound("latitude.specified=true");
+
+        // Get all the oLTList where latitude is null
+        defaultOLTShouldNotBeFound("latitude.specified=false");
     }
 
     @Test
@@ -768,8 +906,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where latitude contains
-        defaultOLTFiltering("latitude.contains=" + DEFAULT_LATITUDE, "latitude.contains=" + UPDATED_LATITUDE);
+        // Get all the oLTList where latitude contains DEFAULT_LATITUDE
+        defaultOLTShouldBeFound("latitude.contains=" + DEFAULT_LATITUDE);
+
+        // Get all the oLTList where latitude contains UPDATED_LATITUDE
+        defaultOLTShouldNotBeFound("latitude.contains=" + UPDATED_LATITUDE);
     }
 
     @Test
@@ -778,8 +919,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where latitude does not contain
-        defaultOLTFiltering("latitude.doesNotContain=" + UPDATED_LATITUDE, "latitude.doesNotContain=" + DEFAULT_LATITUDE);
+        // Get all the oLTList where latitude does not contain DEFAULT_LATITUDE
+        defaultOLTShouldNotBeFound("latitude.doesNotContain=" + DEFAULT_LATITUDE);
+
+        // Get all the oLTList where latitude does not contain UPDATED_LATITUDE
+        defaultOLTShouldBeFound("latitude.doesNotContain=" + UPDATED_LATITUDE);
     }
 
     @Test
@@ -788,8 +932,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where longitude equals to
-        defaultOLTFiltering("longitude.equals=" + DEFAULT_LONGITUDE, "longitude.equals=" + UPDATED_LONGITUDE);
+        // Get all the oLTList where longitude equals to DEFAULT_LONGITUDE
+        defaultOLTShouldBeFound("longitude.equals=" + DEFAULT_LONGITUDE);
+
+        // Get all the oLTList where longitude equals to UPDATED_LONGITUDE
+        defaultOLTShouldNotBeFound("longitude.equals=" + UPDATED_LONGITUDE);
     }
 
     @Test
@@ -798,8 +945,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where longitude in
-        defaultOLTFiltering("longitude.in=" + DEFAULT_LONGITUDE + "," + UPDATED_LONGITUDE, "longitude.in=" + UPDATED_LONGITUDE);
+        // Get all the oLTList where longitude in DEFAULT_LONGITUDE or UPDATED_LONGITUDE
+        defaultOLTShouldBeFound("longitude.in=" + DEFAULT_LONGITUDE + "," + UPDATED_LONGITUDE);
+
+        // Get all the oLTList where longitude equals to UPDATED_LONGITUDE
+        defaultOLTShouldNotBeFound("longitude.in=" + UPDATED_LONGITUDE);
     }
 
     @Test
@@ -809,7 +959,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where longitude is not null
-        defaultOLTFiltering("longitude.specified=true", "longitude.specified=false");
+        defaultOLTShouldBeFound("longitude.specified=true");
+
+        // Get all the oLTList where longitude is null
+        defaultOLTShouldNotBeFound("longitude.specified=false");
     }
 
     @Test
@@ -818,8 +971,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where longitude contains
-        defaultOLTFiltering("longitude.contains=" + DEFAULT_LONGITUDE, "longitude.contains=" + UPDATED_LONGITUDE);
+        // Get all the oLTList where longitude contains DEFAULT_LONGITUDE
+        defaultOLTShouldBeFound("longitude.contains=" + DEFAULT_LONGITUDE);
+
+        // Get all the oLTList where longitude contains UPDATED_LONGITUDE
+        defaultOLTShouldNotBeFound("longitude.contains=" + UPDATED_LONGITUDE);
     }
 
     @Test
@@ -828,8 +984,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where longitude does not contain
-        defaultOLTFiltering("longitude.doesNotContain=" + UPDATED_LONGITUDE, "longitude.doesNotContain=" + DEFAULT_LONGITUDE);
+        // Get all the oLTList where longitude does not contain DEFAULT_LONGITUDE
+        defaultOLTShouldNotBeFound("longitude.doesNotContain=" + DEFAULT_LONGITUDE);
+
+        // Get all the oLTList where longitude does not contain UPDATED_LONGITUDE
+        defaultOLTShouldBeFound("longitude.doesNotContain=" + UPDATED_LONGITUDE);
     }
 
     @Test
@@ -838,8 +997,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where capacite equals to
-        defaultOLTFiltering("capacite.equals=" + DEFAULT_CAPACITE, "capacite.equals=" + UPDATED_CAPACITE);
+        // Get all the oLTList where capacite equals to DEFAULT_CAPACITE
+        defaultOLTShouldBeFound("capacite.equals=" + DEFAULT_CAPACITE);
+
+        // Get all the oLTList where capacite equals to UPDATED_CAPACITE
+        defaultOLTShouldNotBeFound("capacite.equals=" + UPDATED_CAPACITE);
     }
 
     @Test
@@ -848,8 +1010,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where capacite in
-        defaultOLTFiltering("capacite.in=" + DEFAULT_CAPACITE + "," + UPDATED_CAPACITE, "capacite.in=" + UPDATED_CAPACITE);
+        // Get all the oLTList where capacite in DEFAULT_CAPACITE or UPDATED_CAPACITE
+        defaultOLTShouldBeFound("capacite.in=" + DEFAULT_CAPACITE + "," + UPDATED_CAPACITE);
+
+        // Get all the oLTList where capacite equals to UPDATED_CAPACITE
+        defaultOLTShouldNotBeFound("capacite.in=" + UPDATED_CAPACITE);
     }
 
     @Test
@@ -859,7 +1024,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where capacite is not null
-        defaultOLTFiltering("capacite.specified=true", "capacite.specified=false");
+        defaultOLTShouldBeFound("capacite.specified=true");
+
+        // Get all the oLTList where capacite is null
+        defaultOLTShouldNotBeFound("capacite.specified=false");
     }
 
     @Test
@@ -868,8 +1036,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where capacite contains
-        defaultOLTFiltering("capacite.contains=" + DEFAULT_CAPACITE, "capacite.contains=" + UPDATED_CAPACITE);
+        // Get all the oLTList where capacite contains DEFAULT_CAPACITE
+        defaultOLTShouldBeFound("capacite.contains=" + DEFAULT_CAPACITE);
+
+        // Get all the oLTList where capacite contains UPDATED_CAPACITE
+        defaultOLTShouldNotBeFound("capacite.contains=" + UPDATED_CAPACITE);
     }
 
     @Test
@@ -878,8 +1049,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where capacite does not contain
-        defaultOLTFiltering("capacite.doesNotContain=" + UPDATED_CAPACITE, "capacite.doesNotContain=" + DEFAULT_CAPACITE);
+        // Get all the oLTList where capacite does not contain DEFAULT_CAPACITE
+        defaultOLTShouldNotBeFound("capacite.doesNotContain=" + DEFAULT_CAPACITE);
+
+        // Get all the oLTList where capacite does not contain UPDATED_CAPACITE
+        defaultOLTShouldBeFound("capacite.doesNotContain=" + UPDATED_CAPACITE);
     }
 
     @Test
@@ -888,8 +1062,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where etat equals to
-        defaultOLTFiltering("etat.equals=" + DEFAULT_ETAT, "etat.equals=" + UPDATED_ETAT);
+        // Get all the oLTList where etat equals to DEFAULT_ETAT
+        defaultOLTShouldBeFound("etat.equals=" + DEFAULT_ETAT);
+
+        // Get all the oLTList where etat equals to UPDATED_ETAT
+        defaultOLTShouldNotBeFound("etat.equals=" + UPDATED_ETAT);
     }
 
     @Test
@@ -898,8 +1075,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where etat in
-        defaultOLTFiltering("etat.in=" + DEFAULT_ETAT + "," + UPDATED_ETAT, "etat.in=" + UPDATED_ETAT);
+        // Get all the oLTList where etat in DEFAULT_ETAT or UPDATED_ETAT
+        defaultOLTShouldBeFound("etat.in=" + DEFAULT_ETAT + "," + UPDATED_ETAT);
+
+        // Get all the oLTList where etat equals to UPDATED_ETAT
+        defaultOLTShouldNotBeFound("etat.in=" + UPDATED_ETAT);
     }
 
     @Test
@@ -909,7 +1089,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where etat is not null
-        defaultOLTFiltering("etat.specified=true", "etat.specified=false");
+        defaultOLTShouldBeFound("etat.specified=true");
+
+        // Get all the oLTList where etat is null
+        defaultOLTShouldNotBeFound("etat.specified=false");
     }
 
     @Test
@@ -918,8 +1101,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where etat contains
-        defaultOLTFiltering("etat.contains=" + DEFAULT_ETAT, "etat.contains=" + UPDATED_ETAT);
+        // Get all the oLTList where etat contains DEFAULT_ETAT
+        defaultOLTShouldBeFound("etat.contains=" + DEFAULT_ETAT);
+
+        // Get all the oLTList where etat contains UPDATED_ETAT
+        defaultOLTShouldNotBeFound("etat.contains=" + UPDATED_ETAT);
     }
 
     @Test
@@ -928,8 +1114,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where etat does not contain
-        defaultOLTFiltering("etat.doesNotContain=" + UPDATED_ETAT, "etat.doesNotContain=" + DEFAULT_ETAT);
+        // Get all the oLTList where etat does not contain DEFAULT_ETAT
+        defaultOLTShouldNotBeFound("etat.doesNotContain=" + DEFAULT_ETAT);
+
+        // Get all the oLTList where etat does not contain UPDATED_ETAT
+        defaultOLTShouldBeFound("etat.doesNotContain=" + UPDATED_ETAT);
     }
 
     @Test
@@ -938,8 +1127,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where createdAt equals to
-        defaultOLTFiltering("createdAt.equals=" + DEFAULT_CREATED_AT, "createdAt.equals=" + UPDATED_CREATED_AT);
+        // Get all the oLTList where createdAt equals to DEFAULT_CREATED_AT
+        defaultOLTShouldBeFound("createdAt.equals=" + DEFAULT_CREATED_AT);
+
+        // Get all the oLTList where createdAt equals to UPDATED_CREATED_AT
+        defaultOLTShouldNotBeFound("createdAt.equals=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -948,8 +1140,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where createdAt in
-        defaultOLTFiltering("createdAt.in=" + DEFAULT_CREATED_AT + "," + UPDATED_CREATED_AT, "createdAt.in=" + UPDATED_CREATED_AT);
+        // Get all the oLTList where createdAt in DEFAULT_CREATED_AT or UPDATED_CREATED_AT
+        defaultOLTShouldBeFound("createdAt.in=" + DEFAULT_CREATED_AT + "," + UPDATED_CREATED_AT);
+
+        // Get all the oLTList where createdAt equals to UPDATED_CREATED_AT
+        defaultOLTShouldNotBeFound("createdAt.in=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -959,7 +1154,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where createdAt is not null
-        defaultOLTFiltering("createdAt.specified=true", "createdAt.specified=false");
+        defaultOLTShouldBeFound("createdAt.specified=true");
+
+        // Get all the oLTList where createdAt is null
+        defaultOLTShouldNotBeFound("createdAt.specified=false");
     }
 
     @Test
@@ -968,8 +1166,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where createdAt is greater than or equal to
-        defaultOLTFiltering("createdAt.greaterThanOrEqual=" + DEFAULT_CREATED_AT, "createdAt.greaterThanOrEqual=" + UPDATED_CREATED_AT);
+        // Get all the oLTList where createdAt is greater than or equal to DEFAULT_CREATED_AT
+        defaultOLTShouldBeFound("createdAt.greaterThanOrEqual=" + DEFAULT_CREATED_AT);
+
+        // Get all the oLTList where createdAt is greater than or equal to UPDATED_CREATED_AT
+        defaultOLTShouldNotBeFound("createdAt.greaterThanOrEqual=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -978,8 +1179,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where createdAt is less than or equal to
-        defaultOLTFiltering("createdAt.lessThanOrEqual=" + DEFAULT_CREATED_AT, "createdAt.lessThanOrEqual=" + SMALLER_CREATED_AT);
+        // Get all the oLTList where createdAt is less than or equal to DEFAULT_CREATED_AT
+        defaultOLTShouldBeFound("createdAt.lessThanOrEqual=" + DEFAULT_CREATED_AT);
+
+        // Get all the oLTList where createdAt is less than or equal to SMALLER_CREATED_AT
+        defaultOLTShouldNotBeFound("createdAt.lessThanOrEqual=" + SMALLER_CREATED_AT);
     }
 
     @Test
@@ -988,8 +1192,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where createdAt is less than
-        defaultOLTFiltering("createdAt.lessThan=" + UPDATED_CREATED_AT, "createdAt.lessThan=" + DEFAULT_CREATED_AT);
+        // Get all the oLTList where createdAt is less than DEFAULT_CREATED_AT
+        defaultOLTShouldNotBeFound("createdAt.lessThan=" + DEFAULT_CREATED_AT);
+
+        // Get all the oLTList where createdAt is less than UPDATED_CREATED_AT
+        defaultOLTShouldBeFound("createdAt.lessThan=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -998,8 +1205,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where createdAt is greater than
-        defaultOLTFiltering("createdAt.greaterThan=" + SMALLER_CREATED_AT, "createdAt.greaterThan=" + DEFAULT_CREATED_AT);
+        // Get all the oLTList where createdAt is greater than DEFAULT_CREATED_AT
+        defaultOLTShouldNotBeFound("createdAt.greaterThan=" + DEFAULT_CREATED_AT);
+
+        // Get all the oLTList where createdAt is greater than SMALLER_CREATED_AT
+        defaultOLTShouldBeFound("createdAt.greaterThan=" + SMALLER_CREATED_AT);
     }
 
     @Test
@@ -1008,8 +1218,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where updatedAt equals to
-        defaultOLTFiltering("updatedAt.equals=" + DEFAULT_UPDATED_AT, "updatedAt.equals=" + UPDATED_UPDATED_AT);
+        // Get all the oLTList where updatedAt equals to DEFAULT_UPDATED_AT
+        defaultOLTShouldBeFound("updatedAt.equals=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oLTList where updatedAt equals to UPDATED_UPDATED_AT
+        defaultOLTShouldNotBeFound("updatedAt.equals=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -1018,8 +1231,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where updatedAt in
-        defaultOLTFiltering("updatedAt.in=" + DEFAULT_UPDATED_AT + "," + UPDATED_UPDATED_AT, "updatedAt.in=" + UPDATED_UPDATED_AT);
+        // Get all the oLTList where updatedAt in DEFAULT_UPDATED_AT or UPDATED_UPDATED_AT
+        defaultOLTShouldBeFound("updatedAt.in=" + DEFAULT_UPDATED_AT + "," + UPDATED_UPDATED_AT);
+
+        // Get all the oLTList where updatedAt equals to UPDATED_UPDATED_AT
+        defaultOLTShouldNotBeFound("updatedAt.in=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -1029,7 +1245,10 @@ class OLTResourceIT {
         oLTRepository.saveAndFlush(oLT);
 
         // Get all the oLTList where updatedAt is not null
-        defaultOLTFiltering("updatedAt.specified=true", "updatedAt.specified=false");
+        defaultOLTShouldBeFound("updatedAt.specified=true");
+
+        // Get all the oLTList where updatedAt is null
+        defaultOLTShouldNotBeFound("updatedAt.specified=false");
     }
 
     @Test
@@ -1038,8 +1257,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where updatedAt is greater than or equal to
-        defaultOLTFiltering("updatedAt.greaterThanOrEqual=" + DEFAULT_UPDATED_AT, "updatedAt.greaterThanOrEqual=" + UPDATED_UPDATED_AT);
+        // Get all the oLTList where updatedAt is greater than or equal to DEFAULT_UPDATED_AT
+        defaultOLTShouldBeFound("updatedAt.greaterThanOrEqual=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oLTList where updatedAt is greater than or equal to UPDATED_UPDATED_AT
+        defaultOLTShouldNotBeFound("updatedAt.greaterThanOrEqual=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -1048,8 +1270,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where updatedAt is less than or equal to
-        defaultOLTFiltering("updatedAt.lessThanOrEqual=" + DEFAULT_UPDATED_AT, "updatedAt.lessThanOrEqual=" + SMALLER_UPDATED_AT);
+        // Get all the oLTList where updatedAt is less than or equal to DEFAULT_UPDATED_AT
+        defaultOLTShouldBeFound("updatedAt.lessThanOrEqual=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oLTList where updatedAt is less than or equal to SMALLER_UPDATED_AT
+        defaultOLTShouldNotBeFound("updatedAt.lessThanOrEqual=" + SMALLER_UPDATED_AT);
     }
 
     @Test
@@ -1058,8 +1283,11 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where updatedAt is less than
-        defaultOLTFiltering("updatedAt.lessThan=" + UPDATED_UPDATED_AT, "updatedAt.lessThan=" + DEFAULT_UPDATED_AT);
+        // Get all the oLTList where updatedAt is less than DEFAULT_UPDATED_AT
+        defaultOLTShouldNotBeFound("updatedAt.lessThan=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oLTList where updatedAt is less than UPDATED_UPDATED_AT
+        defaultOLTShouldBeFound("updatedAt.lessThan=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -1068,13 +1296,33 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        // Get all the oLTList where updatedAt is greater than
-        defaultOLTFiltering("updatedAt.greaterThan=" + SMALLER_UPDATED_AT, "updatedAt.greaterThan=" + DEFAULT_UPDATED_AT);
+        // Get all the oLTList where updatedAt is greater than DEFAULT_UPDATED_AT
+        defaultOLTShouldNotBeFound("updatedAt.greaterThan=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oLTList where updatedAt is greater than SMALLER_UPDATED_AT
+        defaultOLTShouldBeFound("updatedAt.greaterThan=" + SMALLER_UPDATED_AT);
     }
 
-    private void defaultOLTFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
-        defaultOLTShouldBeFound(shouldBeFound);
-        defaultOLTShouldNotBeFound(shouldNotBeFound);
+    @Test
+    @Transactional
+    void getAllOLTSByOntIsEqualToSomething() throws Exception {
+        ONT ont;
+        if (TestUtil.findAll(em, ONT.class).isEmpty()) {
+            oLTRepository.saveAndFlush(oLT);
+            ont = ONTResourceIT.createEntity(em);
+        } else {
+            ont = TestUtil.findAll(em, ONT.class).get(0);
+        }
+        em.persist(ont);
+        em.flush();
+        oLT.addOnt(ont);
+        oLTRepository.saveAndFlush(oLT);
+        Long ontId = ont.getId();
+        // Get all the oLTList where ont equals to ontId
+        defaultOLTShouldBeFound("ontId.equals=" + ontId);
+
+        // Get all the oLTList where ont equals to (ontId + 1)
+        defaultOLTShouldNotBeFound("ontId.equals=" + (ontId + 1));
     }
 
     /**
@@ -1141,7 +1389,7 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
 
         // Update the oLT
         OLT updatedOLT = oLTRepository.findById(oLT.getId()).orElseThrow();
@@ -1169,19 +1417,34 @@ class OLTResourceIT {
                 put(ENTITY_API_URL_ID, oLTDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(oLTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oLTDTO))
             )
             .andExpect(status().isOk());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertPersistedOLTToMatchAllProperties(updatedOLT);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
+        OLT testOLT = oLTList.get(oLTList.size() - 1);
+        assertThat(testOLT.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testOLT.getIp()).isEqualTo(UPDATED_IP);
+        assertThat(testOLT.getVendeur()).isEqualTo(UPDATED_VENDEUR);
+        assertThat(testOLT.getTypeEquipment()).isEqualTo(UPDATED_TYPE_EQUIPMENT);
+        assertThat(testOLT.getCodeEquipment()).isEqualTo(UPDATED_CODE_EQUIPMENT);
+        assertThat(testOLT.getAdresse()).isEqualTo(UPDATED_ADRESSE);
+        assertThat(testOLT.getEmplacement()).isEqualTo(UPDATED_EMPLACEMENT);
+        assertThat(testOLT.getTypeCarte()).isEqualTo(UPDATED_TYPE_CARTE);
+        assertThat(testOLT.getLatitude()).isEqualTo(UPDATED_LATITUDE);
+        assertThat(testOLT.getLongitude()).isEqualTo(UPDATED_LONGITUDE);
+        assertThat(testOLT.getCapacite()).isEqualTo(UPDATED_CAPACITE);
+        assertThat(testOLT.getEtat()).isEqualTo(UPDATED_ETAT);
+        assertThat(testOLT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
+        assertThat(testOLT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
     }
 
     @Test
     @Transactional
     void putNonExistingOLT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
         oLT.setId(longCount.incrementAndGet());
 
         // Create the OLT
@@ -1193,18 +1456,19 @@ class OLTResourceIT {
                 put(ENTITY_API_URL_ID, oLTDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(oLTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oLTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithIdMismatchOLT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
         oLT.setId(longCount.incrementAndGet());
 
         // Create the OLT
@@ -1216,18 +1480,19 @@ class OLTResourceIT {
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(oLTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oLTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithMissingIdPathParamOLT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
         oLT.setId(longCount.incrementAndGet());
 
         // Create the OLT
@@ -1235,11 +1500,14 @@ class OLTResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restOLTMockMvc
-            .perform(put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oLTDTO)))
+            .perform(
+                put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -1248,7 +1516,7 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
 
         // Update the oLT using partial update
         OLT partialUpdatedOLT = new OLT();
@@ -1271,14 +1539,28 @@ class OLTResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedOLT.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedOLT))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedOLT))
             )
             .andExpect(status().isOk());
 
         // Validate the OLT in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertOLTUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedOLT, oLT), getPersistedOLT(oLT));
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
+        OLT testOLT = oLTList.get(oLTList.size() - 1);
+        assertThat(testOLT.getLibelle()).isEqualTo(DEFAULT_LIBELLE);
+        assertThat(testOLT.getIp()).isEqualTo(DEFAULT_IP);
+        assertThat(testOLT.getVendeur()).isEqualTo(UPDATED_VENDEUR);
+        assertThat(testOLT.getTypeEquipment()).isEqualTo(UPDATED_TYPE_EQUIPMENT);
+        assertThat(testOLT.getCodeEquipment()).isEqualTo(DEFAULT_CODE_EQUIPMENT);
+        assertThat(testOLT.getAdresse()).isEqualTo(UPDATED_ADRESSE);
+        assertThat(testOLT.getEmplacement()).isEqualTo(UPDATED_EMPLACEMENT);
+        assertThat(testOLT.getTypeCarte()).isEqualTo(UPDATED_TYPE_CARTE);
+        assertThat(testOLT.getLatitude()).isEqualTo(UPDATED_LATITUDE);
+        assertThat(testOLT.getLongitude()).isEqualTo(UPDATED_LONGITUDE);
+        assertThat(testOLT.getCapacite()).isEqualTo(UPDATED_CAPACITE);
+        assertThat(testOLT.getEtat()).isEqualTo(UPDATED_ETAT);
+        assertThat(testOLT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
+        assertThat(testOLT.getUpdatedAt()).isEqualTo(DEFAULT_UPDATED_AT);
     }
 
     @Test
@@ -1287,7 +1569,7 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
 
         // Update the oLT using partial update
         OLT partialUpdatedOLT = new OLT();
@@ -1314,20 +1596,34 @@ class OLTResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedOLT.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedOLT))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedOLT))
             )
             .andExpect(status().isOk());
 
         // Validate the OLT in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertOLTUpdatableFieldsEquals(partialUpdatedOLT, getPersistedOLT(partialUpdatedOLT));
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
+        OLT testOLT = oLTList.get(oLTList.size() - 1);
+        assertThat(testOLT.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testOLT.getIp()).isEqualTo(UPDATED_IP);
+        assertThat(testOLT.getVendeur()).isEqualTo(UPDATED_VENDEUR);
+        assertThat(testOLT.getTypeEquipment()).isEqualTo(UPDATED_TYPE_EQUIPMENT);
+        assertThat(testOLT.getCodeEquipment()).isEqualTo(UPDATED_CODE_EQUIPMENT);
+        assertThat(testOLT.getAdresse()).isEqualTo(UPDATED_ADRESSE);
+        assertThat(testOLT.getEmplacement()).isEqualTo(UPDATED_EMPLACEMENT);
+        assertThat(testOLT.getTypeCarte()).isEqualTo(UPDATED_TYPE_CARTE);
+        assertThat(testOLT.getLatitude()).isEqualTo(UPDATED_LATITUDE);
+        assertThat(testOLT.getLongitude()).isEqualTo(UPDATED_LONGITUDE);
+        assertThat(testOLT.getCapacite()).isEqualTo(UPDATED_CAPACITE);
+        assertThat(testOLT.getEtat()).isEqualTo(UPDATED_ETAT);
+        assertThat(testOLT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
+        assertThat(testOLT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
     }
 
     @Test
     @Transactional
     void patchNonExistingOLT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
         oLT.setId(longCount.incrementAndGet());
 
         // Create the OLT
@@ -1339,18 +1635,19 @@ class OLTResourceIT {
                 patch(ENTITY_API_URL_ID, oLTDTO.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(oLTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oLTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithIdMismatchOLT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
         oLT.setId(longCount.incrementAndGet());
 
         // Create the OLT
@@ -1362,18 +1659,19 @@ class OLTResourceIT {
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(oLTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oLTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithMissingIdPathParamOLT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oLTRepository.findAll().size();
         oLT.setId(longCount.incrementAndGet());
 
         // Create the OLT
@@ -1381,11 +1679,17 @@ class OLTResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restOLTMockMvc
-            .perform(patch(ENTITY_API_URL).with(csrf()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(oLTDTO)))
+            .perform(
+                patch(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(oLTDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the OLT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -1394,7 +1698,7 @@ class OLTResourceIT {
         // Initialize the database
         oLTRepository.saveAndFlush(oLT);
 
-        long databaseSizeBeforeDelete = getRepositoryCount();
+        int databaseSizeBeforeDelete = oLTRepository.findAll().size();
 
         // Delete the oLT
         restOLTMockMvc
@@ -1402,34 +1706,7 @@ class OLTResourceIT {
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        assertDecrementedRepositoryCount(databaseSizeBeforeDelete);
-    }
-
-    protected long getRepositoryCount() {
-        return oLTRepository.count();
-    }
-
-    protected void assertIncrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore + 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertDecrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore - 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertSameRepositoryCount(long countBefore) {
-        assertThat(countBefore).isEqualTo(getRepositoryCount());
-    }
-
-    protected OLT getPersistedOLT(OLT oLT) {
-        return oLTRepository.findById(oLT.getId()).orElseThrow();
-    }
-
-    protected void assertPersistedOLTToMatchAllProperties(OLT expectedOLT) {
-        assertOLTAllPropertiesEquals(expectedOLT, getPersistedOLT(expectedOLT));
-    }
-
-    protected void assertPersistedOLTToMatchUpdatableProperties(OLT expectedOLT) {
-        assertOLTAllUpdatablePropertiesEquals(expectedOLT, getPersistedOLT(expectedOLT));
+        List<OLT> oLTList = oLTRepository.findAll();
+        assertThat(oLTList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

@@ -6,6 +6,7 @@
   "clientRootFolder": "SaytuBackend",
   "databaseType": "sql",
   "dto": "mapstruct",
+  "entityTableName": "ont",
   "fields": [
     {
       "fieldName": "index",
@@ -13,7 +14,7 @@
       "fieldValidateRules": ["required"]
     },
     {
-      "fieldName": "ontIP",
+      "fieldName": "ontID",
       "fieldType": "String",
       "fieldValidateRules": ["required"]
     },

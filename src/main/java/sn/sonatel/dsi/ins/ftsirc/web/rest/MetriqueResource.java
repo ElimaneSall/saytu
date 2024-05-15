@@ -69,10 +69,11 @@ public class MetriqueResource {
         if (metriqueDTO.getId() != null) {
             throw new BadRequestAlertException("A new metrique cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        metriqueDTO = metriqueService.save(metriqueDTO);
-        return ResponseEntity.created(new URI("/api/metriques/" + metriqueDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, metriqueDTO.getId().toString()))
-            .body(metriqueDTO);
+        MetriqueDTO result = metriqueService.save(metriqueDTO);
+        return ResponseEntity
+            .created(new URI("/api/metriques/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -102,10 +103,11 @@ public class MetriqueResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        metriqueDTO = metriqueService.update(metriqueDTO);
-        return ResponseEntity.ok()
+        MetriqueDTO result = metriqueService.update(metriqueDTO);
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, metriqueDTO.getId().toString()))
-            .body(metriqueDTO);
+            .body(result);
     }
 
     /**
@@ -198,7 +200,8 @@ public class MetriqueResource {
     public ResponseEntity<Void> deleteMetrique(@PathVariable("id") Long id) {
         log.debug("REST request to delete Metrique : {}", id);
         metriqueService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

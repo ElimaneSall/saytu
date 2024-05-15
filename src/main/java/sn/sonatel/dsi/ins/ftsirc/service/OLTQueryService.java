@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link OLT} entities in the database.
  * The main input is a {@link OLTCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link OLTDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link OLTDTO} or a {@link Page} of {@link OLTDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +36,18 @@ public class OLTQueryService extends QueryService<OLT> {
     public OLTQueryService(OLTRepository oLTRepository, OLTMapper oLTMapper) {
         this.oLTRepository = oLTRepository;
         this.oLTMapper = oLTMapper;
+    }
+
+    /**
+     * Return a {@link List} of {@link OLTDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<OLTDTO> findByCriteria(OLTCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<OLT> specification = createSpecification(criteria);
+        return oLTMapper.toDto(oLTRepository.findAll(specification));
     }
 
     /**
@@ -120,9 +133,8 @@ public class OLTQueryService extends QueryService<OLT> {
                 specification = specification.and(buildRangeSpecification(criteria.getUpdatedAt(), OLT_.updatedAt));
             }
             if (criteria.getOntId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getOntId(), root -> root.join(OLT_.onts, JoinType.LEFT).get(ONT_.id))
-                );
+                specification =
+                    specification.and(buildSpecification(criteria.getOntId(), root -> root.join(OLT_.onts, JoinType.LEFT).get(ONT_.id)));
             }
         }
         return specification;

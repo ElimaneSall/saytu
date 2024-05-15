@@ -65,10 +65,11 @@ public class SignalResource {
         if (signalDTO.getId() != null) {
             throw new BadRequestAlertException("A new signal cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        signalDTO = signalService.save(signalDTO);
-        return ResponseEntity.created(new URI("/api/signals/" + signalDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, signalDTO.getId().toString()))
-            .body(signalDTO);
+        SignalDTO result = signalService.save(signalDTO);
+        return ResponseEntity
+            .created(new URI("/api/signals/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -98,10 +99,11 @@ public class SignalResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        signalDTO = signalService.update(signalDTO);
-        return ResponseEntity.ok()
+        SignalDTO result = signalService.update(signalDTO);
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, signalDTO.getId().toString()))
-            .body(signalDTO);
+            .body(result);
     }
 
     /**
@@ -194,7 +196,8 @@ public class SignalResource {
     public ResponseEntity<Void> deleteSignal(@PathVariable("id") Long id) {
         log.debug("REST request to delete Signal : {}", id);
         signalService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

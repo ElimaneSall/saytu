@@ -17,7 +17,7 @@
             <column name="jhi_index" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
-            <column name="ont_ip" type="varchar(255)">
+            <column name="ont_id" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
             <column name="service_id" type="varchar(255)">
@@ -72,7 +72,7 @@
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
             <column name="jhi_index" type="string"/>
-            <column name="ont_ip" type="string"/>
+            <column name="ont_id" type="string"/>
             <column name="service_id" type="string"/>
             <column name="slot" type="string"/>
             <column name="pon" type="string"/>

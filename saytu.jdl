@@ -17,7 +17,7 @@ entity OLT {
 
 entity ONT {
     index String required,
-    ontIP String required,
+    ontID String required,
     serviceId String required,
     slot String required,
     pon String required,

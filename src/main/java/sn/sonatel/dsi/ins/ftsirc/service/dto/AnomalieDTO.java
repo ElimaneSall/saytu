@@ -2,9 +2,7 @@ package sn.sonatel.dsi.ins.ftsirc.service.dto;
 
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * A DTO for the {@link sn.sonatel.dsi.ins.ftsirc.domain.Anomalie} entity.
@@ -16,8 +14,6 @@ public class AnomalieDTO implements Serializable {
 
     @NotNull
     private String libelle;
-
-    private Set<DiagnosticDTO> diagnostics = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -33,14 +29,6 @@ public class AnomalieDTO implements Serializable {
 
     public void setLibelle(String libelle) {
         this.libelle = libelle;
-    }
-
-    public Set<DiagnosticDTO> getDiagnostics() {
-        return diagnostics;
-    }
-
-    public void setDiagnostics(Set<DiagnosticDTO> diagnostics) {
-        this.diagnostics = diagnostics;
     }
 
     @Override
@@ -70,7 +58,6 @@ public class AnomalieDTO implements Serializable {
         return "AnomalieDTO{" +
             "id=" + getId() +
             ", libelle='" + getLibelle() + "'" +
-            ", diagnostics=" + getDiagnostics() +
             "}";
     }
 }

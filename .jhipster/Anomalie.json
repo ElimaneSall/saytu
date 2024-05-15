@@ -6,6 +6,7 @@
   "clientRootFolder": "SaytuBackend",
   "databaseType": "sql",
   "dto": "mapstruct",
+  "entityTableName": "anomalie",
   "fields": [
     {
       "fieldName": "libelle",

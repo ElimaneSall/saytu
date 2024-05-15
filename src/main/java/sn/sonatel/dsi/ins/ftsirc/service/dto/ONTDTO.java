@@ -17,7 +17,7 @@ public class ONTDTO implements Serializable {
     private String index;
 
     @NotNull
-    private String ontIP;
+    private String ontID;
 
     @NotNull
     private String serviceId;
@@ -59,12 +59,12 @@ public class ONTDTO implements Serializable {
         this.index = index;
     }
 
-    public String getOntIP() {
-        return ontIP;
+    public String getOntID() {
+        return ontID;
     }
 
-    public void setOntIP(String ontIP) {
-        this.ontIP = ontIP;
+    public void setOntID(String ontID) {
+        this.ontID = ontID;
     }
 
     public String getServiceId() {
@@ -174,7 +174,7 @@ public class ONTDTO implements Serializable {
         return "ONTDTO{" +
             "id=" + getId() +
             ", index='" + getIndex() + "'" +
-            ", ontIP='" + getOntIP() + "'" +
+            ", ontID='" + getOntID() + "'" +
             ", serviceId='" + getServiceId() + "'" +
             ", slot='" + getSlot() + "'" +
             ", pon='" + getPon() + "'" +

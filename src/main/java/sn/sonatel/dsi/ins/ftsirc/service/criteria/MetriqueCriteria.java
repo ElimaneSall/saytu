@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
@@ -37,11 +36,11 @@ public class MetriqueCriteria implements Serializable, Criteria {
     public MetriqueCriteria() {}
 
     public MetriqueCriteria(MetriqueCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.oltPower = other.optionalOltPower().map(StringFilter::copy).orElse(null);
-        this.ontPower = other.optionalOntPower().map(StringFilter::copy).orElse(null);
-        this.createdAt = other.optionalCreatedAt().map(LocalDateFilter::copy).orElse(null);
-        this.ontId = other.optionalOntId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.oltPower = other.oltPower == null ? null : other.oltPower.copy();
+        this.ontPower = other.ontPower == null ? null : other.ontPower.copy();
+        this.createdAt = other.createdAt == null ? null : other.createdAt.copy();
+        this.ontId = other.ontId == null ? null : other.ontId.copy();
         this.distinct = other.distinct;
     }
 
@@ -54,13 +53,9 @@ public class MetriqueCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -73,13 +68,9 @@ public class MetriqueCriteria implements Serializable, Criteria {
         return oltPower;
     }
 
-    public Optional<StringFilter> optionalOltPower() {
-        return Optional.ofNullable(oltPower);
-    }
-
     public StringFilter oltPower() {
         if (oltPower == null) {
-            setOltPower(new StringFilter());
+            oltPower = new StringFilter();
         }
         return oltPower;
     }
@@ -92,13 +83,9 @@ public class MetriqueCriteria implements Serializable, Criteria {
         return ontPower;
     }
 
-    public Optional<StringFilter> optionalOntPower() {
-        return Optional.ofNullable(ontPower);
-    }
-
     public StringFilter ontPower() {
         if (ontPower == null) {
-            setOntPower(new StringFilter());
+            ontPower = new StringFilter();
         }
         return ontPower;
     }
@@ -111,13 +98,9 @@ public class MetriqueCriteria implements Serializable, Criteria {
         return createdAt;
     }
 
-    public Optional<LocalDateFilter> optionalCreatedAt() {
-        return Optional.ofNullable(createdAt);
-    }
-
     public LocalDateFilter createdAt() {
         if (createdAt == null) {
-            setCreatedAt(new LocalDateFilter());
+            createdAt = new LocalDateFilter();
         }
         return createdAt;
     }
@@ -130,13 +113,9 @@ public class MetriqueCriteria implements Serializable, Criteria {
         return ontId;
     }
 
-    public Optional<LongFilter> optionalOntId() {
-        return Optional.ofNullable(ontId);
-    }
-
     public LongFilter ontId() {
         if (ontId == null) {
-            setOntId(new LongFilter());
+            ontId = new LongFilter();
         }
         return ontId;
     }
@@ -146,17 +125,6 @@ public class MetriqueCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -192,12 +160,12 @@ public class MetriqueCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "MetriqueCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalOltPower().map(f -> "oltPower=" + f + ", ").orElse("") +
-            optionalOntPower().map(f -> "ontPower=" + f + ", ").orElse("") +
-            optionalCreatedAt().map(f -> "createdAt=" + f + ", ").orElse("") +
-            optionalOntId().map(f -> "ontId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (oltPower != null ? "oltPower=" + oltPower + ", " : "") +
+            (ontPower != null ? "ontPower=" + ontPower + ", " : "") +
+            (createdAt != null ? "createdAt=" + createdAt + ", " : "") +
+            (ontId != null ? "ontId=" + ontId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

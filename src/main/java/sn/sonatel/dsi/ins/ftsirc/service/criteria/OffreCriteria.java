@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
@@ -35,10 +34,10 @@ public class OffreCriteria implements Serializable, Criteria {
     public OffreCriteria() {}
 
     public OffreCriteria(OffreCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.libelle = other.optionalLibelle().map(StringFilter::copy).orElse(null);
-        this.debitMax = other.optionalDebitMax().map(StringFilter::copy).orElse(null);
-        this.clientId = other.optionalClientId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.libelle = other.libelle == null ? null : other.libelle.copy();
+        this.debitMax = other.debitMax == null ? null : other.debitMax.copy();
+        this.clientId = other.clientId == null ? null : other.clientId.copy();
         this.distinct = other.distinct;
     }
 
@@ -51,13 +50,9 @@ public class OffreCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -70,13 +65,9 @@ public class OffreCriteria implements Serializable, Criteria {
         return libelle;
     }
 
-    public Optional<StringFilter> optionalLibelle() {
-        return Optional.ofNullable(libelle);
-    }
-
     public StringFilter libelle() {
         if (libelle == null) {
-            setLibelle(new StringFilter());
+            libelle = new StringFilter();
         }
         return libelle;
     }
@@ -89,13 +80,9 @@ public class OffreCriteria implements Serializable, Criteria {
         return debitMax;
     }
 
-    public Optional<StringFilter> optionalDebitMax() {
-        return Optional.ofNullable(debitMax);
-    }
-
     public StringFilter debitMax() {
         if (debitMax == null) {
-            setDebitMax(new StringFilter());
+            debitMax = new StringFilter();
         }
         return debitMax;
     }
@@ -108,13 +95,9 @@ public class OffreCriteria implements Serializable, Criteria {
         return clientId;
     }
 
-    public Optional<LongFilter> optionalClientId() {
-        return Optional.ofNullable(clientId);
-    }
-
     public LongFilter clientId() {
         if (clientId == null) {
-            setClientId(new LongFilter());
+            clientId = new LongFilter();
         }
         return clientId;
     }
@@ -124,17 +107,6 @@ public class OffreCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -169,11 +141,11 @@ public class OffreCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "OffreCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalLibelle().map(f -> "libelle=" + f + ", ").orElse("") +
-            optionalDebitMax().map(f -> "debitMax=" + f + ", ").orElse("") +
-            optionalClientId().map(f -> "clientId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (libelle != null ? "libelle=" + libelle + ", " : "") +
+            (debitMax != null ? "debitMax=" + debitMax + ", " : "") +
+            (clientId != null ? "clientId=" + clientId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

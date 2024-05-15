@@ -222,7 +222,7 @@ public class InventaireONT implements CommandLineRunner {
         return listONTs;
     }
 
-    public Variable getPowerONT(String vendeur, String index, String ip, String _ont_) throws IOException {
+    public Double getPowerONT(String vendeur, String index, String ip, String _ont_) throws IOException {
         TransportMapping<?> transport = null;
         try {
 
@@ -245,8 +245,7 @@ public class InventaireONT implements CommandLineRunner {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-
-                    return  varBind.getVariable();
+                    return Double.parseDouble( varBind.getVariable().toString()) ;
                 }
             }
         } catch (Exception e) {
