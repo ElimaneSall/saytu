@@ -84,7 +84,7 @@ public class ScriptsDiagnostic {
 
     public static String getRxOpticalPower(String ip, String index, String ontId, String vendeur) throws IOException {
         String OntRxPower = "";
-        String ontpower = "";
+        String varOpticalPower = "";
         String opticalPower = "";
 
         CommunityTarget target = new CommunityTarget();
@@ -105,8 +105,8 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    ontpower = varBind.getVariable().toString();
-                    if (ontpower.equals("32768")) {
+                    varOpticalPower = varBind.getVariable().toString();
+                    if (varOpticalPower.equals("32768")) {
                         opticalPower = "KO";
                     } else {
                         opticalPower = "OK";
@@ -127,8 +127,8 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    ontpower = varBind.getVariable().toString();
-                    if (ontpower.equals("2147483647")) {
+                    varOpticalPower = varBind.getVariable().toString();
+                    if (varOpticalPower.equals("2147483647")) {
                         opticalPower = "KO";
                     } else {
                         opticalPower = "OK";
@@ -141,7 +141,8 @@ public class ScriptsDiagnostic {
 
     public String getOperStatus(String ip, String index, String ontId, String vendeur) throws IOException {
         String OntOperStatus = "";
-        String OperStatus = "";
+        String varOperStatus = "";
+        String operStatus = "";
 
         CommunityTarget target = new CommunityTarget();
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
@@ -161,11 +162,11 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    OperStatus = varBind.getVariable().toString();
-                    if (OperStatus != "1") {
-                        OperStatus = "KO";
+                    varOperStatus = varBind.getVariable().toString();
+                    if (varOperStatus != "1") {
+                        operStatus = "KO";
                     } else {
-                        OperStatus = "OK";
+                        operStatus = "OK";
                     }
                 }
             }
@@ -183,71 +184,129 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    OperStatus = varBind.getVariable().toString();
-                    if (OperStatus.equals("2")) {
-                        OperStatus = "KO";
+                    varOperStatus = varBind.getVariable().toString();
+                    if (varOperStatus.equals("2")) {
+                        operStatus = "KO";
                     } else {
-                        OperStatus = "OK";
+                        operStatus = "OK";
                     }
                 }
             }
         }
-        return OperStatus;
+        return operStatus;
     }
 
     public String getRowStatus(String ip, String index, String ontId, String vendeur) throws IOException {
-        String OntOperStatus = "";
-        String OperStatus = "";
+        String OntRowStatus = "";
+        String varRowStatus = "";
+        String rowStatus = "";
 
         CommunityTarget target = new CommunityTarget();
         TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
         Snmp snmp = new Snmp(transport);
         transport.listen();
         if (vendeur.equalsIgnoreCase("NOKIA")) {
-            OntOperStatus = "1.3.6.1.2.1.2.2.1.8" + "." + index; //Up(1),Down(2),Testing(3),Unknown(4),Dormant(5), notPresent(6),lowerLayerDown(7)
+            OntRowStatus = "1.3.6.1.4.1.637.61.1.35.10.1.1.2" + "." + index; //Active(1),NotInService(2),NotReady(3),CreateAndGo(4),CreateAndWait(5),Destroy(6)
             target.setCommunity(new OctetString("t1HAI2nai"));
             target.setAddress(new UdpAddress(ip + "/" + "161"));
             target.setRetries(20);
             target.setTimeout(2000);
             target.setVersion(SnmpConstants.version2c);
             PDU pdu = new PDU();
-            pdu.add(new VariableBinding(new OID(OntOperStatus)));
+            pdu.add(new VariableBinding(new OID(OntRowStatus)));
             pdu.setType(PDU.GET);
 
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    OperStatus = varBind.getVariable().toString();
-                    if (OperStatus != "1") {
-                        OperStatus = "KO";
+                    varRowStatus = varBind.getVariable().toString();
+                    if (varRowStatus.equals("1")) {
+                        rowStatus = "OK";
                     } else {
-                        OperStatus = "OK";
+                        rowStatus = "KO";
                     }
                 }
             }
         } else if (vendeur.equalsIgnoreCase("HUAWEI")) {
-            OntOperStatus = "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.15" + "." + index + "." + ontId; //Up(1),Down(2),Unknown(-1)
+            OntRowStatus = "1.3.6.1.4.1.2011.6.128.1.1.2.43.1.10" + "." + index + "." + ontId; //Active(1), NotInService(2), NotReady(3), CreateAndGo(4), CreateAndWait(5), Destroy(6)
             target.setCommunity(new OctetString("OLT@osn_read"));
             target.setAddress(new UdpAddress(ip + "/" + "161"));
             target.setRetries(20);
             target.setTimeout(2000);
             target.setVersion(SnmpConstants.version2c);
             PDU pdu = new PDU();
-            pdu.add(new VariableBinding(new OID(OntOperStatus)));
+            pdu.add(new VariableBinding(new OID(OntRowStatus)));
             pdu.setType(PDU.GET);
 
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    OperStatus = varBind.getVariable().toString();
-                    if (OperStatus.equals("2")) {
-                        OperStatus = "KO";
+                    varRowStatus = varBind.getVariable().toString();
+                    if (varRowStatus.equals("1")) {
+                        rowStatus = "OK";
                     } else {
-                        OperStatus = "OK";
+                        rowStatus = "KO";
                     }
                 }
             }
         }
-        return OperStatus;
+        return rowStatus;
+    }
+
+    public String getRanging(String ip, String index, String ontId, String vendeur) throws IOException {
+        String OntRanging = "";
+        String varRanging = "";
+        String ranging = "";
+
+        CommunityTarget target = new CommunityTarget();
+        TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
+        Snmp snmp = new Snmp(transport);
+        transport.listen();
+        if (vendeur.equalsIgnoreCase("NOKIA")) {
+            OntRanging = "1.3.6.1.4.1.637.61.1.35.11.4.1.5" + "." + index; //Not Ranged and Not DISABLED(0), Ranged(1), Manually-DISABLED by the operator(2), Auto-DISABLED by the OLT (3)
+            target.setCommunity(new OctetString("t1HAI2nai"));
+            target.setAddress(new UdpAddress(ip + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(OntRanging)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    varRanging = varBind.getVariable().toString();
+                    if (varRanging != "1") {
+                        ranging = "KO";
+                    } else {
+                        ranging = "OK";
+                    }
+                }
+            }
+        } else if (vendeur.equalsIgnoreCase("HUAWEI")) {
+            OntRanging = "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.20" + "." + index + "." + ontId; //Not Ranged(-1), Ranged(>0)
+            target.setCommunity(new OctetString("OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/" + "161"));
+            target.setRetries(20);
+            target.setTimeout(2000);
+            target.setVersion(SnmpConstants.version2c);
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(OntRanging)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    varRanging = varBind.getVariable().toString();
+                    if (varRanging.equals("-1")) {
+                        ranging = "KO";
+                    } else {
+                        ranging = "OK";
+                    }
+                }
+            }
+        }
+        return ranging;
     }
 }
