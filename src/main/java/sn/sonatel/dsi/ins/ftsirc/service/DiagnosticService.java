@@ -65,7 +65,11 @@ public interface DiagnosticService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+    public String diagnosticFiberCut(ONT ont);
     public String diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
     public String diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
+    public String diagnosticDebit(ONT ont) throws IOException;
+
+
 
 }

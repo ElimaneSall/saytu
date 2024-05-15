@@ -222,6 +222,7 @@ public class DiagnosticResource {
     public ResponseEntity<String> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
         ONT ont = ontRepository.findByServiceId(serviceId);
+        diagnosticService.diagnosticFiberCut(ont);
         diagnosticService.diagnosticOLTPowerUnderLimit(ont);
         diagnosticService.diagnosticOLTPowerUnderLimit(ont);
 

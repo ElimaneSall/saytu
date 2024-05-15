@@ -48,6 +48,11 @@ public class OLTServiceImpl implements OLTService {
     }
 
     @Override
+    public void updateOLT(String path) {
+
+    }
+
+    @Override
     public Optional<OLTDTO> partialUpdate(OLTDTO oLTDTO) {
         log.debug("Request to partially update OLT : {}", oLTDTO);
 

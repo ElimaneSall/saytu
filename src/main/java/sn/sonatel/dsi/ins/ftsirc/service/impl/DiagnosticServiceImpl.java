@@ -104,7 +104,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         log.debug("Request to delete Diagnostic : {}", id);
         diagnosticRepository.deleteById(id);
     }
-
     public String diagnosticFiberCut(ONT ont) {
         try {
 
@@ -330,5 +329,10 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
             } }
         return "";
+    }
+
+    @Override
+    public String diagnosticDebit(ONT ont) throws IOException {
+        return null;
     }
 }
