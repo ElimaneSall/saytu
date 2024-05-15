@@ -1,5 +1,6 @@
 package sn.sonatel.dsi.ins.ftsirc.service.dto;
 
+import jakarta.persistence.Lob;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
@@ -15,6 +16,14 @@ public class AnomalieDTO implements Serializable {
     @NotNull
     private String libelle;
 
+    @Lob
+    private String description;
+
+    private String etat;
+
+    @Lob
+    private String recommandation;
+
     public Long getId() {
         return id;
     }
@@ -29,6 +38,30 @@ public class AnomalieDTO implements Serializable {
 
     public void setLibelle(String libelle) {
         this.libelle = libelle;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getEtat() {
+        return etat;
+    }
+
+    public void setEtat(String etat) {
+        this.etat = etat;
+    }
+
+    public String getRecommandation() {
+        return recommandation;
+    }
+
+    public void setRecommandation(String recommandation) {
+        this.recommandation = recommandation;
     }
 
     @Override
@@ -58,6 +91,9 @@ public class AnomalieDTO implements Serializable {
         return "AnomalieDTO{" +
             "id=" + getId() +
             ", libelle='" + getLibelle() + "'" +
+            ", description='" + getDescription() + "'" +
+            ", etat='" + getEtat() + "'" +
+            ", recommandation='" + getRecommandation() + "'" +
             "}";
     }
 }

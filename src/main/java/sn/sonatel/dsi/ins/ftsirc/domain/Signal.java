@@ -29,6 +29,9 @@ public class Signal implements Serializable {
     @Column(name = "libelle", nullable = false, unique = true)
     private String libelle;
 
+    @Column(name = "value_signal")
+    private Double valueSignal;
+
     @NotNull
     @Column(name = "seuil_min", nullable = false)
     private Double seuilMin;
@@ -68,6 +71,19 @@ public class Signal implements Serializable {
 
     public void setLibelle(String libelle) {
         this.libelle = libelle;
+    }
+
+    public Double getValueSignal() {
+        return this.valueSignal;
+    }
+
+    public Signal valueSignal(Double valueSignal) {
+        this.setValueSignal(valueSignal);
+        return this;
+    }
+
+    public void setValueSignal(Double valueSignal) {
+        this.valueSignal = valueSignal;
     }
 
     public Double getSeuilMin() {
@@ -152,6 +168,7 @@ public class Signal implements Serializable {
         return "Signal{" +
             "id=" + getId() +
             ", libelle='" + getLibelle() + "'" +
+            ", valueSignal=" + getValueSignal() +
             ", seuilMin=" + getSeuilMin() +
             ", seuilMax=" + getSeuilMax() +
             "}";

@@ -62,6 +62,18 @@ public class ONT implements Serializable {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "etat_olt")
+    private String etatOlt;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "status_at")
+    private LocalDate statusAt;
+
+    @Column(name = "nbre_lignes_couper")
+    private Long nbreLignesCouper;
+
     @JsonIgnoreProperties(value = { "offre", "ont" }, allowSetters = true)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(unique = true)
@@ -226,6 +238,58 @@ public class ONT implements Serializable {
         this.updatedAt = updatedAt;
     }
 
+    public String getEtatOlt() {
+        return this.etatOlt;
+    }
+
+    public ONT etatOlt(String etatOlt) {
+        this.setEtatOlt(etatOlt);
+        return this;
+    }
+
+    public void setEtatOlt(String etatOlt) {
+        this.etatOlt = etatOlt;
+    }
+
+    public String getStatus() {
+        return this.status;
+    }
+
+    public ONT status(String status) {
+        this.setStatus(status);
+        return this;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDate getStatusAt() {
+        return this.statusAt;
+    }
+
+    public ONT statusAt(LocalDate statusAt) {
+        this.setStatusAt(statusAt);
+        return this;
+    }
+
+    public void setStatusAt(LocalDate statusAt) {
+        this.statusAt = statusAt;
+    }
+
+    public Long getNbreLignesCouper() {
+        return this.nbreLignesCouper;
+    }
+
+    public ONT nbreLignesCouper(Long nbreLignesCouper) {
+        this.setNbreLignesCouper(nbreLignesCouper);
+        return this;
+    }
+
+    public void setNbreLignesCouper(Long nbreLignesCouper) {
+        this.nbreLignesCouper = nbreLignesCouper;
+    }
+
     public Client getClient() {
         return this.client;
     }
@@ -348,6 +412,10 @@ public class ONT implements Serializable {
             ", maxDown='" + getMaxDown() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
+            ", etatOlt='" + getEtatOlt() + "'" +
+            ", status='" + getStatus() + "'" +
+            ", statusAt='" + getStatusAt() + "'" +
+            ", nbreLignesCouper=" + getNbreLignesCouper() +
             "}";
     }
 }

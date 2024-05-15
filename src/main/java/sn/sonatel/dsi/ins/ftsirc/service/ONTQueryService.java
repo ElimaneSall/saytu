@@ -120,6 +120,18 @@ public class ONTQueryService extends QueryService<ONT> {
             if (criteria.getUpdatedAt() != null) {
                 specification = specification.and(buildRangeSpecification(criteria.getUpdatedAt(), ONT_.updatedAt));
             }
+            if (criteria.getEtatOlt() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getEtatOlt(), ONT_.etatOlt));
+            }
+            if (criteria.getStatus() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getStatus(), ONT_.status));
+            }
+            if (criteria.getStatusAt() != null) {
+                specification = specification.and(buildRangeSpecification(criteria.getStatusAt(), ONT_.statusAt));
+            }
+            if (criteria.getNbreLignesCouper() != null) {
+                specification = specification.and(buildRangeSpecification(criteria.getNbreLignesCouper(), ONT_.nbreLignesCouper));
+            }
             if (criteria.getClientId() != null) {
                 specification =
                     specification.and(

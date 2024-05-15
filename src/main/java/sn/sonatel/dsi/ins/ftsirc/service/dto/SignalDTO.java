@@ -15,6 +15,8 @@ public class SignalDTO implements Serializable {
     @NotNull
     private String libelle;
 
+    private Double valueSignal;
+
     @NotNull
     private Double seuilMin;
 
@@ -35,6 +37,14 @@ public class SignalDTO implements Serializable {
 
     public void setLibelle(String libelle) {
         this.libelle = libelle;
+    }
+
+    public Double getValueSignal() {
+        return valueSignal;
+    }
+
+    public void setValueSignal(Double valueSignal) {
+        this.valueSignal = valueSignal;
     }
 
     public Double getSeuilMin() {
@@ -80,6 +90,7 @@ public class SignalDTO implements Serializable {
         return "SignalDTO{" +
             "id=" + getId() +
             ", libelle='" + getLibelle() + "'" +
+            ", valueSignal=" + getValueSignal() +
             ", seuilMin=" + getSeuilMin() +
             ", seuilMax=" + getSeuilMax() +
             "}";

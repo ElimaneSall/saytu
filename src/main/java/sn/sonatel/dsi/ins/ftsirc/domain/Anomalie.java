@@ -29,6 +29,17 @@ public class Anomalie implements Serializable {
     @Column(name = "libelle", nullable = false, unique = true)
     private String libelle;
 
+    @Lob
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "etat")
+    private String etat;
+
+    @Lob
+    @Column(name = "recommandation")
+    private String recommandation;
+
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "anomalies")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "signal", "ont", "anomalies" }, allowSetters = true)
@@ -60,6 +71,45 @@ public class Anomalie implements Serializable {
 
     public void setLibelle(String libelle) {
         this.libelle = libelle;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public Anomalie description(String description) {
+        this.setDescription(description);
+        return this;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getEtat() {
+        return this.etat;
+    }
+
+    public Anomalie etat(String etat) {
+        this.setEtat(etat);
+        return this;
+    }
+
+    public void setEtat(String etat) {
+        this.etat = etat;
+    }
+
+    public String getRecommandation() {
+        return this.recommandation;
+    }
+
+    public Anomalie recommandation(String recommandation) {
+        this.setRecommandation(recommandation);
+        return this;
+    }
+
+    public void setRecommandation(String recommandation) {
+        this.recommandation = recommandation;
     }
 
     public Set<Diagnostic> getDiagnostics() {
@@ -118,6 +168,9 @@ public class Anomalie implements Serializable {
         return "Anomalie{" +
             "id=" + getId() +
             ", libelle='" + getLibelle() + "'" +
+            ", description='" + getDescription() + "'" +
+            ", etat='" + getEtat() + "'" +
+            ", recommandation='" + getRecommandation() + "'" +
             "}";
     }
 }

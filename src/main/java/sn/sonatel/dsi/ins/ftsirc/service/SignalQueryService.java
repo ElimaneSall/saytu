@@ -93,6 +93,9 @@ public class SignalQueryService extends QueryService<Signal> {
             if (criteria.getLibelle() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getLibelle(), Signal_.libelle));
             }
+            if (criteria.getValueSignal() != null) {
+                specification = specification.and(buildRangeSpecification(criteria.getValueSignal(), Signal_.valueSignal));
+            }
             if (criteria.getSeuilMin() != null) {
                 specification = specification.and(buildRangeSpecification(criteria.getSeuilMin(), Signal_.seuilMin));
             }

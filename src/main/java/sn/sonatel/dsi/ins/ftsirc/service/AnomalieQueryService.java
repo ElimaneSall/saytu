@@ -93,6 +93,9 @@ public class AnomalieQueryService extends QueryService<Anomalie> {
             if (criteria.getLibelle() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getLibelle(), Anomalie_.libelle));
             }
+            if (criteria.getEtat() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getEtat(), Anomalie_.etat));
+            }
             if (criteria.getDiagnosticId() != null) {
                 specification =
                     specification.and(

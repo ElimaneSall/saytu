@@ -79,6 +79,20 @@ class ONTResourceIT {
     private static final LocalDate UPDATED_UPDATED_AT = LocalDate.now(ZoneId.systemDefault());
     private static final LocalDate SMALLER_UPDATED_AT = LocalDate.ofEpochDay(-1L);
 
+    private static final String DEFAULT_ETAT_OLT = "AAAAAAAAAA";
+    private static final String UPDATED_ETAT_OLT = "BBBBBBBBBB";
+
+    private static final String DEFAULT_STATUS = "AAAAAAAAAA";
+    private static final String UPDATED_STATUS = "BBBBBBBBBB";
+
+    private static final LocalDate DEFAULT_STATUS_AT = LocalDate.ofEpochDay(0L);
+    private static final LocalDate UPDATED_STATUS_AT = LocalDate.now(ZoneId.systemDefault());
+    private static final LocalDate SMALLER_STATUS_AT = LocalDate.ofEpochDay(-1L);
+
+    private static final Long DEFAULT_NBRE_LIGNES_COUPER = 1L;
+    private static final Long UPDATED_NBRE_LIGNES_COUPER = 2L;
+    private static final Long SMALLER_NBRE_LIGNES_COUPER = 1L - 1L;
+
     private static final String ENTITY_API_URL = "/api/onts";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
@@ -122,7 +136,11 @@ class ONTResourceIT {
             .maxUp(DEFAULT_MAX_UP)
             .maxDown(DEFAULT_MAX_DOWN)
             .createdAt(DEFAULT_CREATED_AT)
-            .updatedAt(DEFAULT_UPDATED_AT);
+            .updatedAt(DEFAULT_UPDATED_AT)
+            .etatOlt(DEFAULT_ETAT_OLT)
+            .status(DEFAULT_STATUS)
+            .statusAt(DEFAULT_STATUS_AT)
+            .nbreLignesCouper(DEFAULT_NBRE_LIGNES_COUPER);
         return oNT;
     }
 
@@ -143,7 +161,11 @@ class ONTResourceIT {
             .maxUp(UPDATED_MAX_UP)
             .maxDown(UPDATED_MAX_DOWN)
             .createdAt(UPDATED_CREATED_AT)
-            .updatedAt(UPDATED_UPDATED_AT);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .status(UPDATED_STATUS)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
         return oNT;
     }
 
@@ -178,6 +200,10 @@ class ONTResourceIT {
         assertThat(testONT.getMaxDown()).isEqualTo(DEFAULT_MAX_DOWN);
         assertThat(testONT.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
         assertThat(testONT.getUpdatedAt()).isEqualTo(DEFAULT_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(DEFAULT_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(DEFAULT_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(DEFAULT_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(DEFAULT_NBRE_LIGNES_COUPER);
     }
 
     @Test
@@ -342,7 +368,11 @@ class ONTResourceIT {
             .andExpect(jsonPath("$.[*].maxUp").value(hasItem(DEFAULT_MAX_UP)))
             .andExpect(jsonPath("$.[*].maxDown").value(hasItem(DEFAULT_MAX_DOWN)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
-            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())));
+            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
+            .andExpect(jsonPath("$.[*].etatOlt").value(hasItem(DEFAULT_ETAT_OLT)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS)))
+            .andExpect(jsonPath("$.[*].statusAt").value(hasItem(DEFAULT_STATUS_AT.toString())))
+            .andExpect(jsonPath("$.[*].nbreLignesCouper").value(hasItem(DEFAULT_NBRE_LIGNES_COUPER.intValue())));
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -383,7 +413,11 @@ class ONTResourceIT {
             .andExpect(jsonPath("$.maxUp").value(DEFAULT_MAX_UP))
             .andExpect(jsonPath("$.maxDown").value(DEFAULT_MAX_DOWN))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
-            .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()));
+            .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
+            .andExpect(jsonPath("$.etatOlt").value(DEFAULT_ETAT_OLT))
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS))
+            .andExpect(jsonPath("$.statusAt").value(DEFAULT_STATUS_AT.toString()))
+            .andExpect(jsonPath("$.nbreLignesCouper").value(DEFAULT_NBRE_LIGNES_COUPER.intValue()));
     }
 
     @Test
@@ -1108,6 +1142,318 @@ class ONTResourceIT {
 
     @Test
     @Transactional
+    void getAllONTSByEtatOltIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt equals to DEFAULT_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.equals=" + DEFAULT_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt equals to UPDATED_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.equals=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt in DEFAULT_ETAT_OLT or UPDATED_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.in=" + DEFAULT_ETAT_OLT + "," + UPDATED_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt equals to UPDATED_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.in=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt is not null
+        defaultONTShouldBeFound("etatOlt.specified=true");
+
+        // Get all the oNTList where etatOlt is null
+        defaultONTShouldNotBeFound("etatOlt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt contains DEFAULT_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.contains=" + DEFAULT_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt contains UPDATED_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.contains=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltNotContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt does not contain DEFAULT_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.doesNotContain=" + DEFAULT_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt does not contain UPDATED_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.doesNotContain=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status equals to DEFAULT_STATUS
+        defaultONTShouldBeFound("status.equals=" + DEFAULT_STATUS);
+
+        // Get all the oNTList where status equals to UPDATED_STATUS
+        defaultONTShouldNotBeFound("status.equals=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status in DEFAULT_STATUS or UPDATED_STATUS
+        defaultONTShouldBeFound("status.in=" + DEFAULT_STATUS + "," + UPDATED_STATUS);
+
+        // Get all the oNTList where status equals to UPDATED_STATUS
+        defaultONTShouldNotBeFound("status.in=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status is not null
+        defaultONTShouldBeFound("status.specified=true");
+
+        // Get all the oNTList where status is null
+        defaultONTShouldNotBeFound("status.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status contains DEFAULT_STATUS
+        defaultONTShouldBeFound("status.contains=" + DEFAULT_STATUS);
+
+        // Get all the oNTList where status contains UPDATED_STATUS
+        defaultONTShouldNotBeFound("status.contains=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusNotContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status does not contain DEFAULT_STATUS
+        defaultONTShouldNotBeFound("status.doesNotContain=" + DEFAULT_STATUS);
+
+        // Get all the oNTList where status does not contain UPDATED_STATUS
+        defaultONTShouldBeFound("status.doesNotContain=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt equals to DEFAULT_STATUS_AT
+        defaultONTShouldBeFound("statusAt.equals=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt equals to UPDATED_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.equals=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt in DEFAULT_STATUS_AT or UPDATED_STATUS_AT
+        defaultONTShouldBeFound("statusAt.in=" + DEFAULT_STATUS_AT + "," + UPDATED_STATUS_AT);
+
+        // Get all the oNTList where statusAt equals to UPDATED_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.in=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is not null
+        defaultONTShouldBeFound("statusAt.specified=true");
+
+        // Get all the oNTList where statusAt is null
+        defaultONTShouldNotBeFound("statusAt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is greater than or equal to DEFAULT_STATUS_AT
+        defaultONTShouldBeFound("statusAt.greaterThanOrEqual=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is greater than or equal to UPDATED_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.greaterThanOrEqual=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is less than or equal to DEFAULT_STATUS_AT
+        defaultONTShouldBeFound("statusAt.lessThanOrEqual=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is less than or equal to SMALLER_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.lessThanOrEqual=" + SMALLER_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsLessThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is less than DEFAULT_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.lessThan=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is less than UPDATED_STATUS_AT
+        defaultONTShouldBeFound("statusAt.lessThan=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is greater than DEFAULT_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.greaterThan=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is greater than SMALLER_STATUS_AT
+        defaultONTShouldBeFound("statusAt.greaterThan=" + SMALLER_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper equals to DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.equals=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper equals to UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.equals=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper in DEFAULT_NBRE_LIGNES_COUPER or UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.in=" + DEFAULT_NBRE_LIGNES_COUPER + "," + UPDATED_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper equals to UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.in=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is not null
+        defaultONTShouldBeFound("nbreLignesCouper.specified=true");
+
+        // Get all the oNTList where nbreLignesCouper is null
+        defaultONTShouldNotBeFound("nbreLignesCouper.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is greater than or equal to DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.greaterThanOrEqual=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is greater than or equal to UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.greaterThanOrEqual=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is less than or equal to DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.lessThanOrEqual=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is less than or equal to SMALLER_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.lessThanOrEqual=" + SMALLER_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsLessThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is less than DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.lessThan=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is less than UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.lessThan=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is greater than DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.greaterThan=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is greater than SMALLER_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.greaterThan=" + SMALLER_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
     void getAllONTSByClientIsEqualToSomething() throws Exception {
         Client client;
         if (TestUtil.findAll(em, Client.class).isEmpty()) {
@@ -1212,7 +1558,11 @@ class ONTResourceIT {
             .andExpect(jsonPath("$.[*].maxUp").value(hasItem(DEFAULT_MAX_UP)))
             .andExpect(jsonPath("$.[*].maxDown").value(hasItem(DEFAULT_MAX_DOWN)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
-            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())));
+            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
+            .andExpect(jsonPath("$.[*].etatOlt").value(hasItem(DEFAULT_ETAT_OLT)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS)))
+            .andExpect(jsonPath("$.[*].statusAt").value(hasItem(DEFAULT_STATUS_AT.toString())))
+            .andExpect(jsonPath("$.[*].nbreLignesCouper").value(hasItem(DEFAULT_NBRE_LIGNES_COUPER.intValue())));
 
         // Check, that the count call also returns 1
         restONTMockMvc
@@ -1270,7 +1620,11 @@ class ONTResourceIT {
             .maxUp(UPDATED_MAX_UP)
             .maxDown(UPDATED_MAX_DOWN)
             .createdAt(UPDATED_CREATED_AT)
-            .updatedAt(UPDATED_UPDATED_AT);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .status(UPDATED_STATUS)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
         ONTDTO oNTDTO = oNTMapper.toDto(updatedONT);
 
         restONTMockMvc
@@ -1296,6 +1650,10 @@ class ONTResourceIT {
         assertThat(testONT.getMaxDown()).isEqualTo(UPDATED_MAX_DOWN);
         assertThat(testONT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
         assertThat(testONT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(UPDATED_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(UPDATED_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(UPDATED_NBRE_LIGNES_COUPER);
     }
 
     @Test
@@ -1379,7 +1737,12 @@ class ONTResourceIT {
         ONT partialUpdatedONT = new ONT();
         partialUpdatedONT.setId(oNT.getId());
 
-        partialUpdatedONT.ponIndex(UPDATED_PON_INDEX).updatedAt(UPDATED_UPDATED_AT);
+        partialUpdatedONT
+            .ponIndex(UPDATED_PON_INDEX)
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
 
         restONTMockMvc
             .perform(
@@ -1404,6 +1767,10 @@ class ONTResourceIT {
         assertThat(testONT.getMaxDown()).isEqualTo(DEFAULT_MAX_DOWN);
         assertThat(testONT.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
         assertThat(testONT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(UPDATED_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(DEFAULT_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(UPDATED_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(UPDATED_NBRE_LIGNES_COUPER);
     }
 
     @Test
@@ -1428,7 +1795,11 @@ class ONTResourceIT {
             .maxUp(UPDATED_MAX_UP)
             .maxDown(UPDATED_MAX_DOWN)
             .createdAt(UPDATED_CREATED_AT)
-            .updatedAt(UPDATED_UPDATED_AT);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .status(UPDATED_STATUS)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
 
         restONTMockMvc
             .perform(
@@ -1453,6 +1824,10 @@ class ONTResourceIT {
         assertThat(testONT.getMaxDown()).isEqualTo(UPDATED_MAX_DOWN);
         assertThat(testONT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
         assertThat(testONT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(UPDATED_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(UPDATED_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(UPDATED_NBRE_LIGNES_COUPER);
     }
 
     @Test

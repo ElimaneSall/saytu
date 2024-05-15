@@ -43,6 +43,14 @@ public class ONTCriteria implements Serializable, Criteria {
 
     private LocalDateFilter updatedAt;
 
+    private StringFilter etatOlt;
+
+    private StringFilter status;
+
+    private LocalDateFilter statusAt;
+
+    private LongFilter nbreLignesCouper;
+
     private LongFilter clientId;
 
     private LongFilter oltId;
@@ -67,6 +75,10 @@ public class ONTCriteria implements Serializable, Criteria {
         this.maxDown = other.maxDown == null ? null : other.maxDown.copy();
         this.createdAt = other.createdAt == null ? null : other.createdAt.copy();
         this.updatedAt = other.updatedAt == null ? null : other.updatedAt.copy();
+        this.etatOlt = other.etatOlt == null ? null : other.etatOlt.copy();
+        this.status = other.status == null ? null : other.status.copy();
+        this.statusAt = other.statusAt == null ? null : other.statusAt.copy();
+        this.nbreLignesCouper = other.nbreLignesCouper == null ? null : other.nbreLignesCouper.copy();
         this.clientId = other.clientId == null ? null : other.clientId.copy();
         this.oltId = other.oltId == null ? null : other.oltId.copy();
         this.diagnosticId = other.diagnosticId == null ? null : other.diagnosticId.copy();
@@ -244,6 +256,66 @@ public class ONTCriteria implements Serializable, Criteria {
         this.updatedAt = updatedAt;
     }
 
+    public StringFilter getEtatOlt() {
+        return etatOlt;
+    }
+
+    public StringFilter etatOlt() {
+        if (etatOlt == null) {
+            etatOlt = new StringFilter();
+        }
+        return etatOlt;
+    }
+
+    public void setEtatOlt(StringFilter etatOlt) {
+        this.etatOlt = etatOlt;
+    }
+
+    public StringFilter getStatus() {
+        return status;
+    }
+
+    public StringFilter status() {
+        if (status == null) {
+            status = new StringFilter();
+        }
+        return status;
+    }
+
+    public void setStatus(StringFilter status) {
+        this.status = status;
+    }
+
+    public LocalDateFilter getStatusAt() {
+        return statusAt;
+    }
+
+    public LocalDateFilter statusAt() {
+        if (statusAt == null) {
+            statusAt = new LocalDateFilter();
+        }
+        return statusAt;
+    }
+
+    public void setStatusAt(LocalDateFilter statusAt) {
+        this.statusAt = statusAt;
+    }
+
+    public LongFilter getNbreLignesCouper() {
+        return nbreLignesCouper;
+    }
+
+    public LongFilter nbreLignesCouper() {
+        if (nbreLignesCouper == null) {
+            nbreLignesCouper = new LongFilter();
+        }
+        return nbreLignesCouper;
+    }
+
+    public void setNbreLignesCouper(LongFilter nbreLignesCouper) {
+        this.nbreLignesCouper = nbreLignesCouper;
+    }
+
     public LongFilter getClientId() {
         return clientId;
     }
@@ -333,6 +405,10 @@ public class ONTCriteria implements Serializable, Criteria {
             Objects.equals(maxDown, that.maxDown) &&
             Objects.equals(createdAt, that.createdAt) &&
             Objects.equals(updatedAt, that.updatedAt) &&
+            Objects.equals(etatOlt, that.etatOlt) &&
+            Objects.equals(status, that.status) &&
+            Objects.equals(statusAt, that.statusAt) &&
+            Objects.equals(nbreLignesCouper, that.nbreLignesCouper) &&
             Objects.equals(clientId, that.clientId) &&
             Objects.equals(oltId, that.oltId) &&
             Objects.equals(diagnosticId, that.diagnosticId) &&
@@ -355,6 +431,10 @@ public class ONTCriteria implements Serializable, Criteria {
             maxDown,
             createdAt,
             updatedAt,
+            etatOlt,
+            status,
+            statusAt,
+            nbreLignesCouper,
             clientId,
             oltId,
             diagnosticId,
@@ -378,6 +458,10 @@ public class ONTCriteria implements Serializable, Criteria {
             (maxDown != null ? "maxDown=" + maxDown + ", " : "") +
             (createdAt != null ? "createdAt=" + createdAt + ", " : "") +
             (updatedAt != null ? "updatedAt=" + updatedAt + ", " : "") +
+            (etatOlt != null ? "etatOlt=" + etatOlt + ", " : "") +
+            (status != null ? "status=" + status + ", " : "") +
+            (statusAt != null ? "statusAt=" + statusAt + ", " : "") +
+            (nbreLignesCouper != null ? "nbreLignesCouper=" + nbreLignesCouper + ", " : "") +
             (clientId != null ? "clientId=" + clientId + ", " : "") +
             (oltId != null ? "oltId=" + oltId + ", " : "") +
             (diagnosticId != null ? "diagnosticId=" + diagnosticId + ", " : "") +

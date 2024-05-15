@@ -19,7 +19,10 @@ public class ONTTestSamples {
             .pon("pon1")
             .ponIndex("ponIndex1")
             .maxUp("maxUp1")
-            .maxDown("maxDown1");
+            .maxDown("maxDown1")
+            .etatOlt("etatOlt1")
+            .status("status1")
+            .nbreLignesCouper(1L);
     }
 
     public static ONT getONTSample2() {
@@ -32,7 +35,10 @@ public class ONTTestSamples {
             .pon("pon2")
             .ponIndex("ponIndex2")
             .maxUp("maxUp2")
-            .maxDown("maxDown2");
+            .maxDown("maxDown2")
+            .etatOlt("etatOlt2")
+            .status("status2")
+            .nbreLignesCouper(2L);
     }
 
     public static ONT getONTRandomSampleGenerator() {
@@ -45,6 +51,9 @@ public class ONTTestSamples {
             .pon(UUID.randomUUID().toString())
             .ponIndex(UUID.randomUUID().toString())
             .maxUp(UUID.randomUUID().toString())
-            .maxDown(UUID.randomUUID().toString());
+            .maxDown(UUID.randomUUID().toString())
+            .etatOlt(UUID.randomUUID().toString())
+            .status(UUID.randomUUID().toString())
+            .nbreLignesCouper(longCount.incrementAndGet());
     }
 }

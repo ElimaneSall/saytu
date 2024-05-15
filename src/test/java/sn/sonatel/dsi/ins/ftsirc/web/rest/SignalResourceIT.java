@@ -36,6 +36,10 @@ class SignalResourceIT {
     private static final String DEFAULT_LIBELLE = "AAAAAAAAAA";
     private static final String UPDATED_LIBELLE = "BBBBBBBBBB";
 
+    private static final Double DEFAULT_VALUE_SIGNAL = 1D;
+    private static final Double UPDATED_VALUE_SIGNAL = 2D;
+    private static final Double SMALLER_VALUE_SIGNAL = 1D - 1D;
+
     private static final Double DEFAULT_SEUIL_MIN = 1D;
     private static final Double UPDATED_SEUIL_MIN = 2D;
     private static final Double SMALLER_SEUIL_MIN = 1D - 1D;
@@ -71,7 +75,11 @@ class SignalResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Signal createEntity(EntityManager em) {
-        Signal signal = new Signal().libelle(DEFAULT_LIBELLE).seuilMin(DEFAULT_SEUIL_MIN).seuilMax(DEFAULT_SEUIL_MAX);
+        Signal signal = new Signal()
+            .libelle(DEFAULT_LIBELLE)
+            .valueSignal(DEFAULT_VALUE_SIGNAL)
+            .seuilMin(DEFAULT_SEUIL_MIN)
+            .seuilMax(DEFAULT_SEUIL_MAX);
         return signal;
     }
 
@@ -82,7 +90,11 @@ class SignalResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Signal createUpdatedEntity(EntityManager em) {
-        Signal signal = new Signal().libelle(UPDATED_LIBELLE).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
+        Signal signal = new Signal()
+            .libelle(UPDATED_LIBELLE)
+            .valueSignal(UPDATED_VALUE_SIGNAL)
+            .seuilMin(UPDATED_SEUIL_MIN)
+            .seuilMax(UPDATED_SEUIL_MAX);
         return signal;
     }
 
@@ -111,6 +123,7 @@ class SignalResourceIT {
         assertThat(signalList).hasSize(databaseSizeBeforeCreate + 1);
         Signal testSignal = signalList.get(signalList.size() - 1);
         assertThat(testSignal.getLibelle()).isEqualTo(DEFAULT_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(DEFAULT_VALUE_SIGNAL);
         assertThat(testSignal.getSeuilMin()).isEqualTo(DEFAULT_SEUIL_MIN);
         assertThat(testSignal.getSeuilMax()).isEqualTo(DEFAULT_SEUIL_MAX);
     }
@@ -221,6 +234,7 @@ class SignalResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(signal.getId().intValue())))
             .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
+            .andExpect(jsonPath("$.[*].valueSignal").value(hasItem(DEFAULT_VALUE_SIGNAL.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMin").value(hasItem(DEFAULT_SEUIL_MIN.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMax").value(hasItem(DEFAULT_SEUIL_MAX.doubleValue())));
     }
@@ -238,6 +252,7 @@ class SignalResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(signal.getId().intValue()))
             .andExpect(jsonPath("$.libelle").value(DEFAULT_LIBELLE))
+            .andExpect(jsonPath("$.valueSignal").value(DEFAULT_VALUE_SIGNAL.doubleValue()))
             .andExpect(jsonPath("$.seuilMin").value(DEFAULT_SEUIL_MIN.doubleValue()))
             .andExpect(jsonPath("$.seuilMax").value(DEFAULT_SEUIL_MAX.doubleValue()));
     }
@@ -323,6 +338,97 @@ class SignalResourceIT {
 
         // Get all the signalList where libelle does not contain UPDATED_LIBELLE
         defaultSignalShouldBeFound("libelle.doesNotContain=" + UPDATED_LIBELLE);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsEqualToSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal equals to DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.equals=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal equals to UPDATED_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.equals=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsInShouldWork() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal in DEFAULT_VALUE_SIGNAL or UPDATED_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.in=" + DEFAULT_VALUE_SIGNAL + "," + UPDATED_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal equals to UPDATED_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.in=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is not null
+        defaultSignalShouldBeFound("valueSignal.specified=true");
+
+        // Get all the signalList where valueSignal is null
+        defaultSignalShouldNotBeFound("valueSignal.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is greater than or equal to DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.greaterThanOrEqual=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is greater than or equal to UPDATED_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.greaterThanOrEqual=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is less than or equal to DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.lessThanOrEqual=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is less than or equal to SMALLER_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.lessThanOrEqual=" + SMALLER_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsLessThanSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is less than DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.lessThan=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is less than UPDATED_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.lessThan=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is greater than DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.greaterThan=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is greater than SMALLER_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.greaterThan=" + SMALLER_VALUE_SIGNAL);
     }
 
     @Test
@@ -539,6 +645,7 @@ class SignalResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(signal.getId().intValue())))
             .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
+            .andExpect(jsonPath("$.[*].valueSignal").value(hasItem(DEFAULT_VALUE_SIGNAL.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMin").value(hasItem(DEFAULT_SEUIL_MIN.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMax").value(hasItem(DEFAULT_SEUIL_MAX.doubleValue())));
 
@@ -588,7 +695,7 @@ class SignalResourceIT {
         Signal updatedSignal = signalRepository.findById(signal.getId()).orElseThrow();
         // Disconnect from session so that the updates on updatedSignal are not directly saved in db
         em.detach(updatedSignal);
-        updatedSignal.libelle(UPDATED_LIBELLE).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
+        updatedSignal.libelle(UPDATED_LIBELLE).valueSignal(UPDATED_VALUE_SIGNAL).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
         SignalDTO signalDTO = signalMapper.toDto(updatedSignal);
 
         restSignalMockMvc
@@ -605,6 +712,7 @@ class SignalResourceIT {
         assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
         Signal testSignal = signalList.get(signalList.size() - 1);
         assertThat(testSignal.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(UPDATED_VALUE_SIGNAL);
         assertThat(testSignal.getSeuilMin()).isEqualTo(UPDATED_SEUIL_MIN);
         assertThat(testSignal.getSeuilMax()).isEqualTo(UPDATED_SEUIL_MAX);
     }
@@ -709,6 +817,7 @@ class SignalResourceIT {
         assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
         Signal testSignal = signalList.get(signalList.size() - 1);
         assertThat(testSignal.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(DEFAULT_VALUE_SIGNAL);
         assertThat(testSignal.getSeuilMin()).isEqualTo(DEFAULT_SEUIL_MIN);
         assertThat(testSignal.getSeuilMax()).isEqualTo(DEFAULT_SEUIL_MAX);
     }
@@ -725,7 +834,11 @@ class SignalResourceIT {
         Signal partialUpdatedSignal = new Signal();
         partialUpdatedSignal.setId(signal.getId());
 
-        partialUpdatedSignal.libelle(UPDATED_LIBELLE).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
+        partialUpdatedSignal
+            .libelle(UPDATED_LIBELLE)
+            .valueSignal(UPDATED_VALUE_SIGNAL)
+            .seuilMin(UPDATED_SEUIL_MIN)
+            .seuilMax(UPDATED_SEUIL_MAX);
 
         restSignalMockMvc
             .perform(
@@ -741,6 +854,7 @@ class SignalResourceIT {
         assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
         Signal testSignal = signalList.get(signalList.size() - 1);
         assertThat(testSignal.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(UPDATED_VALUE_SIGNAL);
         assertThat(testSignal.getSeuilMin()).isEqualTo(UPDATED_SEUIL_MIN);
         assertThat(testSignal.getSeuilMax()).isEqualTo(UPDATED_SEUIL_MAX);
     }

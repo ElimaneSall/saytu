@@ -25,6 +25,8 @@ public class SignalCriteria implements Serializable, Criteria {
 
     private StringFilter libelle;
 
+    private DoubleFilter valueSignal;
+
     private DoubleFilter seuilMin;
 
     private DoubleFilter seuilMax;
@@ -38,6 +40,7 @@ public class SignalCriteria implements Serializable, Criteria {
     public SignalCriteria(SignalCriteria other) {
         this.id = other.id == null ? null : other.id.copy();
         this.libelle = other.libelle == null ? null : other.libelle.copy();
+        this.valueSignal = other.valueSignal == null ? null : other.valueSignal.copy();
         this.seuilMin = other.seuilMin == null ? null : other.seuilMin.copy();
         this.seuilMax = other.seuilMax == null ? null : other.seuilMax.copy();
         this.diagnosticId = other.diagnosticId == null ? null : other.diagnosticId.copy();
@@ -77,6 +80,21 @@ public class SignalCriteria implements Serializable, Criteria {
 
     public void setLibelle(StringFilter libelle) {
         this.libelle = libelle;
+    }
+
+    public DoubleFilter getValueSignal() {
+        return valueSignal;
+    }
+
+    public DoubleFilter valueSignal() {
+        if (valueSignal == null) {
+            valueSignal = new DoubleFilter();
+        }
+        return valueSignal;
+    }
+
+    public void setValueSignal(DoubleFilter valueSignal) {
+        this.valueSignal = valueSignal;
     }
 
     public DoubleFilter getSeuilMin() {
@@ -144,6 +162,7 @@ public class SignalCriteria implements Serializable, Criteria {
         return (
             Objects.equals(id, that.id) &&
             Objects.equals(libelle, that.libelle) &&
+            Objects.equals(valueSignal, that.valueSignal) &&
             Objects.equals(seuilMin, that.seuilMin) &&
             Objects.equals(seuilMax, that.seuilMax) &&
             Objects.equals(diagnosticId, that.diagnosticId) &&
@@ -153,7 +172,7 @@ public class SignalCriteria implements Serializable, Criteria {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, libelle, seuilMin, seuilMax, diagnosticId, distinct);
+        return Objects.hash(id, libelle, valueSignal, seuilMin, seuilMax, diagnosticId, distinct);
     }
 
     // prettier-ignore
@@ -162,6 +181,7 @@ public class SignalCriteria implements Serializable, Criteria {
         return "SignalCriteria{" +
             (id != null ? "id=" + id + ", " : "") +
             (libelle != null ? "libelle=" + libelle + ", " : "") +
+            (valueSignal != null ? "valueSignal=" + valueSignal + ", " : "") +
             (seuilMin != null ? "seuilMin=" + seuilMin + ", " : "") +
             (seuilMax != null ? "seuilMax=" + seuilMax + ", " : "") +
             (diagnosticId != null ? "diagnosticId=" + diagnosticId + ", " : "") +
