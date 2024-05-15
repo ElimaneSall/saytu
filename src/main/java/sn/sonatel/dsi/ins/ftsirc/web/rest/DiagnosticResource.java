@@ -212,7 +212,7 @@ public class DiagnosticResource {
     /**
      * {@code GET  /diagnostics/diagnostic-fibre} : count all the diagnostics.
      *
-     * @param criteria the criteria which the requested entities should match.
+     * @param serviceId the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
     @GetMapping("/diagnostic-fibre/{serviceId}")
