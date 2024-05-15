@@ -20,7 +20,7 @@ public class ScriptsDiagnostic {
     public String getCurrentAlarms(String ip, String index, String ontId, String vendeur) throws IOException {
         String OntCurrAlarms = "";
         String OntLastDownCause = "";
-        String checkFiberCut = "";
+        String alarm = "";
         List<String> alarmList = new ArrayList<>();
 
         CommunityTarget target = new CommunityTarget();
@@ -48,10 +48,10 @@ public class ScriptsDiagnostic {
                         }
                     }
                     for (String i : alarmList) {
-                        if (i.equals("1") || i.equals("15") || i.equals("16") || i.equals("17")) {
-                            checkFiberCut = "KO";
+                        if (i.equals("1") || i.equals("15") || i.equals("16") || i.equals("17") || i.equals("18")) {
+                            alarm = "KO";
                         } else {
-                            checkFiberCut = "OK";
+                            alarm = "OK";
                         }
                     }
                 }
@@ -71,15 +71,15 @@ public class ScriptsDiagnostic {
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
                     String result = varBind.getVariable().toString();
-                    if (result.equals("1") || result.equals("2") || result.equals("3") || result.equals("4")) {
-                        checkFiberCut = "KO";
+                    if (result.equals("1") || result.equals("2") || result.equals("3") || result.equals("4") || result.equals("13")) {
+                        alarm = "KO";
                     } else {
-                        checkFiberCut = "OK";
+                        alarm = "OK";
                     }
                 }
             }
         }
-        return checkFiberCut;
+        return alarm;
     }
 
     public static String getRxOpticalPower(String ip, String index, String ontId, String vendeur) throws IOException {
@@ -163,10 +163,10 @@ public class ScriptsDiagnostic {
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
                     varOperStatus = varBind.getVariable().toString();
-                    if (varOperStatus != "1") {
-                        operStatus = "KO";
-                    } else {
+                    if (varOperStatus.equals("1")) {
                         operStatus = "OK";
+                    } else {
+                        operStatus = "KO";
                     }
                 }
             }
@@ -277,10 +277,10 @@ public class ScriptsDiagnostic {
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
                     varRanging = varBind.getVariable().toString();
-                    if (varRanging != "1") {
-                        ranging = "KO";
-                    } else {
+                    if (varRanging.equals("1")) {
                         ranging = "OK";
+                    } else {
+                        ranging = "KO";
                     }
                 }
             }
@@ -313,7 +313,6 @@ public class ScriptsDiagnostic {
     public Double getOLTRxPower(String vendeur, String index, String ip, String _ont_) throws IOException {
         TransportMapping<?> transport = null;
         try {
-
             transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
             transport.listen();
@@ -325,7 +324,11 @@ public class ScriptsDiagnostic {
             target.setTimeout(1500);
             target.setVersion(SnmpConstants.version2c);
 
-            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + index : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6" + "." + index + "." + _ont_ );
+            OID oid = new OID(
+                vendeur.equalsIgnoreCase("NOKIA")
+                    ? "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + index
+                    : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6" + "." + index + "." + _ont_
+            );
             PDU pdu = new PDU();
             pdu.add(new VariableBinding(new OID(oid)));
             pdu.setType(PDU.GET);
@@ -333,7 +336,7 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    return Double.parseDouble( varBind.getVariable().toString()) ;
+                    return Double.parseDouble(varBind.getVariable().toString());
                 }
             }
         } catch (Exception e) {
@@ -341,12 +344,11 @@ public class ScriptsDiagnostic {
         }
 
         return null;
-
     }
+
     public Double getONTRxPower(String vendeur, String index, String ip, String _ont_) throws IOException {
         TransportMapping<?> transport = null;
         try {
-
             transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
             transport.listen();
@@ -358,7 +360,11 @@ public class ScriptsDiagnostic {
             target.setTimeout(1500);
             target.setVersion(SnmpConstants.version2c);
 
-            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + _ont_ );
+            OID oid = new OID(
+                vendeur.equalsIgnoreCase("NOKIA")
+                    ? "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index
+                    : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + _ont_
+            );
             PDU pdu = new PDU();
             pdu.add(new VariableBinding(new OID(oid)));
             pdu.setType(PDU.GET);
@@ -366,7 +372,7 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    return Double.parseDouble( varBind.getVariable().toString()) ;
+                    return Double.parseDouble(varBind.getVariable().toString());
                 }
             }
         } catch (Exception e) {
@@ -374,13 +380,11 @@ public class ScriptsDiagnostic {
         }
 
         return null;
-
     }
 
     public Double getPowerOLT(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
         TransportMapping<?> transport = null;
         try {
-
             transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
             transport.listen();
@@ -391,8 +395,12 @@ public class ScriptsDiagnostic {
             target.setRetries(2);
             target.setTimeout(1500);
             target.setVersion(SnmpConstants.version2c);
-            Integer slot_index = 4352 + slot +1;
-            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.56.6.1.13" + "." + slot_index+  "." + pon : "1.3.6.1.4.1.2011.6.128.1.1.2.22.1.28"+ "." + _ont_ );
+            Integer slot_index = 4352 + slot + 1;
+            OID oid = new OID(
+                vendeur.equalsIgnoreCase("NOKIA")
+                    ? "1.3.6.1.4.1.637.61.1.56.6.1.13" + "." + slot_index + "." + pon
+                    : "1.3.6.1.4.1.2011.6.128.1.1.2.22.1.28" + "." + _ont_
+            );
             PDU pdu = new PDU();
             pdu.add(new VariableBinding(new OID(oid)));
             pdu.setType(PDU.GET);
@@ -400,7 +408,7 @@ public class ScriptsDiagnostic {
             ResponseEvent event = snmp.send(pdu, target);
             if (event != null && event.getResponse() != null) {
                 for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    return Double.parseDouble( varBind.getVariable().toString()) ;
+                    return Double.parseDouble(varBind.getVariable().toString());
                 }
             }
         } catch (Exception e) {
@@ -408,6 +416,5 @@ public class ScriptsDiagnostic {
         }
 
         return null;
-
     }
 }
