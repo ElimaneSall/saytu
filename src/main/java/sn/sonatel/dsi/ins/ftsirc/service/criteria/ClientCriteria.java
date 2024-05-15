@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
@@ -47,16 +46,16 @@ public class ClientCriteria implements Serializable, Criteria {
     public ClientCriteria() {}
 
     public ClientCriteria(ClientCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.nclient = other.optionalNclient().map(LongFilter::copy).orElse(null);
-        this.nom = other.optionalNom().map(StringFilter::copy).orElse(null);
-        this.prenom = other.optionalPrenom().map(StringFilter::copy).orElse(null);
-        this.etat = other.optionalEtat().map(StringFilter::copy).orElse(null);
-        this.numeroFixe = other.optionalNumeroFixe().map(StringFilter::copy).orElse(null);
-        this.contactMobileClient = other.optionalContactMobileClient().map(StringFilter::copy).orElse(null);
-        this.isDoublons = other.optionalIsDoublons().map(BooleanFilter::copy).orElse(null);
-        this.offreId = other.optionalOffreId().map(LongFilter::copy).orElse(null);
-        this.ontId = other.optionalOntId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.nclient = other.nclient == null ? null : other.nclient.copy();
+        this.nom = other.nom == null ? null : other.nom.copy();
+        this.prenom = other.prenom == null ? null : other.prenom.copy();
+        this.etat = other.etat == null ? null : other.etat.copy();
+        this.numeroFixe = other.numeroFixe == null ? null : other.numeroFixe.copy();
+        this.contactMobileClient = other.contactMobileClient == null ? null : other.contactMobileClient.copy();
+        this.isDoublons = other.isDoublons == null ? null : other.isDoublons.copy();
+        this.offreId = other.offreId == null ? null : other.offreId.copy();
+        this.ontId = other.ontId == null ? null : other.ontId.copy();
         this.distinct = other.distinct;
     }
 
@@ -69,13 +68,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -88,13 +83,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return nclient;
     }
 
-    public Optional<LongFilter> optionalNclient() {
-        return Optional.ofNullable(nclient);
-    }
-
     public LongFilter nclient() {
         if (nclient == null) {
-            setNclient(new LongFilter());
+            nclient = new LongFilter();
         }
         return nclient;
     }
@@ -107,13 +98,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return nom;
     }
 
-    public Optional<StringFilter> optionalNom() {
-        return Optional.ofNullable(nom);
-    }
-
     public StringFilter nom() {
         if (nom == null) {
-            setNom(new StringFilter());
+            nom = new StringFilter();
         }
         return nom;
     }
@@ -126,13 +113,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return prenom;
     }
 
-    public Optional<StringFilter> optionalPrenom() {
-        return Optional.ofNullable(prenom);
-    }
-
     public StringFilter prenom() {
         if (prenom == null) {
-            setPrenom(new StringFilter());
+            prenom = new StringFilter();
         }
         return prenom;
     }
@@ -145,13 +128,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return etat;
     }
 
-    public Optional<StringFilter> optionalEtat() {
-        return Optional.ofNullable(etat);
-    }
-
     public StringFilter etat() {
         if (etat == null) {
-            setEtat(new StringFilter());
+            etat = new StringFilter();
         }
         return etat;
     }
@@ -164,13 +143,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return numeroFixe;
     }
 
-    public Optional<StringFilter> optionalNumeroFixe() {
-        return Optional.ofNullable(numeroFixe);
-    }
-
     public StringFilter numeroFixe() {
         if (numeroFixe == null) {
-            setNumeroFixe(new StringFilter());
+            numeroFixe = new StringFilter();
         }
         return numeroFixe;
     }
@@ -183,13 +158,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return contactMobileClient;
     }
 
-    public Optional<StringFilter> optionalContactMobileClient() {
-        return Optional.ofNullable(contactMobileClient);
-    }
-
     public StringFilter contactMobileClient() {
         if (contactMobileClient == null) {
-            setContactMobileClient(new StringFilter());
+            contactMobileClient = new StringFilter();
         }
         return contactMobileClient;
     }
@@ -202,13 +173,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return isDoublons;
     }
 
-    public Optional<BooleanFilter> optionalIsDoublons() {
-        return Optional.ofNullable(isDoublons);
-    }
-
     public BooleanFilter isDoublons() {
         if (isDoublons == null) {
-            setIsDoublons(new BooleanFilter());
+            isDoublons = new BooleanFilter();
         }
         return isDoublons;
     }
@@ -221,13 +188,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return offreId;
     }
 
-    public Optional<LongFilter> optionalOffreId() {
-        return Optional.ofNullable(offreId);
-    }
-
     public LongFilter offreId() {
         if (offreId == null) {
-            setOffreId(new LongFilter());
+            offreId = new LongFilter();
         }
         return offreId;
     }
@@ -240,13 +203,9 @@ public class ClientCriteria implements Serializable, Criteria {
         return ontId;
     }
 
-    public Optional<LongFilter> optionalOntId() {
-        return Optional.ofNullable(ontId);
-    }
-
     public LongFilter ontId() {
         if (ontId == null) {
-            setOntId(new LongFilter());
+            ontId = new LongFilter();
         }
         return ontId;
     }
@@ -256,17 +215,6 @@ public class ClientCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -307,17 +255,17 @@ public class ClientCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "ClientCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalNclient().map(f -> "nclient=" + f + ", ").orElse("") +
-            optionalNom().map(f -> "nom=" + f + ", ").orElse("") +
-            optionalPrenom().map(f -> "prenom=" + f + ", ").orElse("") +
-            optionalEtat().map(f -> "etat=" + f + ", ").orElse("") +
-            optionalNumeroFixe().map(f -> "numeroFixe=" + f + ", ").orElse("") +
-            optionalContactMobileClient().map(f -> "contactMobileClient=" + f + ", ").orElse("") +
-            optionalIsDoublons().map(f -> "isDoublons=" + f + ", ").orElse("") +
-            optionalOffreId().map(f -> "offreId=" + f + ", ").orElse("") +
-            optionalOntId().map(f -> "ontId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (nclient != null ? "nclient=" + nclient + ", " : "") +
+            (nom != null ? "nom=" + nom + ", " : "") +
+            (prenom != null ? "prenom=" + prenom + ", " : "") +
+            (etat != null ? "etat=" + etat + ", " : "") +
+            (numeroFixe != null ? "numeroFixe=" + numeroFixe + ", " : "") +
+            (contactMobileClient != null ? "contactMobileClient=" + contactMobileClient + ", " : "") +
+            (isDoublons != null ? "isDoublons=" + isDoublons + ", " : "") +
+            (offreId != null ? "offreId=" + offreId + ", " : "") +
+            (ontId != null ? "ontId=" + ontId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

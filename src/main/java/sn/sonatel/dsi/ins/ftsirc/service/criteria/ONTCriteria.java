@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.service.criteria;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.Optional;
 import org.springdoc.core.annotations.ParameterObject;
 import tech.jhipster.service.Criteria;
 import tech.jhipster.service.filter.*;
@@ -26,7 +25,7 @@ public class ONTCriteria implements Serializable, Criteria {
 
     private StringFilter index;
 
-    private StringFilter ontIP;
+    private StringFilter ontID;
 
     private StringFilter serviceId;
 
@@ -44,6 +43,14 @@ public class ONTCriteria implements Serializable, Criteria {
 
     private LocalDateFilter updatedAt;
 
+    private StringFilter etatOlt;
+
+    private StringFilter status;
+
+    private LocalDateFilter statusAt;
+
+    private LongFilter nbreLignesCouper;
+
     private LongFilter clientId;
 
     private LongFilter oltId;
@@ -57,21 +64,25 @@ public class ONTCriteria implements Serializable, Criteria {
     public ONTCriteria() {}
 
     public ONTCriteria(ONTCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
-        this.index = other.optionalIndex().map(StringFilter::copy).orElse(null);
-        this.ontIP = other.optionalOntIP().map(StringFilter::copy).orElse(null);
-        this.serviceId = other.optionalServiceId().map(StringFilter::copy).orElse(null);
-        this.slot = other.optionalSlot().map(StringFilter::copy).orElse(null);
-        this.pon = other.optionalPon().map(StringFilter::copy).orElse(null);
-        this.ponIndex = other.optionalPonIndex().map(StringFilter::copy).orElse(null);
-        this.maxUp = other.optionalMaxUp().map(StringFilter::copy).orElse(null);
-        this.maxDown = other.optionalMaxDown().map(StringFilter::copy).orElse(null);
-        this.createdAt = other.optionalCreatedAt().map(LocalDateFilter::copy).orElse(null);
-        this.updatedAt = other.optionalUpdatedAt().map(LocalDateFilter::copy).orElse(null);
-        this.clientId = other.optionalClientId().map(LongFilter::copy).orElse(null);
-        this.oltId = other.optionalOltId().map(LongFilter::copy).orElse(null);
-        this.diagnosticId = other.optionalDiagnosticId().map(LongFilter::copy).orElse(null);
-        this.metriqueId = other.optionalMetriqueId().map(LongFilter::copy).orElse(null);
+        this.id = other.id == null ? null : other.id.copy();
+        this.index = other.index == null ? null : other.index.copy();
+        this.ontID = other.ontID == null ? null : other.ontID.copy();
+        this.serviceId = other.serviceId == null ? null : other.serviceId.copy();
+        this.slot = other.slot == null ? null : other.slot.copy();
+        this.pon = other.pon == null ? null : other.pon.copy();
+        this.ponIndex = other.ponIndex == null ? null : other.ponIndex.copy();
+        this.maxUp = other.maxUp == null ? null : other.maxUp.copy();
+        this.maxDown = other.maxDown == null ? null : other.maxDown.copy();
+        this.createdAt = other.createdAt == null ? null : other.createdAt.copy();
+        this.updatedAt = other.updatedAt == null ? null : other.updatedAt.copy();
+        this.etatOlt = other.etatOlt == null ? null : other.etatOlt.copy();
+        this.status = other.status == null ? null : other.status.copy();
+        this.statusAt = other.statusAt == null ? null : other.statusAt.copy();
+        this.nbreLignesCouper = other.nbreLignesCouper == null ? null : other.nbreLignesCouper.copy();
+        this.clientId = other.clientId == null ? null : other.clientId.copy();
+        this.oltId = other.oltId == null ? null : other.oltId.copy();
+        this.diagnosticId = other.diagnosticId == null ? null : other.diagnosticId.copy();
+        this.metriqueId = other.metriqueId == null ? null : other.metriqueId.copy();
         this.distinct = other.distinct;
     }
 
@@ -84,13 +95,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
-        return Optional.ofNullable(id);
-    }
-
     public LongFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            id = new LongFilter();
         }
         return id;
     }
@@ -103,13 +110,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return index;
     }
 
-    public Optional<StringFilter> optionalIndex() {
-        return Optional.ofNullable(index);
-    }
-
     public StringFilter index() {
         if (index == null) {
-            setIndex(new StringFilter());
+            index = new StringFilter();
         }
         return index;
     }
@@ -118,36 +121,28 @@ public class ONTCriteria implements Serializable, Criteria {
         this.index = index;
     }
 
-    public StringFilter getOntIP() {
-        return ontIP;
+    public StringFilter getOntID() {
+        return ontID;
     }
 
-    public Optional<StringFilter> optionalOntIP() {
-        return Optional.ofNullable(ontIP);
-    }
-
-    public StringFilter ontIP() {
-        if (ontIP == null) {
-            setOntIP(new StringFilter());
+    public StringFilter ontID() {
+        if (ontID == null) {
+            ontID = new StringFilter();
         }
-        return ontIP;
+        return ontID;
     }
 
-    public void setOntIP(StringFilter ontIP) {
-        this.ontIP = ontIP;
+    public void setOntID(StringFilter ontID) {
+        this.ontID = ontID;
     }
 
     public StringFilter getServiceId() {
         return serviceId;
     }
 
-    public Optional<StringFilter> optionalServiceId() {
-        return Optional.ofNullable(serviceId);
-    }
-
     public StringFilter serviceId() {
         if (serviceId == null) {
-            setServiceId(new StringFilter());
+            serviceId = new StringFilter();
         }
         return serviceId;
     }
@@ -160,13 +155,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return slot;
     }
 
-    public Optional<StringFilter> optionalSlot() {
-        return Optional.ofNullable(slot);
-    }
-
     public StringFilter slot() {
         if (slot == null) {
-            setSlot(new StringFilter());
+            slot = new StringFilter();
         }
         return slot;
     }
@@ -179,13 +170,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return pon;
     }
 
-    public Optional<StringFilter> optionalPon() {
-        return Optional.ofNullable(pon);
-    }
-
     public StringFilter pon() {
         if (pon == null) {
-            setPon(new StringFilter());
+            pon = new StringFilter();
         }
         return pon;
     }
@@ -198,13 +185,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return ponIndex;
     }
 
-    public Optional<StringFilter> optionalPonIndex() {
-        return Optional.ofNullable(ponIndex);
-    }
-
     public StringFilter ponIndex() {
         if (ponIndex == null) {
-            setPonIndex(new StringFilter());
+            ponIndex = new StringFilter();
         }
         return ponIndex;
     }
@@ -217,13 +200,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return maxUp;
     }
 
-    public Optional<StringFilter> optionalMaxUp() {
-        return Optional.ofNullable(maxUp);
-    }
-
     public StringFilter maxUp() {
         if (maxUp == null) {
-            setMaxUp(new StringFilter());
+            maxUp = new StringFilter();
         }
         return maxUp;
     }
@@ -236,13 +215,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return maxDown;
     }
 
-    public Optional<StringFilter> optionalMaxDown() {
-        return Optional.ofNullable(maxDown);
-    }
-
     public StringFilter maxDown() {
         if (maxDown == null) {
-            setMaxDown(new StringFilter());
+            maxDown = new StringFilter();
         }
         return maxDown;
     }
@@ -255,13 +230,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return createdAt;
     }
 
-    public Optional<LocalDateFilter> optionalCreatedAt() {
-        return Optional.ofNullable(createdAt);
-    }
-
     public LocalDateFilter createdAt() {
         if (createdAt == null) {
-            setCreatedAt(new LocalDateFilter());
+            createdAt = new LocalDateFilter();
         }
         return createdAt;
     }
@@ -274,13 +245,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return updatedAt;
     }
 
-    public Optional<LocalDateFilter> optionalUpdatedAt() {
-        return Optional.ofNullable(updatedAt);
-    }
-
     public LocalDateFilter updatedAt() {
         if (updatedAt == null) {
-            setUpdatedAt(new LocalDateFilter());
+            updatedAt = new LocalDateFilter();
         }
         return updatedAt;
     }
@@ -289,17 +256,73 @@ public class ONTCriteria implements Serializable, Criteria {
         this.updatedAt = updatedAt;
     }
 
+    public StringFilter getEtatOlt() {
+        return etatOlt;
+    }
+
+    public StringFilter etatOlt() {
+        if (etatOlt == null) {
+            etatOlt = new StringFilter();
+        }
+        return etatOlt;
+    }
+
+    public void setEtatOlt(StringFilter etatOlt) {
+        this.etatOlt = etatOlt;
+    }
+
+    public StringFilter getStatus() {
+        return status;
+    }
+
+    public StringFilter status() {
+        if (status == null) {
+            status = new StringFilter();
+        }
+        return status;
+    }
+
+    public void setStatus(StringFilter status) {
+        this.status = status;
+    }
+
+    public LocalDateFilter getStatusAt() {
+        return statusAt;
+    }
+
+    public LocalDateFilter statusAt() {
+        if (statusAt == null) {
+            statusAt = new LocalDateFilter();
+        }
+        return statusAt;
+    }
+
+    public void setStatusAt(LocalDateFilter statusAt) {
+        this.statusAt = statusAt;
+    }
+
+    public LongFilter getNbreLignesCouper() {
+        return nbreLignesCouper;
+    }
+
+    public LongFilter nbreLignesCouper() {
+        if (nbreLignesCouper == null) {
+            nbreLignesCouper = new LongFilter();
+        }
+        return nbreLignesCouper;
+    }
+
+    public void setNbreLignesCouper(LongFilter nbreLignesCouper) {
+        this.nbreLignesCouper = nbreLignesCouper;
+    }
+
     public LongFilter getClientId() {
         return clientId;
     }
 
-    public Optional<LongFilter> optionalClientId() {
-        return Optional.ofNullable(clientId);
-    }
-
     public LongFilter clientId() {
         if (clientId == null) {
-            setClientId(new LongFilter());
+            clientId = new LongFilter();
         }
         return clientId;
     }
@@ -312,13 +335,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return oltId;
     }
 
-    public Optional<LongFilter> optionalOltId() {
-        return Optional.ofNullable(oltId);
-    }
-
     public LongFilter oltId() {
         if (oltId == null) {
-            setOltId(new LongFilter());
+            oltId = new LongFilter();
         }
         return oltId;
     }
@@ -331,13 +350,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return diagnosticId;
     }
 
-    public Optional<LongFilter> optionalDiagnosticId() {
-        return Optional.ofNullable(diagnosticId);
-    }
-
     public LongFilter diagnosticId() {
         if (diagnosticId == null) {
-            setDiagnosticId(new LongFilter());
+            diagnosticId = new LongFilter();
         }
         return diagnosticId;
     }
@@ -350,13 +365,9 @@ public class ONTCriteria implements Serializable, Criteria {
         return metriqueId;
     }
 
-    public Optional<LongFilter> optionalMetriqueId() {
-        return Optional.ofNullable(metriqueId);
-    }
-
     public LongFilter metriqueId() {
         if (metriqueId == null) {
-            setMetriqueId(new LongFilter());
+            metriqueId = new LongFilter();
         }
         return metriqueId;
     }
@@ -366,17 +377,6 @@ public class ONTCriteria implements Serializable, Criteria {
     }
 
     public Boolean getDistinct() {
-        return distinct;
-    }
-
-    public Optional<Boolean> optionalDistinct() {
-        return Optional.ofNullable(distinct);
-    }
-
-    public Boolean distinct() {
-        if (distinct == null) {
-            setDistinct(true);
-        }
         return distinct;
     }
 
@@ -396,7 +396,7 @@ public class ONTCriteria implements Serializable, Criteria {
         return (
             Objects.equals(id, that.id) &&
             Objects.equals(index, that.index) &&
-            Objects.equals(ontIP, that.ontIP) &&
+            Objects.equals(ontID, that.ontID) &&
             Objects.equals(serviceId, that.serviceId) &&
             Objects.equals(slot, that.slot) &&
             Objects.equals(pon, that.pon) &&
@@ -405,6 +405,10 @@ public class ONTCriteria implements Serializable, Criteria {
             Objects.equals(maxDown, that.maxDown) &&
             Objects.equals(createdAt, that.createdAt) &&
             Objects.equals(updatedAt, that.updatedAt) &&
+            Objects.equals(etatOlt, that.etatOlt) &&
+            Objects.equals(status, that.status) &&
+            Objects.equals(statusAt, that.statusAt) &&
+            Objects.equals(nbreLignesCouper, that.nbreLignesCouper) &&
             Objects.equals(clientId, that.clientId) &&
             Objects.equals(oltId, that.oltId) &&
             Objects.equals(diagnosticId, that.diagnosticId) &&
@@ -418,7 +422,7 @@ public class ONTCriteria implements Serializable, Criteria {
         return Objects.hash(
             id,
             index,
-            ontIP,
+            ontID,
             serviceId,
             slot,
             pon,
@@ -427,6 +431,10 @@ public class ONTCriteria implements Serializable, Criteria {
             maxDown,
             createdAt,
             updatedAt,
+            etatOlt,
+            status,
+            statusAt,
+            nbreLignesCouper,
             clientId,
             oltId,
             diagnosticId,
@@ -439,22 +447,26 @@ public class ONTCriteria implements Serializable, Criteria {
     @Override
     public String toString() {
         return "ONTCriteria{" +
-            optionalId().map(f -> "id=" + f + ", ").orElse("") +
-            optionalIndex().map(f -> "index=" + f + ", ").orElse("") +
-            optionalOntIP().map(f -> "ontIP=" + f + ", ").orElse("") +
-            optionalServiceId().map(f -> "serviceId=" + f + ", ").orElse("") +
-            optionalSlot().map(f -> "slot=" + f + ", ").orElse("") +
-            optionalPon().map(f -> "pon=" + f + ", ").orElse("") +
-            optionalPonIndex().map(f -> "ponIndex=" + f + ", ").orElse("") +
-            optionalMaxUp().map(f -> "maxUp=" + f + ", ").orElse("") +
-            optionalMaxDown().map(f -> "maxDown=" + f + ", ").orElse("") +
-            optionalCreatedAt().map(f -> "createdAt=" + f + ", ").orElse("") +
-            optionalUpdatedAt().map(f -> "updatedAt=" + f + ", ").orElse("") +
-            optionalClientId().map(f -> "clientId=" + f + ", ").orElse("") +
-            optionalOltId().map(f -> "oltId=" + f + ", ").orElse("") +
-            optionalDiagnosticId().map(f -> "diagnosticId=" + f + ", ").orElse("") +
-            optionalMetriqueId().map(f -> "metriqueId=" + f + ", ").orElse("") +
-            optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
-        "}";
+            (id != null ? "id=" + id + ", " : "") +
+            (index != null ? "index=" + index + ", " : "") +
+            (ontID != null ? "ontID=" + ontID + ", " : "") +
+            (serviceId != null ? "serviceId=" + serviceId + ", " : "") +
+            (slot != null ? "slot=" + slot + ", " : "") +
+            (pon != null ? "pon=" + pon + ", " : "") +
+            (ponIndex != null ? "ponIndex=" + ponIndex + ", " : "") +
+            (maxUp != null ? "maxUp=" + maxUp + ", " : "") +
+            (maxDown != null ? "maxDown=" + maxDown + ", " : "") +
+            (createdAt != null ? "createdAt=" + createdAt + ", " : "") +
+            (updatedAt != null ? "updatedAt=" + updatedAt + ", " : "") +
+            (etatOlt != null ? "etatOlt=" + etatOlt + ", " : "") +
+            (status != null ? "status=" + status + ", " : "") +
+            (statusAt != null ? "statusAt=" + statusAt + ", " : "") +
+            (nbreLignesCouper != null ? "nbreLignesCouper=" + nbreLignesCouper + ", " : "") +
+            (clientId != null ? "clientId=" + clientId + ", " : "") +
+            (oltId != null ? "oltId=" + oltId + ", " : "") +
+            (diagnosticId != null ? "diagnosticId=" + diagnosticId + ", " : "") +
+            (metriqueId != null ? "metriqueId=" + metriqueId + ", " : "") +
+            (distinct != null ? "distinct=" + distinct + ", " : "") +
+            "}";
     }
 }

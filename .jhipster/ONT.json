@@ -6,6 +6,7 @@
   "clientRootFolder": "SaytuBackend",
   "databaseType": "sql",
   "dto": "mapstruct",
+  "entityTableName": "ont",
   "fields": [
     {
       "fieldName": "index",
@@ -13,7 +14,7 @@
       "fieldValidateRules": ["required"]
     },
     {
-      "fieldName": "ontIP",
+      "fieldName": "ontID",
       "fieldType": "String",
       "fieldValidateRules": ["required"]
     },
@@ -52,6 +53,22 @@
     {
       "fieldName": "updatedAt",
       "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "etatOlt",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "statusAt",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "nbreLignesCouper",
+      "fieldType": "Long"
     }
   ],
   "jpaMetamodelFiltering": true,

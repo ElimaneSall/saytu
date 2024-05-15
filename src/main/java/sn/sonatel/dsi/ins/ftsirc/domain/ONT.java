@@ -31,8 +31,8 @@ public class ONT implements Serializable {
     private String index;
 
     @NotNull
-    @Column(name = "ont_ip", nullable = false)
-    private String ontIP;
+    @Column(name = "ont_id", nullable = false)
+    private String ontID;
 
     @NotNull
     @Column(name = "service_id", nullable = false)
@@ -62,12 +62,24 @@ public class ONT implements Serializable {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "etat_olt")
+    private String etatOlt;
+
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "status_at")
+    private LocalDate statusAt;
+
+    @Column(name = "nbre_lignes_couper")
+    private Long nbreLignesCouper;
+
     @JsonIgnoreProperties(value = { "offre", "ont" }, allowSetters = true)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(unique = true)
     private Client client;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "onts" }, allowSetters = true)
     private OLT olt;
 
@@ -109,17 +121,17 @@ public class ONT implements Serializable {
         this.index = index;
     }
 
-    public String getOntIP() {
-        return this.ontIP;
+    public String getOntID() {
+        return this.ontID;
     }
 
-    public ONT ontIP(String ontIP) {
-        this.setOntIP(ontIP);
+    public ONT ontID(String ontID) {
+        this.setOntID(ontID);
         return this;
     }
 
-    public void setOntIP(String ontIP) {
-        this.ontIP = ontIP;
+    public void setOntID(String ontID) {
+        this.ontID = ontID;
     }
 
     public String getServiceId() {
@@ -224,6 +236,58 @@ public class ONT implements Serializable {
 
     public void setUpdatedAt(LocalDate updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getEtatOlt() {
+        return this.etatOlt;
+    }
+
+    public ONT etatOlt(String etatOlt) {
+        this.setEtatOlt(etatOlt);
+        return this;
+    }
+
+    public void setEtatOlt(String etatOlt) {
+        this.etatOlt = etatOlt;
+    }
+
+    public String getStatus() {
+        return this.status;
+    }
+
+    public ONT status(String status) {
+        this.setStatus(status);
+        return this;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDate getStatusAt() {
+        return this.statusAt;
+    }
+
+    public ONT statusAt(LocalDate statusAt) {
+        this.setStatusAt(statusAt);
+        return this;
+    }
+
+    public void setStatusAt(LocalDate statusAt) {
+        this.statusAt = statusAt;
+    }
+
+    public Long getNbreLignesCouper() {
+        return this.nbreLignesCouper;
+    }
+
+    public ONT nbreLignesCouper(Long nbreLignesCouper) {
+        this.setNbreLignesCouper(nbreLignesCouper);
+        return this;
+    }
+
+    public void setNbreLignesCouper(Long nbreLignesCouper) {
+        this.nbreLignesCouper = nbreLignesCouper;
     }
 
     public Client getClient() {
@@ -339,7 +403,7 @@ public class ONT implements Serializable {
         return "ONT{" +
             "id=" + getId() +
             ", index='" + getIndex() + "'" +
-            ", ontIP='" + getOntIP() + "'" +
+            ", ontID='" + getOntID() + "'" +
             ", serviceId='" + getServiceId() + "'" +
             ", slot='" + getSlot() + "'" +
             ", pon='" + getPon() + "'" +
@@ -348,6 +412,10 @@ public class ONT implements Serializable {
             ", maxDown='" + getMaxDown() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
+            ", etatOlt='" + getEtatOlt() + "'" +
+            ", status='" + getStatus() + "'" +
+            ", statusAt='" + getStatusAt() + "'" +
+            ", nbreLignesCouper=" + getNbreLignesCouper() +
             "}";
     }
 }

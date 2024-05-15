@@ -1,6 +1,8 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OffreDTO;
 
 /**
@@ -30,6 +32,14 @@ public interface OffreService {
      * @return the persisted entity.
      */
     Optional<OffreDTO> partialUpdate(OffreDTO offreDTO);
+
+    /**
+     * Get all the offres.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<OffreDTO> findAll(Pageable pageable);
 
     /**
      * Get the "id" offre.

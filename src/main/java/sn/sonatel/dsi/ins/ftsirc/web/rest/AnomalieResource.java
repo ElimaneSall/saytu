@@ -69,10 +69,11 @@ public class AnomalieResource {
         if (anomalieDTO.getId() != null) {
             throw new BadRequestAlertException("A new anomalie cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        anomalieDTO = anomalieService.save(anomalieDTO);
-        return ResponseEntity.created(new URI("/api/anomalies/" + anomalieDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, anomalieDTO.getId().toString()))
-            .body(anomalieDTO);
+        AnomalieDTO result = anomalieService.save(anomalieDTO);
+        return ResponseEntity
+            .created(new URI("/api/anomalies/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -102,10 +103,11 @@ public class AnomalieResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        anomalieDTO = anomalieService.update(anomalieDTO);
-        return ResponseEntity.ok()
+        AnomalieDTO result = anomalieService.update(anomalieDTO);
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, anomalieDTO.getId().toString()))
-            .body(anomalieDTO);
+            .body(result);
     }
 
     /**
@@ -198,7 +200,8 @@ public class AnomalieResource {
     public ResponseEntity<Void> deleteAnomalie(@PathVariable("id") Long id) {
         log.debug("REST request to delete Anomalie : {}", id);
         anomalieService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

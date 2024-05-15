@@ -5,13 +5,11 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.MetriqueAsserts.*;
-import static sn.sonatel.dsi.ins.ftsirc.web.rest.TestUtil.createUpdateProxyForBean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,9 +50,6 @@ class MetriqueResourceIT {
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
-    @Autowired
-    private ObjectMapper om;
 
     @Autowired
     private MetriqueRepository metriqueRepository;
@@ -100,25 +95,25 @@ class MetriqueResourceIT {
     @Test
     @Transactional
     void createMetrique() throws Exception {
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = metriqueRepository.findAll().size();
         // Create the Metrique
         MetriqueDTO metriqueDTO = metriqueMapper.toDto(metrique);
-        var returnedMetriqueDTO = om.readValue(
-            restMetriqueMockMvc
-                .perform(
-                    post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(metriqueDTO))
-                )
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            MetriqueDTO.class
-        );
+        restMetriqueMockMvc
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
+            )
+            .andExpect(status().isCreated());
 
         // Validate the Metrique in the database
-        assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
-        var returnedMetrique = metriqueMapper.toEntity(returnedMetriqueDTO);
-        assertMetriqueUpdatableFieldsEquals(returnedMetrique, getPersistedMetrique(returnedMetrique));
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeCreate + 1);
+        Metrique testMetrique = metriqueList.get(metriqueList.size() - 1);
+        assertThat(testMetrique.getOltPower()).isEqualTo(DEFAULT_OLT_POWER);
+        assertThat(testMetrique.getOntPower()).isEqualTo(DEFAULT_ONT_POWER);
+        assertThat(testMetrique.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
     }
 
     @Test
@@ -128,21 +123,27 @@ class MetriqueResourceIT {
         metrique.setId(1L);
         MetriqueDTO metriqueDTO = metriqueMapper.toDto(metrique);
 
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = metriqueRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restMetriqueMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(metriqueDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeCreate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
     @Transactional
     void checkOltPowerIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = metriqueRepository.findAll().size();
         // set the field null
         metrique.setOltPower(null);
 
@@ -150,16 +151,22 @@ class MetriqueResourceIT {
         MetriqueDTO metriqueDTO = metriqueMapper.toDto(metrique);
 
         restMetriqueMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(metriqueDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkOntPowerIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = metriqueRepository.findAll().size();
         // set the field null
         metrique.setOntPower(null);
 
@@ -167,10 +174,16 @@ class MetriqueResourceIT {
         MetriqueDTO metriqueDTO = metriqueMapper.toDto(metrique);
 
         restMetriqueMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(metriqueDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -215,11 +228,14 @@ class MetriqueResourceIT {
 
         Long id = metrique.getId();
 
-        defaultMetriqueFiltering("id.equals=" + id, "id.notEquals=" + id);
+        defaultMetriqueShouldBeFound("id.equals=" + id);
+        defaultMetriqueShouldNotBeFound("id.notEquals=" + id);
 
-        defaultMetriqueFiltering("id.greaterThanOrEqual=" + id, "id.greaterThan=" + id);
+        defaultMetriqueShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultMetriqueShouldNotBeFound("id.greaterThan=" + id);
 
-        defaultMetriqueFiltering("id.lessThanOrEqual=" + id, "id.lessThan=" + id);
+        defaultMetriqueShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultMetriqueShouldNotBeFound("id.lessThan=" + id);
     }
 
     @Test
@@ -228,8 +244,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where oltPower equals to
-        defaultMetriqueFiltering("oltPower.equals=" + DEFAULT_OLT_POWER, "oltPower.equals=" + UPDATED_OLT_POWER);
+        // Get all the metriqueList where oltPower equals to DEFAULT_OLT_POWER
+        defaultMetriqueShouldBeFound("oltPower.equals=" + DEFAULT_OLT_POWER);
+
+        // Get all the metriqueList where oltPower equals to UPDATED_OLT_POWER
+        defaultMetriqueShouldNotBeFound("oltPower.equals=" + UPDATED_OLT_POWER);
     }
 
     @Test
@@ -238,8 +257,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where oltPower in
-        defaultMetriqueFiltering("oltPower.in=" + DEFAULT_OLT_POWER + "," + UPDATED_OLT_POWER, "oltPower.in=" + UPDATED_OLT_POWER);
+        // Get all the metriqueList where oltPower in DEFAULT_OLT_POWER or UPDATED_OLT_POWER
+        defaultMetriqueShouldBeFound("oltPower.in=" + DEFAULT_OLT_POWER + "," + UPDATED_OLT_POWER);
+
+        // Get all the metriqueList where oltPower equals to UPDATED_OLT_POWER
+        defaultMetriqueShouldNotBeFound("oltPower.in=" + UPDATED_OLT_POWER);
     }
 
     @Test
@@ -249,7 +271,10 @@ class MetriqueResourceIT {
         metriqueRepository.saveAndFlush(metrique);
 
         // Get all the metriqueList where oltPower is not null
-        defaultMetriqueFiltering("oltPower.specified=true", "oltPower.specified=false");
+        defaultMetriqueShouldBeFound("oltPower.specified=true");
+
+        // Get all the metriqueList where oltPower is null
+        defaultMetriqueShouldNotBeFound("oltPower.specified=false");
     }
 
     @Test
@@ -258,8 +283,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where oltPower contains
-        defaultMetriqueFiltering("oltPower.contains=" + DEFAULT_OLT_POWER, "oltPower.contains=" + UPDATED_OLT_POWER);
+        // Get all the metriqueList where oltPower contains DEFAULT_OLT_POWER
+        defaultMetriqueShouldBeFound("oltPower.contains=" + DEFAULT_OLT_POWER);
+
+        // Get all the metriqueList where oltPower contains UPDATED_OLT_POWER
+        defaultMetriqueShouldNotBeFound("oltPower.contains=" + UPDATED_OLT_POWER);
     }
 
     @Test
@@ -268,8 +296,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where oltPower does not contain
-        defaultMetriqueFiltering("oltPower.doesNotContain=" + UPDATED_OLT_POWER, "oltPower.doesNotContain=" + DEFAULT_OLT_POWER);
+        // Get all the metriqueList where oltPower does not contain DEFAULT_OLT_POWER
+        defaultMetriqueShouldNotBeFound("oltPower.doesNotContain=" + DEFAULT_OLT_POWER);
+
+        // Get all the metriqueList where oltPower does not contain UPDATED_OLT_POWER
+        defaultMetriqueShouldBeFound("oltPower.doesNotContain=" + UPDATED_OLT_POWER);
     }
 
     @Test
@@ -278,8 +309,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where ontPower equals to
-        defaultMetriqueFiltering("ontPower.equals=" + DEFAULT_ONT_POWER, "ontPower.equals=" + UPDATED_ONT_POWER);
+        // Get all the metriqueList where ontPower equals to DEFAULT_ONT_POWER
+        defaultMetriqueShouldBeFound("ontPower.equals=" + DEFAULT_ONT_POWER);
+
+        // Get all the metriqueList where ontPower equals to UPDATED_ONT_POWER
+        defaultMetriqueShouldNotBeFound("ontPower.equals=" + UPDATED_ONT_POWER);
     }
 
     @Test
@@ -288,8 +322,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where ontPower in
-        defaultMetriqueFiltering("ontPower.in=" + DEFAULT_ONT_POWER + "," + UPDATED_ONT_POWER, "ontPower.in=" + UPDATED_ONT_POWER);
+        // Get all the metriqueList where ontPower in DEFAULT_ONT_POWER or UPDATED_ONT_POWER
+        defaultMetriqueShouldBeFound("ontPower.in=" + DEFAULT_ONT_POWER + "," + UPDATED_ONT_POWER);
+
+        // Get all the metriqueList where ontPower equals to UPDATED_ONT_POWER
+        defaultMetriqueShouldNotBeFound("ontPower.in=" + UPDATED_ONT_POWER);
     }
 
     @Test
@@ -299,7 +336,10 @@ class MetriqueResourceIT {
         metriqueRepository.saveAndFlush(metrique);
 
         // Get all the metriqueList where ontPower is not null
-        defaultMetriqueFiltering("ontPower.specified=true", "ontPower.specified=false");
+        defaultMetriqueShouldBeFound("ontPower.specified=true");
+
+        // Get all the metriqueList where ontPower is null
+        defaultMetriqueShouldNotBeFound("ontPower.specified=false");
     }
 
     @Test
@@ -308,8 +348,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where ontPower contains
-        defaultMetriqueFiltering("ontPower.contains=" + DEFAULT_ONT_POWER, "ontPower.contains=" + UPDATED_ONT_POWER);
+        // Get all the metriqueList where ontPower contains DEFAULT_ONT_POWER
+        defaultMetriqueShouldBeFound("ontPower.contains=" + DEFAULT_ONT_POWER);
+
+        // Get all the metriqueList where ontPower contains UPDATED_ONT_POWER
+        defaultMetriqueShouldNotBeFound("ontPower.contains=" + UPDATED_ONT_POWER);
     }
 
     @Test
@@ -318,8 +361,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where ontPower does not contain
-        defaultMetriqueFiltering("ontPower.doesNotContain=" + UPDATED_ONT_POWER, "ontPower.doesNotContain=" + DEFAULT_ONT_POWER);
+        // Get all the metriqueList where ontPower does not contain DEFAULT_ONT_POWER
+        defaultMetriqueShouldNotBeFound("ontPower.doesNotContain=" + DEFAULT_ONT_POWER);
+
+        // Get all the metriqueList where ontPower does not contain UPDATED_ONT_POWER
+        defaultMetriqueShouldBeFound("ontPower.doesNotContain=" + UPDATED_ONT_POWER);
     }
 
     @Test
@@ -328,8 +374,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where createdAt equals to
-        defaultMetriqueFiltering("createdAt.equals=" + DEFAULT_CREATED_AT, "createdAt.equals=" + UPDATED_CREATED_AT);
+        // Get all the metriqueList where createdAt equals to DEFAULT_CREATED_AT
+        defaultMetriqueShouldBeFound("createdAt.equals=" + DEFAULT_CREATED_AT);
+
+        // Get all the metriqueList where createdAt equals to UPDATED_CREATED_AT
+        defaultMetriqueShouldNotBeFound("createdAt.equals=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -338,8 +387,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where createdAt in
-        defaultMetriqueFiltering("createdAt.in=" + DEFAULT_CREATED_AT + "," + UPDATED_CREATED_AT, "createdAt.in=" + UPDATED_CREATED_AT);
+        // Get all the metriqueList where createdAt in DEFAULT_CREATED_AT or UPDATED_CREATED_AT
+        defaultMetriqueShouldBeFound("createdAt.in=" + DEFAULT_CREATED_AT + "," + UPDATED_CREATED_AT);
+
+        // Get all the metriqueList where createdAt equals to UPDATED_CREATED_AT
+        defaultMetriqueShouldNotBeFound("createdAt.in=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -349,7 +401,10 @@ class MetriqueResourceIT {
         metriqueRepository.saveAndFlush(metrique);
 
         // Get all the metriqueList where createdAt is not null
-        defaultMetriqueFiltering("createdAt.specified=true", "createdAt.specified=false");
+        defaultMetriqueShouldBeFound("createdAt.specified=true");
+
+        // Get all the metriqueList where createdAt is null
+        defaultMetriqueShouldNotBeFound("createdAt.specified=false");
     }
 
     @Test
@@ -358,11 +413,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where createdAt is greater than or equal to
-        defaultMetriqueFiltering(
-            "createdAt.greaterThanOrEqual=" + DEFAULT_CREATED_AT,
-            "createdAt.greaterThanOrEqual=" + UPDATED_CREATED_AT
-        );
+        // Get all the metriqueList where createdAt is greater than or equal to DEFAULT_CREATED_AT
+        defaultMetriqueShouldBeFound("createdAt.greaterThanOrEqual=" + DEFAULT_CREATED_AT);
+
+        // Get all the metriqueList where createdAt is greater than or equal to UPDATED_CREATED_AT
+        defaultMetriqueShouldNotBeFound("createdAt.greaterThanOrEqual=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -371,8 +426,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where createdAt is less than or equal to
-        defaultMetriqueFiltering("createdAt.lessThanOrEqual=" + DEFAULT_CREATED_AT, "createdAt.lessThanOrEqual=" + SMALLER_CREATED_AT);
+        // Get all the metriqueList where createdAt is less than or equal to DEFAULT_CREATED_AT
+        defaultMetriqueShouldBeFound("createdAt.lessThanOrEqual=" + DEFAULT_CREATED_AT);
+
+        // Get all the metriqueList where createdAt is less than or equal to SMALLER_CREATED_AT
+        defaultMetriqueShouldNotBeFound("createdAt.lessThanOrEqual=" + SMALLER_CREATED_AT);
     }
 
     @Test
@@ -381,8 +439,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where createdAt is less than
-        defaultMetriqueFiltering("createdAt.lessThan=" + UPDATED_CREATED_AT, "createdAt.lessThan=" + DEFAULT_CREATED_AT);
+        // Get all the metriqueList where createdAt is less than DEFAULT_CREATED_AT
+        defaultMetriqueShouldNotBeFound("createdAt.lessThan=" + DEFAULT_CREATED_AT);
+
+        // Get all the metriqueList where createdAt is less than UPDATED_CREATED_AT
+        defaultMetriqueShouldBeFound("createdAt.lessThan=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -391,8 +452,11 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        // Get all the metriqueList where createdAt is greater than
-        defaultMetriqueFiltering("createdAt.greaterThan=" + SMALLER_CREATED_AT, "createdAt.greaterThan=" + DEFAULT_CREATED_AT);
+        // Get all the metriqueList where createdAt is greater than DEFAULT_CREATED_AT
+        defaultMetriqueShouldNotBeFound("createdAt.greaterThan=" + DEFAULT_CREATED_AT);
+
+        // Get all the metriqueList where createdAt is greater than SMALLER_CREATED_AT
+        defaultMetriqueShouldBeFound("createdAt.greaterThan=" + SMALLER_CREATED_AT);
     }
 
     @Test
@@ -415,11 +479,6 @@ class MetriqueResourceIT {
 
         // Get all the metriqueList where ont equals to (ontId + 1)
         defaultMetriqueShouldNotBeFound("ontId.equals=" + (ontId + 1));
-    }
-
-    private void defaultMetriqueFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
-        defaultMetriqueShouldBeFound(shouldBeFound);
-        defaultMetriqueShouldNotBeFound(shouldNotBeFound);
     }
 
     /**
@@ -475,7 +534,7 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
 
         // Update the metrique
         Metrique updatedMetrique = metriqueRepository.findById(metrique.getId()).orElseThrow();
@@ -489,19 +548,23 @@ class MetriqueResourceIT {
                 put(ENTITY_API_URL_ID, metriqueDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(metriqueDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
             )
             .andExpect(status().isOk());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertPersistedMetriqueToMatchAllProperties(updatedMetrique);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
+        Metrique testMetrique = metriqueList.get(metriqueList.size() - 1);
+        assertThat(testMetrique.getOltPower()).isEqualTo(UPDATED_OLT_POWER);
+        assertThat(testMetrique.getOntPower()).isEqualTo(UPDATED_ONT_POWER);
+        assertThat(testMetrique.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
     }
 
     @Test
     @Transactional
     void putNonExistingMetrique() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
         metrique.setId(longCount.incrementAndGet());
 
         // Create the Metrique
@@ -513,18 +576,19 @@ class MetriqueResourceIT {
                 put(ENTITY_API_URL_ID, metriqueDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(metriqueDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithIdMismatchMetrique() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
         metrique.setId(longCount.incrementAndGet());
 
         // Create the Metrique
@@ -536,18 +600,19 @@ class MetriqueResourceIT {
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(metriqueDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithMissingIdPathParamMetrique() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
         metrique.setId(longCount.incrementAndGet());
 
         // Create the Metrique
@@ -555,11 +620,17 @@ class MetriqueResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMetriqueMockMvc
-            .perform(put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(metriqueDTO)))
+            .perform(
+                put(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -568,7 +639,7 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
 
         // Update the metrique using partial update
         Metrique partialUpdatedMetrique = new Metrique();
@@ -581,14 +652,17 @@ class MetriqueResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedMetrique.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedMetrique))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedMetrique))
             )
             .andExpect(status().isOk());
 
         // Validate the Metrique in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertMetriqueUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedMetrique, metrique), getPersistedMetrique(metrique));
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
+        Metrique testMetrique = metriqueList.get(metriqueList.size() - 1);
+        assertThat(testMetrique.getOltPower()).isEqualTo(UPDATED_OLT_POWER);
+        assertThat(testMetrique.getOntPower()).isEqualTo(DEFAULT_ONT_POWER);
+        assertThat(testMetrique.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
     }
 
     @Test
@@ -597,7 +671,7 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
 
         // Update the metrique using partial update
         Metrique partialUpdatedMetrique = new Metrique();
@@ -610,20 +684,23 @@ class MetriqueResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedMetrique.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedMetrique))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedMetrique))
             )
             .andExpect(status().isOk());
 
         // Validate the Metrique in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertMetriqueUpdatableFieldsEquals(partialUpdatedMetrique, getPersistedMetrique(partialUpdatedMetrique));
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
+        Metrique testMetrique = metriqueList.get(metriqueList.size() - 1);
+        assertThat(testMetrique.getOltPower()).isEqualTo(UPDATED_OLT_POWER);
+        assertThat(testMetrique.getOntPower()).isEqualTo(UPDATED_ONT_POWER);
+        assertThat(testMetrique.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
     }
 
     @Test
     @Transactional
     void patchNonExistingMetrique() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
         metrique.setId(longCount.incrementAndGet());
 
         // Create the Metrique
@@ -635,18 +712,19 @@ class MetriqueResourceIT {
                 patch(ENTITY_API_URL_ID, metriqueDTO.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(metriqueDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithIdMismatchMetrique() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
         metrique.setId(longCount.incrementAndGet());
 
         // Create the Metrique
@@ -658,18 +736,19 @@ class MetriqueResourceIT {
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(metriqueDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithMissingIdPathParamMetrique() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = metriqueRepository.findAll().size();
         metrique.setId(longCount.incrementAndGet());
 
         // Create the Metrique
@@ -678,12 +757,16 @@ class MetriqueResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restMetriqueMockMvc
             .perform(
-                patch(ENTITY_API_URL).with(csrf()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(metriqueDTO))
+                patch(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(metriqueDTO))
             )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Metrique in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -692,7 +775,7 @@ class MetriqueResourceIT {
         // Initialize the database
         metriqueRepository.saveAndFlush(metrique);
 
-        long databaseSizeBeforeDelete = getRepositoryCount();
+        int databaseSizeBeforeDelete = metriqueRepository.findAll().size();
 
         // Delete the metrique
         restMetriqueMockMvc
@@ -700,34 +783,7 @@ class MetriqueResourceIT {
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        assertDecrementedRepositoryCount(databaseSizeBeforeDelete);
-    }
-
-    protected long getRepositoryCount() {
-        return metriqueRepository.count();
-    }
-
-    protected void assertIncrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore + 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertDecrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore - 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertSameRepositoryCount(long countBefore) {
-        assertThat(countBefore).isEqualTo(getRepositoryCount());
-    }
-
-    protected Metrique getPersistedMetrique(Metrique metrique) {
-        return metriqueRepository.findById(metrique.getId()).orElseThrow();
-    }
-
-    protected void assertPersistedMetriqueToMatchAllProperties(Metrique expectedMetrique) {
-        assertMetriqueAllPropertiesEquals(expectedMetrique, getPersistedMetrique(expectedMetrique));
-    }
-
-    protected void assertPersistedMetriqueToMatchUpdatableProperties(Metrique expectedMetrique) {
-        assertMetriqueAllUpdatablePropertiesEquals(expectedMetrique, getPersistedMetrique(expectedMetrique));
+        List<Metrique> metriqueList = metriqueRepository.findAll();
+        assertThat(metriqueList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

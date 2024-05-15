@@ -17,7 +17,7 @@ public class ONTDTO implements Serializable {
     private String index;
 
     @NotNull
-    private String ontIP;
+    private String ontID;
 
     @NotNull
     private String serviceId;
@@ -39,6 +39,14 @@ public class ONTDTO implements Serializable {
 
     private LocalDate updatedAt;
 
+    private String etatOlt;
+
+    private String status;
+
+    private LocalDate statusAt;
+
+    private Long nbreLignesCouper;
+
     private ClientDTO client;
 
     private OLTDTO olt;
@@ -59,12 +67,12 @@ public class ONTDTO implements Serializable {
         this.index = index;
     }
 
-    public String getOntIP() {
-        return ontIP;
+    public String getOntID() {
+        return ontID;
     }
 
-    public void setOntIP(String ontIP) {
-        this.ontIP = ontIP;
+    public void setOntID(String ontID) {
+        this.ontID = ontID;
     }
 
     public String getServiceId() {
@@ -131,6 +139,38 @@ public class ONTDTO implements Serializable {
         this.updatedAt = updatedAt;
     }
 
+    public String getEtatOlt() {
+        return etatOlt;
+    }
+
+    public void setEtatOlt(String etatOlt) {
+        this.etatOlt = etatOlt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDate getStatusAt() {
+        return statusAt;
+    }
+
+    public void setStatusAt(LocalDate statusAt) {
+        this.statusAt = statusAt;
+    }
+
+    public Long getNbreLignesCouper() {
+        return nbreLignesCouper;
+    }
+
+    public void setNbreLignesCouper(Long nbreLignesCouper) {
+        this.nbreLignesCouper = nbreLignesCouper;
+    }
+
     public ClientDTO getClient() {
         return client;
     }
@@ -174,7 +214,7 @@ public class ONTDTO implements Serializable {
         return "ONTDTO{" +
             "id=" + getId() +
             ", index='" + getIndex() + "'" +
-            ", ontIP='" + getOntIP() + "'" +
+            ", ontID='" + getOntID() + "'" +
             ", serviceId='" + getServiceId() + "'" +
             ", slot='" + getSlot() + "'" +
             ", pon='" + getPon() + "'" +
@@ -183,6 +223,10 @@ public class ONTDTO implements Serializable {
             ", maxDown='" + getMaxDown() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", updatedAt='" + getUpdatedAt() + "'" +
+            ", etatOlt='" + getEtatOlt() + "'" +
+            ", status='" + getStatus() + "'" +
+            ", statusAt='" + getStatusAt() + "'" +
+            ", nbreLignesCouper=" + getNbreLignesCouper() +
             ", client=" + getClient() +
             ", olt=" + getOlt() +
             "}";

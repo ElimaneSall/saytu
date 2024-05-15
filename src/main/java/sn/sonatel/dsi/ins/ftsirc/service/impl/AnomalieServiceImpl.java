@@ -3,6 +3,8 @@ package sn.sonatel.dsi.ins.ftsirc.service.impl;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
@@ -58,6 +60,13 @@ public class AnomalieServiceImpl implements AnomalieService {
             })
             .map(anomalieRepository::save)
             .map(anomalieMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AnomalieDTO> findAll(Pageable pageable) {
+        log.debug("Request to get all Anomalies");
+        return anomalieRepository.findAll(pageable).map(anomalieMapper::toDto);
     }
 
     @Override

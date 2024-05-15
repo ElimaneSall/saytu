@@ -65,10 +65,11 @@ public class ONTResource {
         if (oNTDTO.getId() != null) {
             throw new BadRequestAlertException("A new oNT cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        oNTDTO = oNTService.save(oNTDTO);
-        return ResponseEntity.created(new URI("/api/onts/" + oNTDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, oNTDTO.getId().toString()))
-            .body(oNTDTO);
+        ONTDTO result = oNTService.save(oNTDTO);
+        return ResponseEntity
+            .created(new URI("/api/onts/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -96,10 +97,11 @@ public class ONTResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        oNTDTO = oNTService.update(oNTDTO);
-        return ResponseEntity.ok()
+        ONTDTO result = oNTService.update(oNTDTO);
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, oNTDTO.getId().toString()))
-            .body(oNTDTO);
+            .body(result);
     }
 
     /**
@@ -192,7 +194,8 @@ public class ONTResource {
     public ResponseEntity<Void> deleteONT(@PathVariable("id") Long id) {
         log.debug("REST request to delete ONT : {}", id);
         oNTService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

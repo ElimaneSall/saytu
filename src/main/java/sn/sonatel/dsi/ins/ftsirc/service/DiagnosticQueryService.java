@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link Diagnostic} entities in the database.
  * The main input is a {@link DiagnosticCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link DiagnosticDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link DiagnosticDTO} or a {@link Page} of {@link DiagnosticDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -38,6 +39,18 @@ public class DiagnosticQueryService extends QueryService<Diagnostic> {
     }
 
     /**
+     * Return a {@link List} of {@link DiagnosticDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<DiagnosticDTO> findByCriteria(DiagnosticCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<Diagnostic> specification = createSpecification(criteria);
+        return diagnosticMapper.toDto(diagnosticRepository.findAll(specification));
+    }
+
+    /**
      * Return a {@link Page} of {@link DiagnosticDTO} which matches the criteria from the database.
      * @param criteria The object which holds all the filters, which the entities should match.
      * @param page The page, which should be returned.
@@ -47,7 +60,7 @@ public class DiagnosticQueryService extends QueryService<Diagnostic> {
     public Page<DiagnosticDTO> findByCriteria(DiagnosticCriteria criteria, Pageable page) {
         log.debug("find by criteria : {}, page: {}", criteria, page);
         final Specification<Diagnostic> specification = createSpecification(criteria);
-        return diagnosticRepository.fetchBagRelationships(diagnosticRepository.findAll(specification, page)).map(diagnosticMapper::toDto);
+        return diagnosticRepository.findAll(specification, page).map(diagnosticMapper::toDto);
     }
 
     /**
@@ -96,19 +109,25 @@ public class DiagnosticQueryService extends QueryService<Diagnostic> {
                 specification = specification.and(buildSpecification(criteria.getTypeDiagnostic(), Diagnostic_.typeDiagnostic));
             }
             if (criteria.getSignalId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getSignalId(), root -> root.join(Diagnostic_.signal, JoinType.LEFT).get(Signal_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(criteria.getSignalId(), root -> root.join(Diagnostic_.signal, JoinType.LEFT).get(Signal_.id))
+                    );
             }
             if (criteria.getOntId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getOntId(), root -> root.join(Diagnostic_.ont, JoinType.LEFT).get(ONT_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(criteria.getOntId(), root -> root.join(Diagnostic_.ont, JoinType.LEFT).get(ONT_.id))
+                    );
             }
             if (criteria.getAnomalieId() != null) {
-                specification = specification.and(
-                    buildSpecification(criteria.getAnomalieId(), root -> root.join(Diagnostic_.anomalies, JoinType.LEFT).get(Anomalie_.id))
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(
+                            criteria.getAnomalieId(),
+                            root -> root.join(Diagnostic_.anomalies, JoinType.LEFT).get(Anomalie_.id)
+                        )
+                    );
             }
         }
         return specification;

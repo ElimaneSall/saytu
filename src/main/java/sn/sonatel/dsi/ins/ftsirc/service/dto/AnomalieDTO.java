@@ -1,10 +1,9 @@
 package sn.sonatel.dsi.ins.ftsirc.service.dto;
 
+import jakarta.persistence.Lob;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * A DTO for the {@link sn.sonatel.dsi.ins.ftsirc.domain.Anomalie} entity.
@@ -17,7 +16,13 @@ public class AnomalieDTO implements Serializable {
     @NotNull
     private String libelle;
 
-    private Set<DiagnosticDTO> diagnostics = new HashSet<>();
+    @Lob
+    private String description;
+
+    private String etat;
+
+    @Lob
+    private String recommandation;
 
     public Long getId() {
         return id;
@@ -35,12 +40,28 @@ public class AnomalieDTO implements Serializable {
         this.libelle = libelle;
     }
 
-    public Set<DiagnosticDTO> getDiagnostics() {
-        return diagnostics;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDiagnostics(Set<DiagnosticDTO> diagnostics) {
-        this.diagnostics = diagnostics;
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getEtat() {
+        return etat;
+    }
+
+    public void setEtat(String etat) {
+        this.etat = etat;
+    }
+
+    public String getRecommandation() {
+        return recommandation;
+    }
+
+    public void setRecommandation(String recommandation) {
+        this.recommandation = recommandation;
     }
 
     @Override
@@ -70,7 +91,9 @@ public class AnomalieDTO implements Serializable {
         return "AnomalieDTO{" +
             "id=" + getId() +
             ", libelle='" + getLibelle() + "'" +
-            ", diagnostics=" + getDiagnostics() +
+            ", description='" + getDescription() + "'" +
+            ", etat='" + getEtat() + "'" +
+            ", recommandation='" + getRecommandation() + "'" +
             "}";
     }
 }

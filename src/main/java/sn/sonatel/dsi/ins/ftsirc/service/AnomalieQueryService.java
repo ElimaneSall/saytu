@@ -1,6 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import jakarta.persistence.criteria.JoinType;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -8,9 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sn.sonatel.dsi.ins.ftsirc.domain.*; // for static metamodels
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
-import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie_;
-import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic_;
 import sn.sonatel.dsi.ins.ftsirc.repository.AnomalieRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.criteria.AnomalieCriteria;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.AnomalieDTO;
@@ -21,7 +21,7 @@ import tech.jhipster.service.QueryService;
  * Service for executing complex queries for {@link Anomalie} entities in the database.
  * The main input is a {@link AnomalieCriteria} which gets converted to {@link Specification},
  * in a way that all the filters must apply.
- * It returns a {@link Page} of {@link AnomalieDTO} which fulfills the criteria.
+ * It returns a {@link List} of {@link AnomalieDTO} or a {@link Page} of {@link AnomalieDTO} which fulfills the criteria.
  */
 @Service
 @Transactional(readOnly = true)
@@ -36,6 +36,18 @@ public class AnomalieQueryService extends QueryService<Anomalie> {
     public AnomalieQueryService(AnomalieRepository anomalieRepository, AnomalieMapper anomalieMapper) {
         this.anomalieRepository = anomalieRepository;
         this.anomalieMapper = anomalieMapper;
+    }
+
+    /**
+     * Return a {@link List} of {@link AnomalieDTO} which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    @Transactional(readOnly = true)
+    public List<AnomalieDTO> findByCriteria(AnomalieCriteria criteria) {
+        log.debug("find by criteria : {}", criteria);
+        final Specification<Anomalie> specification = createSpecification(criteria);
+        return anomalieMapper.toDto(anomalieRepository.findAll(specification));
     }
 
     /**
@@ -81,13 +93,17 @@ public class AnomalieQueryService extends QueryService<Anomalie> {
             if (criteria.getLibelle() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getLibelle(), Anomalie_.libelle));
             }
+            if (criteria.getEtat() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getEtat(), Anomalie_.etat));
+            }
             if (criteria.getDiagnosticId() != null) {
-                specification = specification.and(
-                    buildSpecification(
-                        criteria.getDiagnosticId(),
-                        root -> root.join(Anomalie_.diagnostics, JoinType.LEFT).get(Diagnostic_.id)
-                    )
-                );
+                specification =
+                    specification.and(
+                        buildSpecification(
+                            criteria.getDiagnosticId(),
+                            root -> root.join(Anomalie_.diagnostics, JoinType.LEFT).get(Diagnostic_.id)
+                        )
+                    );
             }
         }
         return specification;

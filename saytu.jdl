@@ -17,7 +17,7 @@ entity OLT {
 
 entity ONT {
     index String required,
-    ontIP String required,
+    ontID String required,
     serviceId String required,
     slot String required,
     pon String required,
@@ -25,7 +25,11 @@ entity ONT {
     maxUp String,
     maxDown String,
     createdAt LocalDate,
-    updatedAt LocalDate
+    updatedAt LocalDate,
+    etatOlt String,
+    status String,
+    statusAt LocalDate,
+    nbreLignesCouper Long
 
 }
 
@@ -56,11 +60,16 @@ entity Metrique {
 
 entity Anomalie {
     libelle String required unique,
+    description TextBlob,
+    etat String,
+    description TextBlob,
+    recommandation TextBlob
 }
 
 entity Signal {
     libelle String required unique,
-    seuilMin Double required
+    valueSignal Double,
+    seuilMin Double required,
     seuilMax Double required
 
 }

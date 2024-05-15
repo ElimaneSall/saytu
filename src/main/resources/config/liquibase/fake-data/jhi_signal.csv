@@ -1,11 +1,11 @@
-id;libelle;seuil_min;seuil_max
-1;comme;7061.79;25322.52
-2;pourpre;27832.59;18990.1
-3;actionnaire du côté de;26548.96;31497.2
-4;sauf aussitôt que oups;268.18;18050.66
-5;drelin très;16860.15;26801.49
-6;chez sincère;29141.51;2530.69
-7;aussitôt que probablement;32676.53;23655.76
-8;bzzz;22239.14;14875.66
-9;résulter au cas où paf;5238.77;14853.68
-10;hôte;1789.09;13562.38
+id;libelle;value_signal;seuil_min;seuil_max
+1;comme;7061.79;25322.52;9841.02
+2;spécialiste hi bè;27216.84;25333.9;26548.96
+3;fixer oui charitable;21696.77;268.18;18050.66
+4;drelin très;16860.15;26801.49;18160.77
+5;éclaircir;12516.18;15750;11770.98
+6;meuh bon dérouler;683.3;4571;1405.37
+7;y résulter au cas où;19461.51;6245.21;10452
+8;quand concernant personnel professionnel;10470.43;19530.06;21325.92
+9;gens;20013.83;10765.01;2722.77
+10;mince;8240.85;15179.54;20638.92

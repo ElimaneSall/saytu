@@ -6,14 +6,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.ONTAsserts.*;
-import static sn.sonatel.dsi.ins.ftsirc.web.rest.TestUtil.createUpdateProxyForBean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +29,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.IntegrationTest;
 import sn.sonatel.dsi.ins.ftsirc.domain.Client;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
+import sn.sonatel.dsi.ins.ftsirc.domain.Metrique;
 import sn.sonatel.dsi.ins.ftsirc.domain.OLT;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
@@ -50,8 +50,8 @@ class ONTResourceIT {
     private static final String DEFAULT_INDEX = "AAAAAAAAAA";
     private static final String UPDATED_INDEX = "BBBBBBBBBB";
 
-    private static final String DEFAULT_ONT_IP = "AAAAAAAAAA";
-    private static final String UPDATED_ONT_IP = "BBBBBBBBBB";
+    private static final String DEFAULT_ONT_ID = "AAAAAAAAAA";
+    private static final String UPDATED_ONT_ID = "BBBBBBBBBB";
 
     private static final String DEFAULT_SERVICE_ID = "AAAAAAAAAA";
     private static final String UPDATED_SERVICE_ID = "BBBBBBBBBB";
@@ -79,14 +79,25 @@ class ONTResourceIT {
     private static final LocalDate UPDATED_UPDATED_AT = LocalDate.now(ZoneId.systemDefault());
     private static final LocalDate SMALLER_UPDATED_AT = LocalDate.ofEpochDay(-1L);
 
+    private static final String DEFAULT_ETAT_OLT = "AAAAAAAAAA";
+    private static final String UPDATED_ETAT_OLT = "BBBBBBBBBB";
+
+    private static final String DEFAULT_STATUS = "AAAAAAAAAA";
+    private static final String UPDATED_STATUS = "BBBBBBBBBB";
+
+    private static final LocalDate DEFAULT_STATUS_AT = LocalDate.ofEpochDay(0L);
+    private static final LocalDate UPDATED_STATUS_AT = LocalDate.now(ZoneId.systemDefault());
+    private static final LocalDate SMALLER_STATUS_AT = LocalDate.ofEpochDay(-1L);
+
+    private static final Long DEFAULT_NBRE_LIGNES_COUPER = 1L;
+    private static final Long UPDATED_NBRE_LIGNES_COUPER = 2L;
+    private static final Long SMALLER_NBRE_LIGNES_COUPER = 1L - 1L;
+
     private static final String ENTITY_API_URL = "/api/onts";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
-    @Autowired
-    private ObjectMapper om;
 
     @Autowired
     private ONTRepository oNTRepository;
@@ -117,7 +128,7 @@ class ONTResourceIT {
     public static ONT createEntity(EntityManager em) {
         ONT oNT = new ONT()
             .index(DEFAULT_INDEX)
-            .ontIP(DEFAULT_ONT_IP)
+            .ontID(DEFAULT_ONT_ID)
             .serviceId(DEFAULT_SERVICE_ID)
             .slot(DEFAULT_SLOT)
             .pon(DEFAULT_PON)
@@ -125,7 +136,11 @@ class ONTResourceIT {
             .maxUp(DEFAULT_MAX_UP)
             .maxDown(DEFAULT_MAX_DOWN)
             .createdAt(DEFAULT_CREATED_AT)
-            .updatedAt(DEFAULT_UPDATED_AT);
+            .updatedAt(DEFAULT_UPDATED_AT)
+            .etatOlt(DEFAULT_ETAT_OLT)
+            .status(DEFAULT_STATUS)
+            .statusAt(DEFAULT_STATUS_AT)
+            .nbreLignesCouper(DEFAULT_NBRE_LIGNES_COUPER);
         return oNT;
     }
 
@@ -138,7 +153,7 @@ class ONTResourceIT {
     public static ONT createUpdatedEntity(EntityManager em) {
         ONT oNT = new ONT()
             .index(UPDATED_INDEX)
-            .ontIP(UPDATED_ONT_IP)
+            .ontID(UPDATED_ONT_ID)
             .serviceId(UPDATED_SERVICE_ID)
             .slot(UPDATED_SLOT)
             .pon(UPDATED_PON)
@@ -146,7 +161,11 @@ class ONTResourceIT {
             .maxUp(UPDATED_MAX_UP)
             .maxDown(UPDATED_MAX_DOWN)
             .createdAt(UPDATED_CREATED_AT)
-            .updatedAt(UPDATED_UPDATED_AT);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .status(UPDATED_STATUS)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
         return oNT;
     }
 
@@ -158,23 +177,33 @@ class ONTResourceIT {
     @Test
     @Transactional
     void createONT() throws Exception {
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = oNTRepository.findAll().size();
         // Create the ONT
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
-        var returnedONTDTO = om.readValue(
-            restONTMockMvc
-                .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            ONTDTO.class
-        );
+        restONTMockMvc
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
+            .andExpect(status().isCreated());
 
         // Validate the ONT in the database
-        assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
-        var returnedONT = oNTMapper.toEntity(returnedONTDTO);
-        assertONTUpdatableFieldsEquals(returnedONT, getPersistedONT(returnedONT));
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeCreate + 1);
+        ONT testONT = oNTList.get(oNTList.size() - 1);
+        assertThat(testONT.getIndex()).isEqualTo(DEFAULT_INDEX);
+        assertThat(testONT.getOntID()).isEqualTo(DEFAULT_ONT_ID);
+        assertThat(testONT.getServiceId()).isEqualTo(DEFAULT_SERVICE_ID);
+        assertThat(testONT.getSlot()).isEqualTo(DEFAULT_SLOT);
+        assertThat(testONT.getPon()).isEqualTo(DEFAULT_PON);
+        assertThat(testONT.getPonIndex()).isEqualTo(DEFAULT_PON_INDEX);
+        assertThat(testONT.getMaxUp()).isEqualTo(DEFAULT_MAX_UP);
+        assertThat(testONT.getMaxDown()).isEqualTo(DEFAULT_MAX_DOWN);
+        assertThat(testONT.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
+        assertThat(testONT.getUpdatedAt()).isEqualTo(DEFAULT_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(DEFAULT_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(DEFAULT_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(DEFAULT_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(DEFAULT_NBRE_LIGNES_COUPER);
     }
 
     @Test
@@ -184,21 +213,24 @@ class ONTResourceIT {
         oNT.setId(1L);
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = oNTRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeCreate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
     @Transactional
     void checkIndexIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oNTRepository.findAll().size();
         // set the field null
         oNT.setIndex(null);
 
@@ -206,33 +238,39 @@ class ONTResourceIT {
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
-    void checkOntIPIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+    void checkOntIDIsRequired() throws Exception {
+        int databaseSizeBeforeTest = oNTRepository.findAll().size();
         // set the field null
-        oNT.setOntIP(null);
+        oNT.setOntID(null);
 
         // Create the ONT, which fails.
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkServiceIdIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oNTRepository.findAll().size();
         // set the field null
         oNT.setServiceId(null);
 
@@ -240,16 +278,19 @@ class ONTResourceIT {
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkSlotIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oNTRepository.findAll().size();
         // set the field null
         oNT.setSlot(null);
 
@@ -257,16 +298,19 @@ class ONTResourceIT {
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkPonIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oNTRepository.findAll().size();
         // set the field null
         oNT.setPon(null);
 
@@ -274,16 +318,19 @@ class ONTResourceIT {
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkPonIndexIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = oNTRepository.findAll().size();
         // set the field null
         oNT.setPonIndex(null);
 
@@ -291,10 +338,13 @@ class ONTResourceIT {
         ONTDTO oNTDTO = oNTMapper.toDto(oNT);
 
         restONTMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -310,7 +360,7 @@ class ONTResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(oNT.getId().intValue())))
             .andExpect(jsonPath("$.[*].index").value(hasItem(DEFAULT_INDEX)))
-            .andExpect(jsonPath("$.[*].ontIP").value(hasItem(DEFAULT_ONT_IP)))
+            .andExpect(jsonPath("$.[*].ontID").value(hasItem(DEFAULT_ONT_ID)))
             .andExpect(jsonPath("$.[*].serviceId").value(hasItem(DEFAULT_SERVICE_ID)))
             .andExpect(jsonPath("$.[*].slot").value(hasItem(DEFAULT_SLOT)))
             .andExpect(jsonPath("$.[*].pon").value(hasItem(DEFAULT_PON)))
@@ -318,7 +368,11 @@ class ONTResourceIT {
             .andExpect(jsonPath("$.[*].maxUp").value(hasItem(DEFAULT_MAX_UP)))
             .andExpect(jsonPath("$.[*].maxDown").value(hasItem(DEFAULT_MAX_DOWN)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
-            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())));
+            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
+            .andExpect(jsonPath("$.[*].etatOlt").value(hasItem(DEFAULT_ETAT_OLT)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS)))
+            .andExpect(jsonPath("$.[*].statusAt").value(hasItem(DEFAULT_STATUS_AT.toString())))
+            .andExpect(jsonPath("$.[*].nbreLignesCouper").value(hasItem(DEFAULT_NBRE_LIGNES_COUPER.intValue())));
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -351,7 +405,7 @@ class ONTResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(oNT.getId().intValue()))
             .andExpect(jsonPath("$.index").value(DEFAULT_INDEX))
-            .andExpect(jsonPath("$.ontIP").value(DEFAULT_ONT_IP))
+            .andExpect(jsonPath("$.ontID").value(DEFAULT_ONT_ID))
             .andExpect(jsonPath("$.serviceId").value(DEFAULT_SERVICE_ID))
             .andExpect(jsonPath("$.slot").value(DEFAULT_SLOT))
             .andExpect(jsonPath("$.pon").value(DEFAULT_PON))
@@ -359,7 +413,11 @@ class ONTResourceIT {
             .andExpect(jsonPath("$.maxUp").value(DEFAULT_MAX_UP))
             .andExpect(jsonPath("$.maxDown").value(DEFAULT_MAX_DOWN))
             .andExpect(jsonPath("$.createdAt").value(DEFAULT_CREATED_AT.toString()))
-            .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()));
+            .andExpect(jsonPath("$.updatedAt").value(DEFAULT_UPDATED_AT.toString()))
+            .andExpect(jsonPath("$.etatOlt").value(DEFAULT_ETAT_OLT))
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS))
+            .andExpect(jsonPath("$.statusAt").value(DEFAULT_STATUS_AT.toString()))
+            .andExpect(jsonPath("$.nbreLignesCouper").value(DEFAULT_NBRE_LIGNES_COUPER.intValue()));
     }
 
     @Test
@@ -370,11 +428,14 @@ class ONTResourceIT {
 
         Long id = oNT.getId();
 
-        defaultONTFiltering("id.equals=" + id, "id.notEquals=" + id);
+        defaultONTShouldBeFound("id.equals=" + id);
+        defaultONTShouldNotBeFound("id.notEquals=" + id);
 
-        defaultONTFiltering("id.greaterThanOrEqual=" + id, "id.greaterThan=" + id);
+        defaultONTShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultONTShouldNotBeFound("id.greaterThan=" + id);
 
-        defaultONTFiltering("id.lessThanOrEqual=" + id, "id.lessThan=" + id);
+        defaultONTShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultONTShouldNotBeFound("id.lessThan=" + id);
     }
 
     @Test
@@ -383,8 +444,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where index equals to
-        defaultONTFiltering("index.equals=" + DEFAULT_INDEX, "index.equals=" + UPDATED_INDEX);
+        // Get all the oNTList where index equals to DEFAULT_INDEX
+        defaultONTShouldBeFound("index.equals=" + DEFAULT_INDEX);
+
+        // Get all the oNTList where index equals to UPDATED_INDEX
+        defaultONTShouldNotBeFound("index.equals=" + UPDATED_INDEX);
     }
 
     @Test
@@ -393,8 +457,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where index in
-        defaultONTFiltering("index.in=" + DEFAULT_INDEX + "," + UPDATED_INDEX, "index.in=" + UPDATED_INDEX);
+        // Get all the oNTList where index in DEFAULT_INDEX or UPDATED_INDEX
+        defaultONTShouldBeFound("index.in=" + DEFAULT_INDEX + "," + UPDATED_INDEX);
+
+        // Get all the oNTList where index equals to UPDATED_INDEX
+        defaultONTShouldNotBeFound("index.in=" + UPDATED_INDEX);
     }
 
     @Test
@@ -404,7 +471,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where index is not null
-        defaultONTFiltering("index.specified=true", "index.specified=false");
+        defaultONTShouldBeFound("index.specified=true");
+
+        // Get all the oNTList where index is null
+        defaultONTShouldNotBeFound("index.specified=false");
     }
 
     @Test
@@ -413,8 +483,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where index contains
-        defaultONTFiltering("index.contains=" + DEFAULT_INDEX, "index.contains=" + UPDATED_INDEX);
+        // Get all the oNTList where index contains DEFAULT_INDEX
+        defaultONTShouldBeFound("index.contains=" + DEFAULT_INDEX);
+
+        // Get all the oNTList where index contains UPDATED_INDEX
+        defaultONTShouldNotBeFound("index.contains=" + UPDATED_INDEX);
     }
 
     @Test
@@ -423,58 +496,76 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where index does not contain
-        defaultONTFiltering("index.doesNotContain=" + UPDATED_INDEX, "index.doesNotContain=" + DEFAULT_INDEX);
+        // Get all the oNTList where index does not contain DEFAULT_INDEX
+        defaultONTShouldNotBeFound("index.doesNotContain=" + DEFAULT_INDEX);
+
+        // Get all the oNTList where index does not contain UPDATED_INDEX
+        defaultONTShouldBeFound("index.doesNotContain=" + UPDATED_INDEX);
     }
 
     @Test
     @Transactional
-    void getAllONTSByOntIPIsEqualToSomething() throws Exception {
+    void getAllONTSByOntIDIsEqualToSomething() throws Exception {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ontIP equals to
-        defaultONTFiltering("ontIP.equals=" + DEFAULT_ONT_IP, "ontIP.equals=" + UPDATED_ONT_IP);
+        // Get all the oNTList where ontID equals to DEFAULT_ONT_ID
+        defaultONTShouldBeFound("ontID.equals=" + DEFAULT_ONT_ID);
+
+        // Get all the oNTList where ontID equals to UPDATED_ONT_ID
+        defaultONTShouldNotBeFound("ontID.equals=" + UPDATED_ONT_ID);
     }
 
     @Test
     @Transactional
-    void getAllONTSByOntIPIsInShouldWork() throws Exception {
+    void getAllONTSByOntIDIsInShouldWork() throws Exception {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ontIP in
-        defaultONTFiltering("ontIP.in=" + DEFAULT_ONT_IP + "," + UPDATED_ONT_IP, "ontIP.in=" + UPDATED_ONT_IP);
+        // Get all the oNTList where ontID in DEFAULT_ONT_ID or UPDATED_ONT_ID
+        defaultONTShouldBeFound("ontID.in=" + DEFAULT_ONT_ID + "," + UPDATED_ONT_ID);
+
+        // Get all the oNTList where ontID equals to UPDATED_ONT_ID
+        defaultONTShouldNotBeFound("ontID.in=" + UPDATED_ONT_ID);
     }
 
     @Test
     @Transactional
-    void getAllONTSByOntIPIsNullOrNotNull() throws Exception {
+    void getAllONTSByOntIDIsNullOrNotNull() throws Exception {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ontIP is not null
-        defaultONTFiltering("ontIP.specified=true", "ontIP.specified=false");
+        // Get all the oNTList where ontID is not null
+        defaultONTShouldBeFound("ontID.specified=true");
+
+        // Get all the oNTList where ontID is null
+        defaultONTShouldNotBeFound("ontID.specified=false");
     }
 
     @Test
     @Transactional
-    void getAllONTSByOntIPContainsSomething() throws Exception {
+    void getAllONTSByOntIDContainsSomething() throws Exception {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ontIP contains
-        defaultONTFiltering("ontIP.contains=" + DEFAULT_ONT_IP, "ontIP.contains=" + UPDATED_ONT_IP);
+        // Get all the oNTList where ontID contains DEFAULT_ONT_ID
+        defaultONTShouldBeFound("ontID.contains=" + DEFAULT_ONT_ID);
+
+        // Get all the oNTList where ontID contains UPDATED_ONT_ID
+        defaultONTShouldNotBeFound("ontID.contains=" + UPDATED_ONT_ID);
     }
 
     @Test
     @Transactional
-    void getAllONTSByOntIPNotContainsSomething() throws Exception {
+    void getAllONTSByOntIDNotContainsSomething() throws Exception {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ontIP does not contain
-        defaultONTFiltering("ontIP.doesNotContain=" + UPDATED_ONT_IP, "ontIP.doesNotContain=" + DEFAULT_ONT_IP);
+        // Get all the oNTList where ontID does not contain DEFAULT_ONT_ID
+        defaultONTShouldNotBeFound("ontID.doesNotContain=" + DEFAULT_ONT_ID);
+
+        // Get all the oNTList where ontID does not contain UPDATED_ONT_ID
+        defaultONTShouldBeFound("ontID.doesNotContain=" + UPDATED_ONT_ID);
     }
 
     @Test
@@ -483,8 +574,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where serviceId equals to
-        defaultONTFiltering("serviceId.equals=" + DEFAULT_SERVICE_ID, "serviceId.equals=" + UPDATED_SERVICE_ID);
+        // Get all the oNTList where serviceId equals to DEFAULT_SERVICE_ID
+        defaultONTShouldBeFound("serviceId.equals=" + DEFAULT_SERVICE_ID);
+
+        // Get all the oNTList where serviceId equals to UPDATED_SERVICE_ID
+        defaultONTShouldNotBeFound("serviceId.equals=" + UPDATED_SERVICE_ID);
     }
 
     @Test
@@ -493,8 +587,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where serviceId in
-        defaultONTFiltering("serviceId.in=" + DEFAULT_SERVICE_ID + "," + UPDATED_SERVICE_ID, "serviceId.in=" + UPDATED_SERVICE_ID);
+        // Get all the oNTList where serviceId in DEFAULT_SERVICE_ID or UPDATED_SERVICE_ID
+        defaultONTShouldBeFound("serviceId.in=" + DEFAULT_SERVICE_ID + "," + UPDATED_SERVICE_ID);
+
+        // Get all the oNTList where serviceId equals to UPDATED_SERVICE_ID
+        defaultONTShouldNotBeFound("serviceId.in=" + UPDATED_SERVICE_ID);
     }
 
     @Test
@@ -504,7 +601,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where serviceId is not null
-        defaultONTFiltering("serviceId.specified=true", "serviceId.specified=false");
+        defaultONTShouldBeFound("serviceId.specified=true");
+
+        // Get all the oNTList where serviceId is null
+        defaultONTShouldNotBeFound("serviceId.specified=false");
     }
 
     @Test
@@ -513,8 +613,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where serviceId contains
-        defaultONTFiltering("serviceId.contains=" + DEFAULT_SERVICE_ID, "serviceId.contains=" + UPDATED_SERVICE_ID);
+        // Get all the oNTList where serviceId contains DEFAULT_SERVICE_ID
+        defaultONTShouldBeFound("serviceId.contains=" + DEFAULT_SERVICE_ID);
+
+        // Get all the oNTList where serviceId contains UPDATED_SERVICE_ID
+        defaultONTShouldNotBeFound("serviceId.contains=" + UPDATED_SERVICE_ID);
     }
 
     @Test
@@ -523,8 +626,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where serviceId does not contain
-        defaultONTFiltering("serviceId.doesNotContain=" + UPDATED_SERVICE_ID, "serviceId.doesNotContain=" + DEFAULT_SERVICE_ID);
+        // Get all the oNTList where serviceId does not contain DEFAULT_SERVICE_ID
+        defaultONTShouldNotBeFound("serviceId.doesNotContain=" + DEFAULT_SERVICE_ID);
+
+        // Get all the oNTList where serviceId does not contain UPDATED_SERVICE_ID
+        defaultONTShouldBeFound("serviceId.doesNotContain=" + UPDATED_SERVICE_ID);
     }
 
     @Test
@@ -533,8 +639,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where slot equals to
-        defaultONTFiltering("slot.equals=" + DEFAULT_SLOT, "slot.equals=" + UPDATED_SLOT);
+        // Get all the oNTList where slot equals to DEFAULT_SLOT
+        defaultONTShouldBeFound("slot.equals=" + DEFAULT_SLOT);
+
+        // Get all the oNTList where slot equals to UPDATED_SLOT
+        defaultONTShouldNotBeFound("slot.equals=" + UPDATED_SLOT);
     }
 
     @Test
@@ -543,8 +652,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where slot in
-        defaultONTFiltering("slot.in=" + DEFAULT_SLOT + "," + UPDATED_SLOT, "slot.in=" + UPDATED_SLOT);
+        // Get all the oNTList where slot in DEFAULT_SLOT or UPDATED_SLOT
+        defaultONTShouldBeFound("slot.in=" + DEFAULT_SLOT + "," + UPDATED_SLOT);
+
+        // Get all the oNTList where slot equals to UPDATED_SLOT
+        defaultONTShouldNotBeFound("slot.in=" + UPDATED_SLOT);
     }
 
     @Test
@@ -554,7 +666,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where slot is not null
-        defaultONTFiltering("slot.specified=true", "slot.specified=false");
+        defaultONTShouldBeFound("slot.specified=true");
+
+        // Get all the oNTList where slot is null
+        defaultONTShouldNotBeFound("slot.specified=false");
     }
 
     @Test
@@ -563,8 +678,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where slot contains
-        defaultONTFiltering("slot.contains=" + DEFAULT_SLOT, "slot.contains=" + UPDATED_SLOT);
+        // Get all the oNTList where slot contains DEFAULT_SLOT
+        defaultONTShouldBeFound("slot.contains=" + DEFAULT_SLOT);
+
+        // Get all the oNTList where slot contains UPDATED_SLOT
+        defaultONTShouldNotBeFound("slot.contains=" + UPDATED_SLOT);
     }
 
     @Test
@@ -573,8 +691,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where slot does not contain
-        defaultONTFiltering("slot.doesNotContain=" + UPDATED_SLOT, "slot.doesNotContain=" + DEFAULT_SLOT);
+        // Get all the oNTList where slot does not contain DEFAULT_SLOT
+        defaultONTShouldNotBeFound("slot.doesNotContain=" + DEFAULT_SLOT);
+
+        // Get all the oNTList where slot does not contain UPDATED_SLOT
+        defaultONTShouldBeFound("slot.doesNotContain=" + UPDATED_SLOT);
     }
 
     @Test
@@ -583,8 +704,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where pon equals to
-        defaultONTFiltering("pon.equals=" + DEFAULT_PON, "pon.equals=" + UPDATED_PON);
+        // Get all the oNTList where pon equals to DEFAULT_PON
+        defaultONTShouldBeFound("pon.equals=" + DEFAULT_PON);
+
+        // Get all the oNTList where pon equals to UPDATED_PON
+        defaultONTShouldNotBeFound("pon.equals=" + UPDATED_PON);
     }
 
     @Test
@@ -593,8 +717,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where pon in
-        defaultONTFiltering("pon.in=" + DEFAULT_PON + "," + UPDATED_PON, "pon.in=" + UPDATED_PON);
+        // Get all the oNTList where pon in DEFAULT_PON or UPDATED_PON
+        defaultONTShouldBeFound("pon.in=" + DEFAULT_PON + "," + UPDATED_PON);
+
+        // Get all the oNTList where pon equals to UPDATED_PON
+        defaultONTShouldNotBeFound("pon.in=" + UPDATED_PON);
     }
 
     @Test
@@ -604,7 +731,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where pon is not null
-        defaultONTFiltering("pon.specified=true", "pon.specified=false");
+        defaultONTShouldBeFound("pon.specified=true");
+
+        // Get all the oNTList where pon is null
+        defaultONTShouldNotBeFound("pon.specified=false");
     }
 
     @Test
@@ -613,8 +743,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where pon contains
-        defaultONTFiltering("pon.contains=" + DEFAULT_PON, "pon.contains=" + UPDATED_PON);
+        // Get all the oNTList where pon contains DEFAULT_PON
+        defaultONTShouldBeFound("pon.contains=" + DEFAULT_PON);
+
+        // Get all the oNTList where pon contains UPDATED_PON
+        defaultONTShouldNotBeFound("pon.contains=" + UPDATED_PON);
     }
 
     @Test
@@ -623,8 +756,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where pon does not contain
-        defaultONTFiltering("pon.doesNotContain=" + UPDATED_PON, "pon.doesNotContain=" + DEFAULT_PON);
+        // Get all the oNTList where pon does not contain DEFAULT_PON
+        defaultONTShouldNotBeFound("pon.doesNotContain=" + DEFAULT_PON);
+
+        // Get all the oNTList where pon does not contain UPDATED_PON
+        defaultONTShouldBeFound("pon.doesNotContain=" + UPDATED_PON);
     }
 
     @Test
@@ -633,8 +769,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ponIndex equals to
-        defaultONTFiltering("ponIndex.equals=" + DEFAULT_PON_INDEX, "ponIndex.equals=" + UPDATED_PON_INDEX);
+        // Get all the oNTList where ponIndex equals to DEFAULT_PON_INDEX
+        defaultONTShouldBeFound("ponIndex.equals=" + DEFAULT_PON_INDEX);
+
+        // Get all the oNTList where ponIndex equals to UPDATED_PON_INDEX
+        defaultONTShouldNotBeFound("ponIndex.equals=" + UPDATED_PON_INDEX);
     }
 
     @Test
@@ -643,8 +782,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ponIndex in
-        defaultONTFiltering("ponIndex.in=" + DEFAULT_PON_INDEX + "," + UPDATED_PON_INDEX, "ponIndex.in=" + UPDATED_PON_INDEX);
+        // Get all the oNTList where ponIndex in DEFAULT_PON_INDEX or UPDATED_PON_INDEX
+        defaultONTShouldBeFound("ponIndex.in=" + DEFAULT_PON_INDEX + "," + UPDATED_PON_INDEX);
+
+        // Get all the oNTList where ponIndex equals to UPDATED_PON_INDEX
+        defaultONTShouldNotBeFound("ponIndex.in=" + UPDATED_PON_INDEX);
     }
 
     @Test
@@ -654,7 +796,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where ponIndex is not null
-        defaultONTFiltering("ponIndex.specified=true", "ponIndex.specified=false");
+        defaultONTShouldBeFound("ponIndex.specified=true");
+
+        // Get all the oNTList where ponIndex is null
+        defaultONTShouldNotBeFound("ponIndex.specified=false");
     }
 
     @Test
@@ -663,8 +808,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ponIndex contains
-        defaultONTFiltering("ponIndex.contains=" + DEFAULT_PON_INDEX, "ponIndex.contains=" + UPDATED_PON_INDEX);
+        // Get all the oNTList where ponIndex contains DEFAULT_PON_INDEX
+        defaultONTShouldBeFound("ponIndex.contains=" + DEFAULT_PON_INDEX);
+
+        // Get all the oNTList where ponIndex contains UPDATED_PON_INDEX
+        defaultONTShouldNotBeFound("ponIndex.contains=" + UPDATED_PON_INDEX);
     }
 
     @Test
@@ -673,8 +821,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where ponIndex does not contain
-        defaultONTFiltering("ponIndex.doesNotContain=" + UPDATED_PON_INDEX, "ponIndex.doesNotContain=" + DEFAULT_PON_INDEX);
+        // Get all the oNTList where ponIndex does not contain DEFAULT_PON_INDEX
+        defaultONTShouldNotBeFound("ponIndex.doesNotContain=" + DEFAULT_PON_INDEX);
+
+        // Get all the oNTList where ponIndex does not contain UPDATED_PON_INDEX
+        defaultONTShouldBeFound("ponIndex.doesNotContain=" + UPDATED_PON_INDEX);
     }
 
     @Test
@@ -683,8 +834,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxUp equals to
-        defaultONTFiltering("maxUp.equals=" + DEFAULT_MAX_UP, "maxUp.equals=" + UPDATED_MAX_UP);
+        // Get all the oNTList where maxUp equals to DEFAULT_MAX_UP
+        defaultONTShouldBeFound("maxUp.equals=" + DEFAULT_MAX_UP);
+
+        // Get all the oNTList where maxUp equals to UPDATED_MAX_UP
+        defaultONTShouldNotBeFound("maxUp.equals=" + UPDATED_MAX_UP);
     }
 
     @Test
@@ -693,8 +847,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxUp in
-        defaultONTFiltering("maxUp.in=" + DEFAULT_MAX_UP + "," + UPDATED_MAX_UP, "maxUp.in=" + UPDATED_MAX_UP);
+        // Get all the oNTList where maxUp in DEFAULT_MAX_UP or UPDATED_MAX_UP
+        defaultONTShouldBeFound("maxUp.in=" + DEFAULT_MAX_UP + "," + UPDATED_MAX_UP);
+
+        // Get all the oNTList where maxUp equals to UPDATED_MAX_UP
+        defaultONTShouldNotBeFound("maxUp.in=" + UPDATED_MAX_UP);
     }
 
     @Test
@@ -704,7 +861,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where maxUp is not null
-        defaultONTFiltering("maxUp.specified=true", "maxUp.specified=false");
+        defaultONTShouldBeFound("maxUp.specified=true");
+
+        // Get all the oNTList where maxUp is null
+        defaultONTShouldNotBeFound("maxUp.specified=false");
     }
 
     @Test
@@ -713,8 +873,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxUp contains
-        defaultONTFiltering("maxUp.contains=" + DEFAULT_MAX_UP, "maxUp.contains=" + UPDATED_MAX_UP);
+        // Get all the oNTList where maxUp contains DEFAULT_MAX_UP
+        defaultONTShouldBeFound("maxUp.contains=" + DEFAULT_MAX_UP);
+
+        // Get all the oNTList where maxUp contains UPDATED_MAX_UP
+        defaultONTShouldNotBeFound("maxUp.contains=" + UPDATED_MAX_UP);
     }
 
     @Test
@@ -723,8 +886,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxUp does not contain
-        defaultONTFiltering("maxUp.doesNotContain=" + UPDATED_MAX_UP, "maxUp.doesNotContain=" + DEFAULT_MAX_UP);
+        // Get all the oNTList where maxUp does not contain DEFAULT_MAX_UP
+        defaultONTShouldNotBeFound("maxUp.doesNotContain=" + DEFAULT_MAX_UP);
+
+        // Get all the oNTList where maxUp does not contain UPDATED_MAX_UP
+        defaultONTShouldBeFound("maxUp.doesNotContain=" + UPDATED_MAX_UP);
     }
 
     @Test
@@ -733,8 +899,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxDown equals to
-        defaultONTFiltering("maxDown.equals=" + DEFAULT_MAX_DOWN, "maxDown.equals=" + UPDATED_MAX_DOWN);
+        // Get all the oNTList where maxDown equals to DEFAULT_MAX_DOWN
+        defaultONTShouldBeFound("maxDown.equals=" + DEFAULT_MAX_DOWN);
+
+        // Get all the oNTList where maxDown equals to UPDATED_MAX_DOWN
+        defaultONTShouldNotBeFound("maxDown.equals=" + UPDATED_MAX_DOWN);
     }
 
     @Test
@@ -743,8 +912,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxDown in
-        defaultONTFiltering("maxDown.in=" + DEFAULT_MAX_DOWN + "," + UPDATED_MAX_DOWN, "maxDown.in=" + UPDATED_MAX_DOWN);
+        // Get all the oNTList where maxDown in DEFAULT_MAX_DOWN or UPDATED_MAX_DOWN
+        defaultONTShouldBeFound("maxDown.in=" + DEFAULT_MAX_DOWN + "," + UPDATED_MAX_DOWN);
+
+        // Get all the oNTList where maxDown equals to UPDATED_MAX_DOWN
+        defaultONTShouldNotBeFound("maxDown.in=" + UPDATED_MAX_DOWN);
     }
 
     @Test
@@ -754,7 +926,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where maxDown is not null
-        defaultONTFiltering("maxDown.specified=true", "maxDown.specified=false");
+        defaultONTShouldBeFound("maxDown.specified=true");
+
+        // Get all the oNTList where maxDown is null
+        defaultONTShouldNotBeFound("maxDown.specified=false");
     }
 
     @Test
@@ -763,8 +938,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxDown contains
-        defaultONTFiltering("maxDown.contains=" + DEFAULT_MAX_DOWN, "maxDown.contains=" + UPDATED_MAX_DOWN);
+        // Get all the oNTList where maxDown contains DEFAULT_MAX_DOWN
+        defaultONTShouldBeFound("maxDown.contains=" + DEFAULT_MAX_DOWN);
+
+        // Get all the oNTList where maxDown contains UPDATED_MAX_DOWN
+        defaultONTShouldNotBeFound("maxDown.contains=" + UPDATED_MAX_DOWN);
     }
 
     @Test
@@ -773,8 +951,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where maxDown does not contain
-        defaultONTFiltering("maxDown.doesNotContain=" + UPDATED_MAX_DOWN, "maxDown.doesNotContain=" + DEFAULT_MAX_DOWN);
+        // Get all the oNTList where maxDown does not contain DEFAULT_MAX_DOWN
+        defaultONTShouldNotBeFound("maxDown.doesNotContain=" + DEFAULT_MAX_DOWN);
+
+        // Get all the oNTList where maxDown does not contain UPDATED_MAX_DOWN
+        defaultONTShouldBeFound("maxDown.doesNotContain=" + UPDATED_MAX_DOWN);
     }
 
     @Test
@@ -783,8 +964,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where createdAt equals to
-        defaultONTFiltering("createdAt.equals=" + DEFAULT_CREATED_AT, "createdAt.equals=" + UPDATED_CREATED_AT);
+        // Get all the oNTList where createdAt equals to DEFAULT_CREATED_AT
+        defaultONTShouldBeFound("createdAt.equals=" + DEFAULT_CREATED_AT);
+
+        // Get all the oNTList where createdAt equals to UPDATED_CREATED_AT
+        defaultONTShouldNotBeFound("createdAt.equals=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -793,8 +977,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where createdAt in
-        defaultONTFiltering("createdAt.in=" + DEFAULT_CREATED_AT + "," + UPDATED_CREATED_AT, "createdAt.in=" + UPDATED_CREATED_AT);
+        // Get all the oNTList where createdAt in DEFAULT_CREATED_AT or UPDATED_CREATED_AT
+        defaultONTShouldBeFound("createdAt.in=" + DEFAULT_CREATED_AT + "," + UPDATED_CREATED_AT);
+
+        // Get all the oNTList where createdAt equals to UPDATED_CREATED_AT
+        defaultONTShouldNotBeFound("createdAt.in=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -804,7 +991,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where createdAt is not null
-        defaultONTFiltering("createdAt.specified=true", "createdAt.specified=false");
+        defaultONTShouldBeFound("createdAt.specified=true");
+
+        // Get all the oNTList where createdAt is null
+        defaultONTShouldNotBeFound("createdAt.specified=false");
     }
 
     @Test
@@ -813,8 +1003,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where createdAt is greater than or equal to
-        defaultONTFiltering("createdAt.greaterThanOrEqual=" + DEFAULT_CREATED_AT, "createdAt.greaterThanOrEqual=" + UPDATED_CREATED_AT);
+        // Get all the oNTList where createdAt is greater than or equal to DEFAULT_CREATED_AT
+        defaultONTShouldBeFound("createdAt.greaterThanOrEqual=" + DEFAULT_CREATED_AT);
+
+        // Get all the oNTList where createdAt is greater than or equal to UPDATED_CREATED_AT
+        defaultONTShouldNotBeFound("createdAt.greaterThanOrEqual=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -823,8 +1016,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where createdAt is less than or equal to
-        defaultONTFiltering("createdAt.lessThanOrEqual=" + DEFAULT_CREATED_AT, "createdAt.lessThanOrEqual=" + SMALLER_CREATED_AT);
+        // Get all the oNTList where createdAt is less than or equal to DEFAULT_CREATED_AT
+        defaultONTShouldBeFound("createdAt.lessThanOrEqual=" + DEFAULT_CREATED_AT);
+
+        // Get all the oNTList where createdAt is less than or equal to SMALLER_CREATED_AT
+        defaultONTShouldNotBeFound("createdAt.lessThanOrEqual=" + SMALLER_CREATED_AT);
     }
 
     @Test
@@ -833,8 +1029,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where createdAt is less than
-        defaultONTFiltering("createdAt.lessThan=" + UPDATED_CREATED_AT, "createdAt.lessThan=" + DEFAULT_CREATED_AT);
+        // Get all the oNTList where createdAt is less than DEFAULT_CREATED_AT
+        defaultONTShouldNotBeFound("createdAt.lessThan=" + DEFAULT_CREATED_AT);
+
+        // Get all the oNTList where createdAt is less than UPDATED_CREATED_AT
+        defaultONTShouldBeFound("createdAt.lessThan=" + UPDATED_CREATED_AT);
     }
 
     @Test
@@ -843,8 +1042,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where createdAt is greater than
-        defaultONTFiltering("createdAt.greaterThan=" + SMALLER_CREATED_AT, "createdAt.greaterThan=" + DEFAULT_CREATED_AT);
+        // Get all the oNTList where createdAt is greater than DEFAULT_CREATED_AT
+        defaultONTShouldNotBeFound("createdAt.greaterThan=" + DEFAULT_CREATED_AT);
+
+        // Get all the oNTList where createdAt is greater than SMALLER_CREATED_AT
+        defaultONTShouldBeFound("createdAt.greaterThan=" + SMALLER_CREATED_AT);
     }
 
     @Test
@@ -853,8 +1055,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where updatedAt equals to
-        defaultONTFiltering("updatedAt.equals=" + DEFAULT_UPDATED_AT, "updatedAt.equals=" + UPDATED_UPDATED_AT);
+        // Get all the oNTList where updatedAt equals to DEFAULT_UPDATED_AT
+        defaultONTShouldBeFound("updatedAt.equals=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oNTList where updatedAt equals to UPDATED_UPDATED_AT
+        defaultONTShouldNotBeFound("updatedAt.equals=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -863,8 +1068,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where updatedAt in
-        defaultONTFiltering("updatedAt.in=" + DEFAULT_UPDATED_AT + "," + UPDATED_UPDATED_AT, "updatedAt.in=" + UPDATED_UPDATED_AT);
+        // Get all the oNTList where updatedAt in DEFAULT_UPDATED_AT or UPDATED_UPDATED_AT
+        defaultONTShouldBeFound("updatedAt.in=" + DEFAULT_UPDATED_AT + "," + UPDATED_UPDATED_AT);
+
+        // Get all the oNTList where updatedAt equals to UPDATED_UPDATED_AT
+        defaultONTShouldNotBeFound("updatedAt.in=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -874,7 +1082,10 @@ class ONTResourceIT {
         oNTRepository.saveAndFlush(oNT);
 
         // Get all the oNTList where updatedAt is not null
-        defaultONTFiltering("updatedAt.specified=true", "updatedAt.specified=false");
+        defaultONTShouldBeFound("updatedAt.specified=true");
+
+        // Get all the oNTList where updatedAt is null
+        defaultONTShouldNotBeFound("updatedAt.specified=false");
     }
 
     @Test
@@ -883,8 +1094,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where updatedAt is greater than or equal to
-        defaultONTFiltering("updatedAt.greaterThanOrEqual=" + DEFAULT_UPDATED_AT, "updatedAt.greaterThanOrEqual=" + UPDATED_UPDATED_AT);
+        // Get all the oNTList where updatedAt is greater than or equal to DEFAULT_UPDATED_AT
+        defaultONTShouldBeFound("updatedAt.greaterThanOrEqual=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oNTList where updatedAt is greater than or equal to UPDATED_UPDATED_AT
+        defaultONTShouldNotBeFound("updatedAt.greaterThanOrEqual=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -893,8 +1107,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where updatedAt is less than or equal to
-        defaultONTFiltering("updatedAt.lessThanOrEqual=" + DEFAULT_UPDATED_AT, "updatedAt.lessThanOrEqual=" + SMALLER_UPDATED_AT);
+        // Get all the oNTList where updatedAt is less than or equal to DEFAULT_UPDATED_AT
+        defaultONTShouldBeFound("updatedAt.lessThanOrEqual=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oNTList where updatedAt is less than or equal to SMALLER_UPDATED_AT
+        defaultONTShouldNotBeFound("updatedAt.lessThanOrEqual=" + SMALLER_UPDATED_AT);
     }
 
     @Test
@@ -903,8 +1120,11 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where updatedAt is less than
-        defaultONTFiltering("updatedAt.lessThan=" + UPDATED_UPDATED_AT, "updatedAt.lessThan=" + DEFAULT_UPDATED_AT);
+        // Get all the oNTList where updatedAt is less than DEFAULT_UPDATED_AT
+        defaultONTShouldNotBeFound("updatedAt.lessThan=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oNTList where updatedAt is less than UPDATED_UPDATED_AT
+        defaultONTShouldBeFound("updatedAt.lessThan=" + UPDATED_UPDATED_AT);
     }
 
     @Test
@@ -913,8 +1133,323 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        // Get all the oNTList where updatedAt is greater than
-        defaultONTFiltering("updatedAt.greaterThan=" + SMALLER_UPDATED_AT, "updatedAt.greaterThan=" + DEFAULT_UPDATED_AT);
+        // Get all the oNTList where updatedAt is greater than DEFAULT_UPDATED_AT
+        defaultONTShouldNotBeFound("updatedAt.greaterThan=" + DEFAULT_UPDATED_AT);
+
+        // Get all the oNTList where updatedAt is greater than SMALLER_UPDATED_AT
+        defaultONTShouldBeFound("updatedAt.greaterThan=" + SMALLER_UPDATED_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt equals to DEFAULT_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.equals=" + DEFAULT_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt equals to UPDATED_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.equals=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt in DEFAULT_ETAT_OLT or UPDATED_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.in=" + DEFAULT_ETAT_OLT + "," + UPDATED_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt equals to UPDATED_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.in=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt is not null
+        defaultONTShouldBeFound("etatOlt.specified=true");
+
+        // Get all the oNTList where etatOlt is null
+        defaultONTShouldNotBeFound("etatOlt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt contains DEFAULT_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.contains=" + DEFAULT_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt contains UPDATED_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.contains=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByEtatOltNotContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where etatOlt does not contain DEFAULT_ETAT_OLT
+        defaultONTShouldNotBeFound("etatOlt.doesNotContain=" + DEFAULT_ETAT_OLT);
+
+        // Get all the oNTList where etatOlt does not contain UPDATED_ETAT_OLT
+        defaultONTShouldBeFound("etatOlt.doesNotContain=" + UPDATED_ETAT_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status equals to DEFAULT_STATUS
+        defaultONTShouldBeFound("status.equals=" + DEFAULT_STATUS);
+
+        // Get all the oNTList where status equals to UPDATED_STATUS
+        defaultONTShouldNotBeFound("status.equals=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status in DEFAULT_STATUS or UPDATED_STATUS
+        defaultONTShouldBeFound("status.in=" + DEFAULT_STATUS + "," + UPDATED_STATUS);
+
+        // Get all the oNTList where status equals to UPDATED_STATUS
+        defaultONTShouldNotBeFound("status.in=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status is not null
+        defaultONTShouldBeFound("status.specified=true");
+
+        // Get all the oNTList where status is null
+        defaultONTShouldNotBeFound("status.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status contains DEFAULT_STATUS
+        defaultONTShouldBeFound("status.contains=" + DEFAULT_STATUS);
+
+        // Get all the oNTList where status contains UPDATED_STATUS
+        defaultONTShouldNotBeFound("status.contains=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusNotContainsSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where status does not contain DEFAULT_STATUS
+        defaultONTShouldNotBeFound("status.doesNotContain=" + DEFAULT_STATUS);
+
+        // Get all the oNTList where status does not contain UPDATED_STATUS
+        defaultONTShouldBeFound("status.doesNotContain=" + UPDATED_STATUS);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt equals to DEFAULT_STATUS_AT
+        defaultONTShouldBeFound("statusAt.equals=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt equals to UPDATED_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.equals=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt in DEFAULT_STATUS_AT or UPDATED_STATUS_AT
+        defaultONTShouldBeFound("statusAt.in=" + DEFAULT_STATUS_AT + "," + UPDATED_STATUS_AT);
+
+        // Get all the oNTList where statusAt equals to UPDATED_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.in=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is not null
+        defaultONTShouldBeFound("statusAt.specified=true");
+
+        // Get all the oNTList where statusAt is null
+        defaultONTShouldNotBeFound("statusAt.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is greater than or equal to DEFAULT_STATUS_AT
+        defaultONTShouldBeFound("statusAt.greaterThanOrEqual=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is greater than or equal to UPDATED_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.greaterThanOrEqual=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is less than or equal to DEFAULT_STATUS_AT
+        defaultONTShouldBeFound("statusAt.lessThanOrEqual=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is less than or equal to SMALLER_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.lessThanOrEqual=" + SMALLER_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsLessThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is less than DEFAULT_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.lessThan=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is less than UPDATED_STATUS_AT
+        defaultONTShouldBeFound("statusAt.lessThan=" + UPDATED_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByStatusAtIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where statusAt is greater than DEFAULT_STATUS_AT
+        defaultONTShouldNotBeFound("statusAt.greaterThan=" + DEFAULT_STATUS_AT);
+
+        // Get all the oNTList where statusAt is greater than SMALLER_STATUS_AT
+        defaultONTShouldBeFound("statusAt.greaterThan=" + SMALLER_STATUS_AT);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper equals to DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.equals=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper equals to UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.equals=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsInShouldWork() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper in DEFAULT_NBRE_LIGNES_COUPER or UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.in=" + DEFAULT_NBRE_LIGNES_COUPER + "," + UPDATED_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper equals to UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.in=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is not null
+        defaultONTShouldBeFound("nbreLignesCouper.specified=true");
+
+        // Get all the oNTList where nbreLignesCouper is null
+        defaultONTShouldNotBeFound("nbreLignesCouper.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is greater than or equal to DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.greaterThanOrEqual=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is greater than or equal to UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.greaterThanOrEqual=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is less than or equal to DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.lessThanOrEqual=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is less than or equal to SMALLER_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.lessThanOrEqual=" + SMALLER_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsLessThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is less than DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.lessThan=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is less than UPDATED_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.lessThan=" + UPDATED_NBRE_LIGNES_COUPER);
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByNbreLignesCouperIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        oNTRepository.saveAndFlush(oNT);
+
+        // Get all the oNTList where nbreLignesCouper is greater than DEFAULT_NBRE_LIGNES_COUPER
+        defaultONTShouldNotBeFound("nbreLignesCouper.greaterThan=" + DEFAULT_NBRE_LIGNES_COUPER);
+
+        // Get all the oNTList where nbreLignesCouper is greater than SMALLER_NBRE_LIGNES_COUPER
+        defaultONTShouldBeFound("nbreLignesCouper.greaterThan=" + SMALLER_NBRE_LIGNES_COUPER);
     }
 
     @Test
@@ -961,9 +1496,48 @@ class ONTResourceIT {
         defaultONTShouldNotBeFound("oltId.equals=" + (oltId + 1));
     }
 
-    private void defaultONTFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
-        defaultONTShouldBeFound(shouldBeFound);
-        defaultONTShouldNotBeFound(shouldNotBeFound);
+    @Test
+    @Transactional
+    void getAllONTSByDiagnosticIsEqualToSomething() throws Exception {
+        Diagnostic diagnostic;
+        if (TestUtil.findAll(em, Diagnostic.class).isEmpty()) {
+            oNTRepository.saveAndFlush(oNT);
+            diagnostic = DiagnosticResourceIT.createEntity(em);
+        } else {
+            diagnostic = TestUtil.findAll(em, Diagnostic.class).get(0);
+        }
+        em.persist(diagnostic);
+        em.flush();
+        oNT.addDiagnostic(diagnostic);
+        oNTRepository.saveAndFlush(oNT);
+        Long diagnosticId = diagnostic.getId();
+        // Get all the oNTList where diagnostic equals to diagnosticId
+        defaultONTShouldBeFound("diagnosticId.equals=" + diagnosticId);
+
+        // Get all the oNTList where diagnostic equals to (diagnosticId + 1)
+        defaultONTShouldNotBeFound("diagnosticId.equals=" + (diagnosticId + 1));
+    }
+
+    @Test
+    @Transactional
+    void getAllONTSByMetriqueIsEqualToSomething() throws Exception {
+        Metrique metrique;
+        if (TestUtil.findAll(em, Metrique.class).isEmpty()) {
+            oNTRepository.saveAndFlush(oNT);
+            metrique = MetriqueResourceIT.createEntity(em);
+        } else {
+            metrique = TestUtil.findAll(em, Metrique.class).get(0);
+        }
+        em.persist(metrique);
+        em.flush();
+        oNT.addMetrique(metrique);
+        oNTRepository.saveAndFlush(oNT);
+        Long metriqueId = metrique.getId();
+        // Get all the oNTList where metrique equals to metriqueId
+        defaultONTShouldBeFound("metriqueId.equals=" + metriqueId);
+
+        // Get all the oNTList where metrique equals to (metriqueId + 1)
+        defaultONTShouldNotBeFound("metriqueId.equals=" + (metriqueId + 1));
     }
 
     /**
@@ -976,7 +1550,7 @@ class ONTResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(oNT.getId().intValue())))
             .andExpect(jsonPath("$.[*].index").value(hasItem(DEFAULT_INDEX)))
-            .andExpect(jsonPath("$.[*].ontIP").value(hasItem(DEFAULT_ONT_IP)))
+            .andExpect(jsonPath("$.[*].ontID").value(hasItem(DEFAULT_ONT_ID)))
             .andExpect(jsonPath("$.[*].serviceId").value(hasItem(DEFAULT_SERVICE_ID)))
             .andExpect(jsonPath("$.[*].slot").value(hasItem(DEFAULT_SLOT)))
             .andExpect(jsonPath("$.[*].pon").value(hasItem(DEFAULT_PON)))
@@ -984,7 +1558,11 @@ class ONTResourceIT {
             .andExpect(jsonPath("$.[*].maxUp").value(hasItem(DEFAULT_MAX_UP)))
             .andExpect(jsonPath("$.[*].maxDown").value(hasItem(DEFAULT_MAX_DOWN)))
             .andExpect(jsonPath("$.[*].createdAt").value(hasItem(DEFAULT_CREATED_AT.toString())))
-            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())));
+            .andExpect(jsonPath("$.[*].updatedAt").value(hasItem(DEFAULT_UPDATED_AT.toString())))
+            .andExpect(jsonPath("$.[*].etatOlt").value(hasItem(DEFAULT_ETAT_OLT)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS)))
+            .andExpect(jsonPath("$.[*].statusAt").value(hasItem(DEFAULT_STATUS_AT.toString())))
+            .andExpect(jsonPath("$.[*].nbreLignesCouper").value(hasItem(DEFAULT_NBRE_LIGNES_COUPER.intValue())));
 
         // Check, that the count call also returns 1
         restONTMockMvc
@@ -1026,7 +1604,7 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
 
         // Update the oNT
         ONT updatedONT = oNTRepository.findById(oNT.getId()).orElseThrow();
@@ -1034,7 +1612,7 @@ class ONTResourceIT {
         em.detach(updatedONT);
         updatedONT
             .index(UPDATED_INDEX)
-            .ontIP(UPDATED_ONT_IP)
+            .ontID(UPDATED_ONT_ID)
             .serviceId(UPDATED_SERVICE_ID)
             .slot(UPDATED_SLOT)
             .pon(UPDATED_PON)
@@ -1042,7 +1620,11 @@ class ONTResourceIT {
             .maxUp(UPDATED_MAX_UP)
             .maxDown(UPDATED_MAX_DOWN)
             .createdAt(UPDATED_CREATED_AT)
-            .updatedAt(UPDATED_UPDATED_AT);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .status(UPDATED_STATUS)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
         ONTDTO oNTDTO = oNTMapper.toDto(updatedONT);
 
         restONTMockMvc
@@ -1050,19 +1632,34 @@ class ONTResourceIT {
                 put(ENTITY_API_URL_ID, oNTDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(oNTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oNTDTO))
             )
             .andExpect(status().isOk());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertPersistedONTToMatchAllProperties(updatedONT);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
+        ONT testONT = oNTList.get(oNTList.size() - 1);
+        assertThat(testONT.getIndex()).isEqualTo(UPDATED_INDEX);
+        assertThat(testONT.getOntID()).isEqualTo(UPDATED_ONT_ID);
+        assertThat(testONT.getServiceId()).isEqualTo(UPDATED_SERVICE_ID);
+        assertThat(testONT.getSlot()).isEqualTo(UPDATED_SLOT);
+        assertThat(testONT.getPon()).isEqualTo(UPDATED_PON);
+        assertThat(testONT.getPonIndex()).isEqualTo(UPDATED_PON_INDEX);
+        assertThat(testONT.getMaxUp()).isEqualTo(UPDATED_MAX_UP);
+        assertThat(testONT.getMaxDown()).isEqualTo(UPDATED_MAX_DOWN);
+        assertThat(testONT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
+        assertThat(testONT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(UPDATED_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(UPDATED_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(UPDATED_NBRE_LIGNES_COUPER);
     }
 
     @Test
     @Transactional
     void putNonExistingONT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
         oNT.setId(longCount.incrementAndGet());
 
         // Create the ONT
@@ -1074,18 +1671,19 @@ class ONTResourceIT {
                 put(ENTITY_API_URL_ID, oNTDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(oNTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oNTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithIdMismatchONT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
         oNT.setId(longCount.incrementAndGet());
 
         // Create the ONT
@@ -1097,18 +1695,19 @@ class ONTResourceIT {
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(oNTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oNTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithMissingIdPathParamONT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
         oNT.setId(longCount.incrementAndGet());
 
         // Create the ONT
@@ -1116,11 +1715,14 @@ class ONTResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restONTMockMvc
-            .perform(put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -1129,27 +1731,46 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
 
         // Update the oNT using partial update
         ONT partialUpdatedONT = new ONT();
         partialUpdatedONT.setId(oNT.getId());
 
-        partialUpdatedONT.ponIndex(UPDATED_PON_INDEX).updatedAt(UPDATED_UPDATED_AT);
+        partialUpdatedONT
+            .ponIndex(UPDATED_PON_INDEX)
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
 
         restONTMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, partialUpdatedONT.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedONT))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedONT))
             )
             .andExpect(status().isOk());
 
         // Validate the ONT in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertONTUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedONT, oNT), getPersistedONT(oNT));
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
+        ONT testONT = oNTList.get(oNTList.size() - 1);
+        assertThat(testONT.getIndex()).isEqualTo(DEFAULT_INDEX);
+        assertThat(testONT.getOntID()).isEqualTo(DEFAULT_ONT_ID);
+        assertThat(testONT.getServiceId()).isEqualTo(DEFAULT_SERVICE_ID);
+        assertThat(testONT.getSlot()).isEqualTo(DEFAULT_SLOT);
+        assertThat(testONT.getPon()).isEqualTo(DEFAULT_PON);
+        assertThat(testONT.getPonIndex()).isEqualTo(UPDATED_PON_INDEX);
+        assertThat(testONT.getMaxUp()).isEqualTo(DEFAULT_MAX_UP);
+        assertThat(testONT.getMaxDown()).isEqualTo(DEFAULT_MAX_DOWN);
+        assertThat(testONT.getCreatedAt()).isEqualTo(DEFAULT_CREATED_AT);
+        assertThat(testONT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(UPDATED_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(DEFAULT_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(UPDATED_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(UPDATED_NBRE_LIGNES_COUPER);
     }
 
     @Test
@@ -1158,7 +1779,7 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
 
         // Update the oNT using partial update
         ONT partialUpdatedONT = new ONT();
@@ -1166,7 +1787,7 @@ class ONTResourceIT {
 
         partialUpdatedONT
             .index(UPDATED_INDEX)
-            .ontIP(UPDATED_ONT_IP)
+            .ontID(UPDATED_ONT_ID)
             .serviceId(UPDATED_SERVICE_ID)
             .slot(UPDATED_SLOT)
             .pon(UPDATED_PON)
@@ -1174,27 +1795,45 @@ class ONTResourceIT {
             .maxUp(UPDATED_MAX_UP)
             .maxDown(UPDATED_MAX_DOWN)
             .createdAt(UPDATED_CREATED_AT)
-            .updatedAt(UPDATED_UPDATED_AT);
+            .updatedAt(UPDATED_UPDATED_AT)
+            .etatOlt(UPDATED_ETAT_OLT)
+            .status(UPDATED_STATUS)
+            .statusAt(UPDATED_STATUS_AT)
+            .nbreLignesCouper(UPDATED_NBRE_LIGNES_COUPER);
 
         restONTMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, partialUpdatedONT.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedONT))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedONT))
             )
             .andExpect(status().isOk());
 
         // Validate the ONT in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertONTUpdatableFieldsEquals(partialUpdatedONT, getPersistedONT(partialUpdatedONT));
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
+        ONT testONT = oNTList.get(oNTList.size() - 1);
+        assertThat(testONT.getIndex()).isEqualTo(UPDATED_INDEX);
+        assertThat(testONT.getOntID()).isEqualTo(UPDATED_ONT_ID);
+        assertThat(testONT.getServiceId()).isEqualTo(UPDATED_SERVICE_ID);
+        assertThat(testONT.getSlot()).isEqualTo(UPDATED_SLOT);
+        assertThat(testONT.getPon()).isEqualTo(UPDATED_PON);
+        assertThat(testONT.getPonIndex()).isEqualTo(UPDATED_PON_INDEX);
+        assertThat(testONT.getMaxUp()).isEqualTo(UPDATED_MAX_UP);
+        assertThat(testONT.getMaxDown()).isEqualTo(UPDATED_MAX_DOWN);
+        assertThat(testONT.getCreatedAt()).isEqualTo(UPDATED_CREATED_AT);
+        assertThat(testONT.getUpdatedAt()).isEqualTo(UPDATED_UPDATED_AT);
+        assertThat(testONT.getEtatOlt()).isEqualTo(UPDATED_ETAT_OLT);
+        assertThat(testONT.getStatus()).isEqualTo(UPDATED_STATUS);
+        assertThat(testONT.getStatusAt()).isEqualTo(UPDATED_STATUS_AT);
+        assertThat(testONT.getNbreLignesCouper()).isEqualTo(UPDATED_NBRE_LIGNES_COUPER);
     }
 
     @Test
     @Transactional
     void patchNonExistingONT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
         oNT.setId(longCount.incrementAndGet());
 
         // Create the ONT
@@ -1206,18 +1845,19 @@ class ONTResourceIT {
                 patch(ENTITY_API_URL_ID, oNTDTO.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(oNTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oNTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithIdMismatchONT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
         oNT.setId(longCount.incrementAndGet());
 
         // Create the ONT
@@ -1229,18 +1869,19 @@ class ONTResourceIT {
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(oNTDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(oNTDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithMissingIdPathParamONT() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = oNTRepository.findAll().size();
         oNT.setId(longCount.incrementAndGet());
 
         // Create the ONT
@@ -1248,11 +1889,17 @@ class ONTResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restONTMockMvc
-            .perform(patch(ENTITY_API_URL).with(csrf()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(oNTDTO)))
+            .perform(
+                patch(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(oNTDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the ONT in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -1261,7 +1908,7 @@ class ONTResourceIT {
         // Initialize the database
         oNTRepository.saveAndFlush(oNT);
 
-        long databaseSizeBeforeDelete = getRepositoryCount();
+        int databaseSizeBeforeDelete = oNTRepository.findAll().size();
 
         // Delete the oNT
         restONTMockMvc
@@ -1269,34 +1916,7 @@ class ONTResourceIT {
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        assertDecrementedRepositoryCount(databaseSizeBeforeDelete);
-    }
-
-    protected long getRepositoryCount() {
-        return oNTRepository.count();
-    }
-
-    protected void assertIncrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore + 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertDecrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore - 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertSameRepositoryCount(long countBefore) {
-        assertThat(countBefore).isEqualTo(getRepositoryCount());
-    }
-
-    protected ONT getPersistedONT(ONT oNT) {
-        return oNTRepository.findById(oNT.getId()).orElseThrow();
-    }
-
-    protected void assertPersistedONTToMatchAllProperties(ONT expectedONT) {
-        assertONTAllPropertiesEquals(expectedONT, getPersistedONT(expectedONT));
-    }
-
-    protected void assertPersistedONTToMatchUpdatableProperties(ONT expectedONT) {
-        assertONTAllUpdatablePropertiesEquals(expectedONT, getPersistedONT(expectedONT));
+        List<ONT> oNTList = oNTRepository.findAll();
+        assertThat(oNTList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

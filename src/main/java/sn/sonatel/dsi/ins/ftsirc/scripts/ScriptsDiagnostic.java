@@ -309,4 +309,105 @@ public class ScriptsDiagnostic {
         }
         return ranging;
     }
+
+    public Double getOLTRxPower(String vendeur, String index, String ip, String _ont_) throws IOException {
+        TransportMapping<?> transport = null;
+        try {
+
+            transport = new DefaultUdpTransportMapping();
+            Snmp snmp = new Snmp(transport);
+            transport.listen();
+
+            CommunityTarget target = new CommunityTarget();
+            target.setCommunity(new OctetString(vendeur.equalsIgnoreCase("NOKIA") ? "t1HAI2nai" : "OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/161"));
+            target.setRetries(2);
+            target.setTimeout(1500);
+            target.setVersion(SnmpConstants.version2c);
+
+            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + index : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6" + "." + index + "." + _ont_ );
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    return Double.parseDouble( varBind.getVariable().toString()) ;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+
+        return null;
+
+    }
+    public Double getONTRxPower(String vendeur, String index, String ip, String _ont_) throws IOException {
+        TransportMapping<?> transport = null;
+        try {
+
+            transport = new DefaultUdpTransportMapping();
+            Snmp snmp = new Snmp(transport);
+            transport.listen();
+
+            CommunityTarget target = new CommunityTarget();
+            target.setCommunity(new OctetString(vendeur.equalsIgnoreCase("NOKIA") ? "t1HAI2nai" : "OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/161"));
+            target.setRetries(2);
+            target.setTimeout(1500);
+            target.setVersion(SnmpConstants.version2c);
+
+            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + _ont_ );
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    return Double.parseDouble( varBind.getVariable().toString()) ;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+
+        return null;
+
+    }
+
+    public Double getPowerOLT(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
+        TransportMapping<?> transport = null;
+        try {
+
+            transport = new DefaultUdpTransportMapping();
+            Snmp snmp = new Snmp(transport);
+            transport.listen();
+
+            CommunityTarget target = new CommunityTarget();
+            target.setCommunity(new OctetString(vendeur.equalsIgnoreCase("NOKIA") ? "t1HAI2nai" : "OLT@osn_read"));
+            target.setAddress(new UdpAddress(ip + "/161"));
+            target.setRetries(2);
+            target.setTimeout(1500);
+            target.setVersion(SnmpConstants.version2c);
+            Integer slot_index = 4352 + slot +1;
+            OID oid = new OID(vendeur.equalsIgnoreCase("NOKIA") ? "1.3.6.1.4.1.637.61.1.56.6.1.13" + "." + slot_index+  "." + pon : "1.3.6.1.4.1.2011.6.128.1.1.2.22.1.28"+ "." + _ont_ );
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent event = snmp.send(pdu, target);
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    return Double.parseDouble( varBind.getVariable().toString()) ;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+
+        return null;
+
+    }
 }

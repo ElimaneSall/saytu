@@ -5,11 +5,9 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.SignalAsserts.*;
-import static sn.sonatel.dsi.ins.ftsirc.web.rest.TestUtil.createUpdateProxyForBean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.IntegrationTest;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.Signal;
 import sn.sonatel.dsi.ins.ftsirc.repository.SignalRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.SignalDTO;
@@ -37,6 +36,10 @@ class SignalResourceIT {
     private static final String DEFAULT_LIBELLE = "AAAAAAAAAA";
     private static final String UPDATED_LIBELLE = "BBBBBBBBBB";
 
+    private static final Double DEFAULT_VALUE_SIGNAL = 1D;
+    private static final Double UPDATED_VALUE_SIGNAL = 2D;
+    private static final Double SMALLER_VALUE_SIGNAL = 1D - 1D;
+
     private static final Double DEFAULT_SEUIL_MIN = 1D;
     private static final Double UPDATED_SEUIL_MIN = 2D;
     private static final Double SMALLER_SEUIL_MIN = 1D - 1D;
@@ -50,9 +53,6 @@ class SignalResourceIT {
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
-    @Autowired
-    private ObjectMapper om;
 
     @Autowired
     private SignalRepository signalRepository;
@@ -75,7 +75,11 @@ class SignalResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Signal createEntity(EntityManager em) {
-        Signal signal = new Signal().libelle(DEFAULT_LIBELLE).seuilMin(DEFAULT_SEUIL_MIN).seuilMax(DEFAULT_SEUIL_MAX);
+        Signal signal = new Signal()
+            .libelle(DEFAULT_LIBELLE)
+            .valueSignal(DEFAULT_VALUE_SIGNAL)
+            .seuilMin(DEFAULT_SEUIL_MIN)
+            .seuilMax(DEFAULT_SEUIL_MAX);
         return signal;
     }
 
@@ -86,7 +90,11 @@ class SignalResourceIT {
      * if they test an entity which requires the current entity.
      */
     public static Signal createUpdatedEntity(EntityManager em) {
-        Signal signal = new Signal().libelle(UPDATED_LIBELLE).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
+        Signal signal = new Signal()
+            .libelle(UPDATED_LIBELLE)
+            .valueSignal(UPDATED_VALUE_SIGNAL)
+            .seuilMin(UPDATED_SEUIL_MIN)
+            .seuilMax(UPDATED_SEUIL_MAX);
         return signal;
     }
 
@@ -98,23 +106,26 @@ class SignalResourceIT {
     @Test
     @Transactional
     void createSignal() throws Exception {
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = signalRepository.findAll().size();
         // Create the Signal
         SignalDTO signalDTO = signalMapper.toDto(signal);
-        var returnedSignalDTO = om.readValue(
-            restSignalMockMvc
-                .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(signalDTO)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            SignalDTO.class
-        );
+        restSignalMockMvc
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
+            )
+            .andExpect(status().isCreated());
 
         // Validate the Signal in the database
-        assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
-        var returnedSignal = signalMapper.toEntity(returnedSignalDTO);
-        assertSignalUpdatableFieldsEquals(returnedSignal, getPersistedSignal(returnedSignal));
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeCreate + 1);
+        Signal testSignal = signalList.get(signalList.size() - 1);
+        assertThat(testSignal.getLibelle()).isEqualTo(DEFAULT_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(DEFAULT_VALUE_SIGNAL);
+        assertThat(testSignal.getSeuilMin()).isEqualTo(DEFAULT_SEUIL_MIN);
+        assertThat(testSignal.getSeuilMax()).isEqualTo(DEFAULT_SEUIL_MAX);
     }
 
     @Test
@@ -124,21 +135,27 @@ class SignalResourceIT {
         signal.setId(1L);
         SignalDTO signalDTO = signalMapper.toDto(signal);
 
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = signalRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restSignalMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(signalDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeCreate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
     @Transactional
     void checkLibelleIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = signalRepository.findAll().size();
         // set the field null
         signal.setLibelle(null);
 
@@ -146,16 +163,22 @@ class SignalResourceIT {
         SignalDTO signalDTO = signalMapper.toDto(signal);
 
         restSignalMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(signalDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkSeuilMinIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = signalRepository.findAll().size();
         // set the field null
         signal.setSeuilMin(null);
 
@@ -163,16 +186,22 @@ class SignalResourceIT {
         SignalDTO signalDTO = signalMapper.toDto(signal);
 
         restSignalMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(signalDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkSeuilMaxIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = signalRepository.findAll().size();
         // set the field null
         signal.setSeuilMax(null);
 
@@ -180,10 +209,16 @@ class SignalResourceIT {
         SignalDTO signalDTO = signalMapper.toDto(signal);
 
         restSignalMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(signalDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -199,6 +234,7 @@ class SignalResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(signal.getId().intValue())))
             .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
+            .andExpect(jsonPath("$.[*].valueSignal").value(hasItem(DEFAULT_VALUE_SIGNAL.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMin").value(hasItem(DEFAULT_SEUIL_MIN.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMax").value(hasItem(DEFAULT_SEUIL_MAX.doubleValue())));
     }
@@ -216,6 +252,7 @@ class SignalResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(signal.getId().intValue()))
             .andExpect(jsonPath("$.libelle").value(DEFAULT_LIBELLE))
+            .andExpect(jsonPath("$.valueSignal").value(DEFAULT_VALUE_SIGNAL.doubleValue()))
             .andExpect(jsonPath("$.seuilMin").value(DEFAULT_SEUIL_MIN.doubleValue()))
             .andExpect(jsonPath("$.seuilMax").value(DEFAULT_SEUIL_MAX.doubleValue()));
     }
@@ -228,11 +265,14 @@ class SignalResourceIT {
 
         Long id = signal.getId();
 
-        defaultSignalFiltering("id.equals=" + id, "id.notEquals=" + id);
+        defaultSignalShouldBeFound("id.equals=" + id);
+        defaultSignalShouldNotBeFound("id.notEquals=" + id);
 
-        defaultSignalFiltering("id.greaterThanOrEqual=" + id, "id.greaterThan=" + id);
+        defaultSignalShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultSignalShouldNotBeFound("id.greaterThan=" + id);
 
-        defaultSignalFiltering("id.lessThanOrEqual=" + id, "id.lessThan=" + id);
+        defaultSignalShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultSignalShouldNotBeFound("id.lessThan=" + id);
     }
 
     @Test
@@ -241,8 +281,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where libelle equals to
-        defaultSignalFiltering("libelle.equals=" + DEFAULT_LIBELLE, "libelle.equals=" + UPDATED_LIBELLE);
+        // Get all the signalList where libelle equals to DEFAULT_LIBELLE
+        defaultSignalShouldBeFound("libelle.equals=" + DEFAULT_LIBELLE);
+
+        // Get all the signalList where libelle equals to UPDATED_LIBELLE
+        defaultSignalShouldNotBeFound("libelle.equals=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -251,8 +294,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where libelle in
-        defaultSignalFiltering("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE, "libelle.in=" + UPDATED_LIBELLE);
+        // Get all the signalList where libelle in DEFAULT_LIBELLE or UPDATED_LIBELLE
+        defaultSignalShouldBeFound("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE);
+
+        // Get all the signalList where libelle equals to UPDATED_LIBELLE
+        defaultSignalShouldNotBeFound("libelle.in=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -262,7 +308,10 @@ class SignalResourceIT {
         signalRepository.saveAndFlush(signal);
 
         // Get all the signalList where libelle is not null
-        defaultSignalFiltering("libelle.specified=true", "libelle.specified=false");
+        defaultSignalShouldBeFound("libelle.specified=true");
+
+        // Get all the signalList where libelle is null
+        defaultSignalShouldNotBeFound("libelle.specified=false");
     }
 
     @Test
@@ -271,8 +320,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where libelle contains
-        defaultSignalFiltering("libelle.contains=" + DEFAULT_LIBELLE, "libelle.contains=" + UPDATED_LIBELLE);
+        // Get all the signalList where libelle contains DEFAULT_LIBELLE
+        defaultSignalShouldBeFound("libelle.contains=" + DEFAULT_LIBELLE);
+
+        // Get all the signalList where libelle contains UPDATED_LIBELLE
+        defaultSignalShouldNotBeFound("libelle.contains=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -281,8 +333,102 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where libelle does not contain
-        defaultSignalFiltering("libelle.doesNotContain=" + UPDATED_LIBELLE, "libelle.doesNotContain=" + DEFAULT_LIBELLE);
+        // Get all the signalList where libelle does not contain DEFAULT_LIBELLE
+        defaultSignalShouldNotBeFound("libelle.doesNotContain=" + DEFAULT_LIBELLE);
+
+        // Get all the signalList where libelle does not contain UPDATED_LIBELLE
+        defaultSignalShouldBeFound("libelle.doesNotContain=" + UPDATED_LIBELLE);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsEqualToSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal equals to DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.equals=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal equals to UPDATED_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.equals=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsInShouldWork() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal in DEFAULT_VALUE_SIGNAL or UPDATED_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.in=" + DEFAULT_VALUE_SIGNAL + "," + UPDATED_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal equals to UPDATED_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.in=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is not null
+        defaultSignalShouldBeFound("valueSignal.specified=true");
+
+        // Get all the signalList where valueSignal is null
+        defaultSignalShouldNotBeFound("valueSignal.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is greater than or equal to DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.greaterThanOrEqual=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is greater than or equal to UPDATED_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.greaterThanOrEqual=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is less than or equal to DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.lessThanOrEqual=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is less than or equal to SMALLER_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.lessThanOrEqual=" + SMALLER_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsLessThanSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is less than DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.lessThan=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is less than UPDATED_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.lessThan=" + UPDATED_VALUE_SIGNAL);
+    }
+
+    @Test
+    @Transactional
+    void getAllSignalsByValueSignalIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        signalRepository.saveAndFlush(signal);
+
+        // Get all the signalList where valueSignal is greater than DEFAULT_VALUE_SIGNAL
+        defaultSignalShouldNotBeFound("valueSignal.greaterThan=" + DEFAULT_VALUE_SIGNAL);
+
+        // Get all the signalList where valueSignal is greater than SMALLER_VALUE_SIGNAL
+        defaultSignalShouldBeFound("valueSignal.greaterThan=" + SMALLER_VALUE_SIGNAL);
     }
 
     @Test
@@ -291,8 +437,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMin equals to
-        defaultSignalFiltering("seuilMin.equals=" + DEFAULT_SEUIL_MIN, "seuilMin.equals=" + UPDATED_SEUIL_MIN);
+        // Get all the signalList where seuilMin equals to DEFAULT_SEUIL_MIN
+        defaultSignalShouldBeFound("seuilMin.equals=" + DEFAULT_SEUIL_MIN);
+
+        // Get all the signalList where seuilMin equals to UPDATED_SEUIL_MIN
+        defaultSignalShouldNotBeFound("seuilMin.equals=" + UPDATED_SEUIL_MIN);
     }
 
     @Test
@@ -301,8 +450,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMin in
-        defaultSignalFiltering("seuilMin.in=" + DEFAULT_SEUIL_MIN + "," + UPDATED_SEUIL_MIN, "seuilMin.in=" + UPDATED_SEUIL_MIN);
+        // Get all the signalList where seuilMin in DEFAULT_SEUIL_MIN or UPDATED_SEUIL_MIN
+        defaultSignalShouldBeFound("seuilMin.in=" + DEFAULT_SEUIL_MIN + "," + UPDATED_SEUIL_MIN);
+
+        // Get all the signalList where seuilMin equals to UPDATED_SEUIL_MIN
+        defaultSignalShouldNotBeFound("seuilMin.in=" + UPDATED_SEUIL_MIN);
     }
 
     @Test
@@ -312,7 +464,10 @@ class SignalResourceIT {
         signalRepository.saveAndFlush(signal);
 
         // Get all the signalList where seuilMin is not null
-        defaultSignalFiltering("seuilMin.specified=true", "seuilMin.specified=false");
+        defaultSignalShouldBeFound("seuilMin.specified=true");
+
+        // Get all the signalList where seuilMin is null
+        defaultSignalShouldNotBeFound("seuilMin.specified=false");
     }
 
     @Test
@@ -321,8 +476,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMin is greater than or equal to
-        defaultSignalFiltering("seuilMin.greaterThanOrEqual=" + DEFAULT_SEUIL_MIN, "seuilMin.greaterThanOrEqual=" + UPDATED_SEUIL_MIN);
+        // Get all the signalList where seuilMin is greater than or equal to DEFAULT_SEUIL_MIN
+        defaultSignalShouldBeFound("seuilMin.greaterThanOrEqual=" + DEFAULT_SEUIL_MIN);
+
+        // Get all the signalList where seuilMin is greater than or equal to UPDATED_SEUIL_MIN
+        defaultSignalShouldNotBeFound("seuilMin.greaterThanOrEqual=" + UPDATED_SEUIL_MIN);
     }
 
     @Test
@@ -331,8 +489,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMin is less than or equal to
-        defaultSignalFiltering("seuilMin.lessThanOrEqual=" + DEFAULT_SEUIL_MIN, "seuilMin.lessThanOrEqual=" + SMALLER_SEUIL_MIN);
+        // Get all the signalList where seuilMin is less than or equal to DEFAULT_SEUIL_MIN
+        defaultSignalShouldBeFound("seuilMin.lessThanOrEqual=" + DEFAULT_SEUIL_MIN);
+
+        // Get all the signalList where seuilMin is less than or equal to SMALLER_SEUIL_MIN
+        defaultSignalShouldNotBeFound("seuilMin.lessThanOrEqual=" + SMALLER_SEUIL_MIN);
     }
 
     @Test
@@ -341,8 +502,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMin is less than
-        defaultSignalFiltering("seuilMin.lessThan=" + UPDATED_SEUIL_MIN, "seuilMin.lessThan=" + DEFAULT_SEUIL_MIN);
+        // Get all the signalList where seuilMin is less than DEFAULT_SEUIL_MIN
+        defaultSignalShouldNotBeFound("seuilMin.lessThan=" + DEFAULT_SEUIL_MIN);
+
+        // Get all the signalList where seuilMin is less than UPDATED_SEUIL_MIN
+        defaultSignalShouldBeFound("seuilMin.lessThan=" + UPDATED_SEUIL_MIN);
     }
 
     @Test
@@ -351,8 +515,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMin is greater than
-        defaultSignalFiltering("seuilMin.greaterThan=" + SMALLER_SEUIL_MIN, "seuilMin.greaterThan=" + DEFAULT_SEUIL_MIN);
+        // Get all the signalList where seuilMin is greater than DEFAULT_SEUIL_MIN
+        defaultSignalShouldNotBeFound("seuilMin.greaterThan=" + DEFAULT_SEUIL_MIN);
+
+        // Get all the signalList where seuilMin is greater than SMALLER_SEUIL_MIN
+        defaultSignalShouldBeFound("seuilMin.greaterThan=" + SMALLER_SEUIL_MIN);
     }
 
     @Test
@@ -361,8 +528,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMax equals to
-        defaultSignalFiltering("seuilMax.equals=" + DEFAULT_SEUIL_MAX, "seuilMax.equals=" + UPDATED_SEUIL_MAX);
+        // Get all the signalList where seuilMax equals to DEFAULT_SEUIL_MAX
+        defaultSignalShouldBeFound("seuilMax.equals=" + DEFAULT_SEUIL_MAX);
+
+        // Get all the signalList where seuilMax equals to UPDATED_SEUIL_MAX
+        defaultSignalShouldNotBeFound("seuilMax.equals=" + UPDATED_SEUIL_MAX);
     }
 
     @Test
@@ -371,8 +541,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMax in
-        defaultSignalFiltering("seuilMax.in=" + DEFAULT_SEUIL_MAX + "," + UPDATED_SEUIL_MAX, "seuilMax.in=" + UPDATED_SEUIL_MAX);
+        // Get all the signalList where seuilMax in DEFAULT_SEUIL_MAX or UPDATED_SEUIL_MAX
+        defaultSignalShouldBeFound("seuilMax.in=" + DEFAULT_SEUIL_MAX + "," + UPDATED_SEUIL_MAX);
+
+        // Get all the signalList where seuilMax equals to UPDATED_SEUIL_MAX
+        defaultSignalShouldNotBeFound("seuilMax.in=" + UPDATED_SEUIL_MAX);
     }
 
     @Test
@@ -382,7 +555,10 @@ class SignalResourceIT {
         signalRepository.saveAndFlush(signal);
 
         // Get all the signalList where seuilMax is not null
-        defaultSignalFiltering("seuilMax.specified=true", "seuilMax.specified=false");
+        defaultSignalShouldBeFound("seuilMax.specified=true");
+
+        // Get all the signalList where seuilMax is null
+        defaultSignalShouldNotBeFound("seuilMax.specified=false");
     }
 
     @Test
@@ -391,8 +567,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMax is greater than or equal to
-        defaultSignalFiltering("seuilMax.greaterThanOrEqual=" + DEFAULT_SEUIL_MAX, "seuilMax.greaterThanOrEqual=" + UPDATED_SEUIL_MAX);
+        // Get all the signalList where seuilMax is greater than or equal to DEFAULT_SEUIL_MAX
+        defaultSignalShouldBeFound("seuilMax.greaterThanOrEqual=" + DEFAULT_SEUIL_MAX);
+
+        // Get all the signalList where seuilMax is greater than or equal to UPDATED_SEUIL_MAX
+        defaultSignalShouldNotBeFound("seuilMax.greaterThanOrEqual=" + UPDATED_SEUIL_MAX);
     }
 
     @Test
@@ -401,8 +580,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMax is less than or equal to
-        defaultSignalFiltering("seuilMax.lessThanOrEqual=" + DEFAULT_SEUIL_MAX, "seuilMax.lessThanOrEqual=" + SMALLER_SEUIL_MAX);
+        // Get all the signalList where seuilMax is less than or equal to DEFAULT_SEUIL_MAX
+        defaultSignalShouldBeFound("seuilMax.lessThanOrEqual=" + DEFAULT_SEUIL_MAX);
+
+        // Get all the signalList where seuilMax is less than or equal to SMALLER_SEUIL_MAX
+        defaultSignalShouldNotBeFound("seuilMax.lessThanOrEqual=" + SMALLER_SEUIL_MAX);
     }
 
     @Test
@@ -411,8 +593,11 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMax is less than
-        defaultSignalFiltering("seuilMax.lessThan=" + UPDATED_SEUIL_MAX, "seuilMax.lessThan=" + DEFAULT_SEUIL_MAX);
+        // Get all the signalList where seuilMax is less than DEFAULT_SEUIL_MAX
+        defaultSignalShouldNotBeFound("seuilMax.lessThan=" + DEFAULT_SEUIL_MAX);
+
+        // Get all the signalList where seuilMax is less than UPDATED_SEUIL_MAX
+        defaultSignalShouldBeFound("seuilMax.lessThan=" + UPDATED_SEUIL_MAX);
     }
 
     @Test
@@ -421,13 +606,33 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        // Get all the signalList where seuilMax is greater than
-        defaultSignalFiltering("seuilMax.greaterThan=" + SMALLER_SEUIL_MAX, "seuilMax.greaterThan=" + DEFAULT_SEUIL_MAX);
+        // Get all the signalList where seuilMax is greater than DEFAULT_SEUIL_MAX
+        defaultSignalShouldNotBeFound("seuilMax.greaterThan=" + DEFAULT_SEUIL_MAX);
+
+        // Get all the signalList where seuilMax is greater than SMALLER_SEUIL_MAX
+        defaultSignalShouldBeFound("seuilMax.greaterThan=" + SMALLER_SEUIL_MAX);
     }
 
-    private void defaultSignalFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
-        defaultSignalShouldBeFound(shouldBeFound);
-        defaultSignalShouldNotBeFound(shouldNotBeFound);
+    @Test
+    @Transactional
+    void getAllSignalsByDiagnosticIsEqualToSomething() throws Exception {
+        Diagnostic diagnostic;
+        if (TestUtil.findAll(em, Diagnostic.class).isEmpty()) {
+            signalRepository.saveAndFlush(signal);
+            diagnostic = DiagnosticResourceIT.createEntity(em);
+        } else {
+            diagnostic = TestUtil.findAll(em, Diagnostic.class).get(0);
+        }
+        em.persist(diagnostic);
+        em.flush();
+        signal.addDiagnostic(diagnostic);
+        signalRepository.saveAndFlush(signal);
+        Long diagnosticId = diagnostic.getId();
+        // Get all the signalList where diagnostic equals to diagnosticId
+        defaultSignalShouldBeFound("diagnosticId.equals=" + diagnosticId);
+
+        // Get all the signalList where diagnostic equals to (diagnosticId + 1)
+        defaultSignalShouldNotBeFound("diagnosticId.equals=" + (diagnosticId + 1));
     }
 
     /**
@@ -440,6 +645,7 @@ class SignalResourceIT {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(signal.getId().intValue())))
             .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
+            .andExpect(jsonPath("$.[*].valueSignal").value(hasItem(DEFAULT_VALUE_SIGNAL.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMin").value(hasItem(DEFAULT_SEUIL_MIN.doubleValue())))
             .andExpect(jsonPath("$.[*].seuilMax").value(hasItem(DEFAULT_SEUIL_MAX.doubleValue())));
 
@@ -483,13 +689,13 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
 
         // Update the signal
         Signal updatedSignal = signalRepository.findById(signal.getId()).orElseThrow();
         // Disconnect from session so that the updates on updatedSignal are not directly saved in db
         em.detach(updatedSignal);
-        updatedSignal.libelle(UPDATED_LIBELLE).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
+        updatedSignal.libelle(UPDATED_LIBELLE).valueSignal(UPDATED_VALUE_SIGNAL).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
         SignalDTO signalDTO = signalMapper.toDto(updatedSignal);
 
         restSignalMockMvc
@@ -497,19 +703,24 @@ class SignalResourceIT {
                 put(ENTITY_API_URL_ID, signalDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(signalDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
             )
             .andExpect(status().isOk());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertPersistedSignalToMatchAllProperties(updatedSignal);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
+        Signal testSignal = signalList.get(signalList.size() - 1);
+        assertThat(testSignal.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(UPDATED_VALUE_SIGNAL);
+        assertThat(testSignal.getSeuilMin()).isEqualTo(UPDATED_SEUIL_MIN);
+        assertThat(testSignal.getSeuilMax()).isEqualTo(UPDATED_SEUIL_MAX);
     }
 
     @Test
     @Transactional
     void putNonExistingSignal() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
         signal.setId(longCount.incrementAndGet());
 
         // Create the Signal
@@ -521,18 +732,19 @@ class SignalResourceIT {
                 put(ENTITY_API_URL_ID, signalDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(signalDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithIdMismatchSignal() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
         signal.setId(longCount.incrementAndGet());
 
         // Create the Signal
@@ -544,18 +756,19 @@ class SignalResourceIT {
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(signalDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithMissingIdPathParamSignal() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
         signal.setId(longCount.incrementAndGet());
 
         // Create the Signal
@@ -563,11 +776,17 @@ class SignalResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restSignalMockMvc
-            .perform(put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(signalDTO)))
+            .perform(
+                put(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -576,7 +795,7 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
 
         // Update the signal using partial update
         Signal partialUpdatedSignal = new Signal();
@@ -589,14 +808,18 @@ class SignalResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedSignal.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedSignal))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedSignal))
             )
             .andExpect(status().isOk());
 
         // Validate the Signal in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertSignalUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedSignal, signal), getPersistedSignal(signal));
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
+        Signal testSignal = signalList.get(signalList.size() - 1);
+        assertThat(testSignal.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(DEFAULT_VALUE_SIGNAL);
+        assertThat(testSignal.getSeuilMin()).isEqualTo(DEFAULT_SEUIL_MIN);
+        assertThat(testSignal.getSeuilMax()).isEqualTo(DEFAULT_SEUIL_MAX);
     }
 
     @Test
@@ -605,33 +828,41 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
 
         // Update the signal using partial update
         Signal partialUpdatedSignal = new Signal();
         partialUpdatedSignal.setId(signal.getId());
 
-        partialUpdatedSignal.libelle(UPDATED_LIBELLE).seuilMin(UPDATED_SEUIL_MIN).seuilMax(UPDATED_SEUIL_MAX);
+        partialUpdatedSignal
+            .libelle(UPDATED_LIBELLE)
+            .valueSignal(UPDATED_VALUE_SIGNAL)
+            .seuilMin(UPDATED_SEUIL_MIN)
+            .seuilMax(UPDATED_SEUIL_MAX);
 
         restSignalMockMvc
             .perform(
                 patch(ENTITY_API_URL_ID, partialUpdatedSignal.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedSignal))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedSignal))
             )
             .andExpect(status().isOk());
 
         // Validate the Signal in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertSignalUpdatableFieldsEquals(partialUpdatedSignal, getPersistedSignal(partialUpdatedSignal));
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
+        Signal testSignal = signalList.get(signalList.size() - 1);
+        assertThat(testSignal.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testSignal.getValueSignal()).isEqualTo(UPDATED_VALUE_SIGNAL);
+        assertThat(testSignal.getSeuilMin()).isEqualTo(UPDATED_SEUIL_MIN);
+        assertThat(testSignal.getSeuilMax()).isEqualTo(UPDATED_SEUIL_MAX);
     }
 
     @Test
     @Transactional
     void patchNonExistingSignal() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
         signal.setId(longCount.incrementAndGet());
 
         // Create the Signal
@@ -643,18 +874,19 @@ class SignalResourceIT {
                 patch(ENTITY_API_URL_ID, signalDTO.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(signalDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithIdMismatchSignal() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
         signal.setId(longCount.incrementAndGet());
 
         // Create the Signal
@@ -666,18 +898,19 @@ class SignalResourceIT {
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(signalDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithMissingIdPathParamSignal() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = signalRepository.findAll().size();
         signal.setId(longCount.incrementAndGet());
 
         // Create the Signal
@@ -686,12 +919,16 @@ class SignalResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restSignalMockMvc
             .perform(
-                patch(ENTITY_API_URL).with(csrf()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(signalDTO))
+                patch(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(signalDTO))
             )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Signal in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -700,7 +937,7 @@ class SignalResourceIT {
         // Initialize the database
         signalRepository.saveAndFlush(signal);
 
-        long databaseSizeBeforeDelete = getRepositoryCount();
+        int databaseSizeBeforeDelete = signalRepository.findAll().size();
 
         // Delete the signal
         restSignalMockMvc
@@ -708,34 +945,7 @@ class SignalResourceIT {
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        assertDecrementedRepositoryCount(databaseSizeBeforeDelete);
-    }
-
-    protected long getRepositoryCount() {
-        return signalRepository.count();
-    }
-
-    protected void assertIncrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore + 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertDecrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore - 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertSameRepositoryCount(long countBefore) {
-        assertThat(countBefore).isEqualTo(getRepositoryCount());
-    }
-
-    protected Signal getPersistedSignal(Signal signal) {
-        return signalRepository.findById(signal.getId()).orElseThrow();
-    }
-
-    protected void assertPersistedSignalToMatchAllProperties(Signal expectedSignal) {
-        assertSignalAllPropertiesEquals(expectedSignal, getPersistedSignal(expectedSignal));
-    }
-
-    protected void assertPersistedSignalToMatchUpdatableProperties(Signal expectedSignal) {
-        assertSignalAllUpdatablePropertiesEquals(expectedSignal, getPersistedSignal(expectedSignal));
+        List<Signal> signalList = signalRepository.findAll();
+        assertThat(signalList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

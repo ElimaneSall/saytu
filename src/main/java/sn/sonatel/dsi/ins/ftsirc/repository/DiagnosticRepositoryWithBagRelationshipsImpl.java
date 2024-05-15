@@ -16,9 +16,6 @@ import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
  */
 public class DiagnosticRepositoryWithBagRelationshipsImpl implements DiagnosticRepositoryWithBagRelationships {
 
-    private static final String ID_PARAMETER = "id";
-    private static final String DIAGNOSTICS_PARAMETER = "diagnostics";
-
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -43,7 +40,7 @@ public class DiagnosticRepositoryWithBagRelationshipsImpl implements DiagnosticR
                 "select diagnostic from Diagnostic diagnostic left join fetch diagnostic.anomalies where diagnostic.id = :id",
                 Diagnostic.class
             )
-            .setParameter(ID_PARAMETER, result.getId())
+            .setParameter("id", result.getId())
             .getSingleResult();
     }
 
@@ -55,7 +52,7 @@ public class DiagnosticRepositoryWithBagRelationshipsImpl implements DiagnosticR
                 "select diagnostic from Diagnostic diagnostic left join fetch diagnostic.anomalies where diagnostic in :diagnostics",
                 Diagnostic.class
             )
-            .setParameter(DIAGNOSTICS_PARAMETER, diagnostics)
+            .setParameter("diagnostics", diagnostics)
             .getResultList();
         Collections.sort(result, (o1, o2) -> Integer.compare(order.get(o1.getId()), order.get(o2.getId())));
         return result;

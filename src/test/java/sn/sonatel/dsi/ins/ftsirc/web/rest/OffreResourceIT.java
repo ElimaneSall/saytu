@@ -5,11 +5,9 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static sn.sonatel.dsi.ins.ftsirc.domain.OffreAsserts.*;
-import static sn.sonatel.dsi.ins.ftsirc.web.rest.TestUtil.createUpdateProxyForBean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.IntegrationTest;
+import sn.sonatel.dsi.ins.ftsirc.domain.Client;
 import sn.sonatel.dsi.ins.ftsirc.domain.Offre;
 import sn.sonatel.dsi.ins.ftsirc.repository.OffreRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OffreDTO;
@@ -45,9 +44,6 @@ class OffreResourceIT {
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
-
-    @Autowired
-    private ObjectMapper om;
 
     @Autowired
     private OffreRepository offreRepository;
@@ -93,23 +89,24 @@ class OffreResourceIT {
     @Test
     @Transactional
     void createOffre() throws Exception {
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = offreRepository.findAll().size();
         // Create the Offre
         OffreDTO offreDTO = offreMapper.toDto(offre);
-        var returnedOffreDTO = om.readValue(
-            restOffreMockMvc
-                .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(offreDTO)))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            OffreDTO.class
-        );
+        restOffreMockMvc
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
+            )
+            .andExpect(status().isCreated());
 
         // Validate the Offre in the database
-        assertIncrementedRepositoryCount(databaseSizeBeforeCreate);
-        var returnedOffre = offreMapper.toEntity(returnedOffreDTO);
-        assertOffreUpdatableFieldsEquals(returnedOffre, getPersistedOffre(returnedOffre));
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeCreate + 1);
+        Offre testOffre = offreList.get(offreList.size() - 1);
+        assertThat(testOffre.getLibelle()).isEqualTo(DEFAULT_LIBELLE);
+        assertThat(testOffre.getDebitMax()).isEqualTo(DEFAULT_DEBIT_MAX);
     }
 
     @Test
@@ -119,21 +116,27 @@ class OffreResourceIT {
         offre.setId(1L);
         OffreDTO offreDTO = offreMapper.toDto(offre);
 
-        long databaseSizeBeforeCreate = getRepositoryCount();
+        int databaseSizeBeforeCreate = offreRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restOffreMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(offreDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
+            )
             .andExpect(status().isBadRequest());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeCreate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
     @Transactional
     void checkLibelleIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = offreRepository.findAll().size();
         // set the field null
         offre.setLibelle(null);
 
@@ -141,16 +144,22 @@ class OffreResourceIT {
         OffreDTO offreDTO = offreMapper.toDto(offre);
 
         restOffreMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(offreDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
     @Transactional
     void checkDebitMaxIsRequired() throws Exception {
-        long databaseSizeBeforeTest = getRepositoryCount();
+        int databaseSizeBeforeTest = offreRepository.findAll().size();
         // set the field null
         offre.setDebitMax(null);
 
@@ -158,10 +167,16 @@ class OffreResourceIT {
         OffreDTO offreDTO = offreMapper.toDto(offre);
 
         restOffreMockMvc
-            .perform(post(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(offreDTO)))
+            .perform(
+                post(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
+            )
             .andExpect(status().isBadRequest());
 
-        assertSameRepositoryCount(databaseSizeBeforeTest);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -204,11 +219,14 @@ class OffreResourceIT {
 
         Long id = offre.getId();
 
-        defaultOffreFiltering("id.equals=" + id, "id.notEquals=" + id);
+        defaultOffreShouldBeFound("id.equals=" + id);
+        defaultOffreShouldNotBeFound("id.notEquals=" + id);
 
-        defaultOffreFiltering("id.greaterThanOrEqual=" + id, "id.greaterThan=" + id);
+        defaultOffreShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultOffreShouldNotBeFound("id.greaterThan=" + id);
 
-        defaultOffreFiltering("id.lessThanOrEqual=" + id, "id.lessThan=" + id);
+        defaultOffreShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultOffreShouldNotBeFound("id.lessThan=" + id);
     }
 
     @Test
@@ -217,8 +235,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where libelle equals to
-        defaultOffreFiltering("libelle.equals=" + DEFAULT_LIBELLE, "libelle.equals=" + UPDATED_LIBELLE);
+        // Get all the offreList where libelle equals to DEFAULT_LIBELLE
+        defaultOffreShouldBeFound("libelle.equals=" + DEFAULT_LIBELLE);
+
+        // Get all the offreList where libelle equals to UPDATED_LIBELLE
+        defaultOffreShouldNotBeFound("libelle.equals=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -227,8 +248,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where libelle in
-        defaultOffreFiltering("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE, "libelle.in=" + UPDATED_LIBELLE);
+        // Get all the offreList where libelle in DEFAULT_LIBELLE or UPDATED_LIBELLE
+        defaultOffreShouldBeFound("libelle.in=" + DEFAULT_LIBELLE + "," + UPDATED_LIBELLE);
+
+        // Get all the offreList where libelle equals to UPDATED_LIBELLE
+        defaultOffreShouldNotBeFound("libelle.in=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -238,7 +262,10 @@ class OffreResourceIT {
         offreRepository.saveAndFlush(offre);
 
         // Get all the offreList where libelle is not null
-        defaultOffreFiltering("libelle.specified=true", "libelle.specified=false");
+        defaultOffreShouldBeFound("libelle.specified=true");
+
+        // Get all the offreList where libelle is null
+        defaultOffreShouldNotBeFound("libelle.specified=false");
     }
 
     @Test
@@ -247,8 +274,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where libelle contains
-        defaultOffreFiltering("libelle.contains=" + DEFAULT_LIBELLE, "libelle.contains=" + UPDATED_LIBELLE);
+        // Get all the offreList where libelle contains DEFAULT_LIBELLE
+        defaultOffreShouldBeFound("libelle.contains=" + DEFAULT_LIBELLE);
+
+        // Get all the offreList where libelle contains UPDATED_LIBELLE
+        defaultOffreShouldNotBeFound("libelle.contains=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -257,8 +287,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where libelle does not contain
-        defaultOffreFiltering("libelle.doesNotContain=" + UPDATED_LIBELLE, "libelle.doesNotContain=" + DEFAULT_LIBELLE);
+        // Get all the offreList where libelle does not contain DEFAULT_LIBELLE
+        defaultOffreShouldNotBeFound("libelle.doesNotContain=" + DEFAULT_LIBELLE);
+
+        // Get all the offreList where libelle does not contain UPDATED_LIBELLE
+        defaultOffreShouldBeFound("libelle.doesNotContain=" + UPDATED_LIBELLE);
     }
 
     @Test
@@ -267,8 +300,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where debitMax equals to
-        defaultOffreFiltering("debitMax.equals=" + DEFAULT_DEBIT_MAX, "debitMax.equals=" + UPDATED_DEBIT_MAX);
+        // Get all the offreList where debitMax equals to DEFAULT_DEBIT_MAX
+        defaultOffreShouldBeFound("debitMax.equals=" + DEFAULT_DEBIT_MAX);
+
+        // Get all the offreList where debitMax equals to UPDATED_DEBIT_MAX
+        defaultOffreShouldNotBeFound("debitMax.equals=" + UPDATED_DEBIT_MAX);
     }
 
     @Test
@@ -277,8 +313,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where debitMax in
-        defaultOffreFiltering("debitMax.in=" + DEFAULT_DEBIT_MAX + "," + UPDATED_DEBIT_MAX, "debitMax.in=" + UPDATED_DEBIT_MAX);
+        // Get all the offreList where debitMax in DEFAULT_DEBIT_MAX or UPDATED_DEBIT_MAX
+        defaultOffreShouldBeFound("debitMax.in=" + DEFAULT_DEBIT_MAX + "," + UPDATED_DEBIT_MAX);
+
+        // Get all the offreList where debitMax equals to UPDATED_DEBIT_MAX
+        defaultOffreShouldNotBeFound("debitMax.in=" + UPDATED_DEBIT_MAX);
     }
 
     @Test
@@ -288,7 +327,10 @@ class OffreResourceIT {
         offreRepository.saveAndFlush(offre);
 
         // Get all the offreList where debitMax is not null
-        defaultOffreFiltering("debitMax.specified=true", "debitMax.specified=false");
+        defaultOffreShouldBeFound("debitMax.specified=true");
+
+        // Get all the offreList where debitMax is null
+        defaultOffreShouldNotBeFound("debitMax.specified=false");
     }
 
     @Test
@@ -297,8 +339,11 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where debitMax contains
-        defaultOffreFiltering("debitMax.contains=" + DEFAULT_DEBIT_MAX, "debitMax.contains=" + UPDATED_DEBIT_MAX);
+        // Get all the offreList where debitMax contains DEFAULT_DEBIT_MAX
+        defaultOffreShouldBeFound("debitMax.contains=" + DEFAULT_DEBIT_MAX);
+
+        // Get all the offreList where debitMax contains UPDATED_DEBIT_MAX
+        defaultOffreShouldNotBeFound("debitMax.contains=" + UPDATED_DEBIT_MAX);
     }
 
     @Test
@@ -307,13 +352,33 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        // Get all the offreList where debitMax does not contain
-        defaultOffreFiltering("debitMax.doesNotContain=" + UPDATED_DEBIT_MAX, "debitMax.doesNotContain=" + DEFAULT_DEBIT_MAX);
+        // Get all the offreList where debitMax does not contain DEFAULT_DEBIT_MAX
+        defaultOffreShouldNotBeFound("debitMax.doesNotContain=" + DEFAULT_DEBIT_MAX);
+
+        // Get all the offreList where debitMax does not contain UPDATED_DEBIT_MAX
+        defaultOffreShouldBeFound("debitMax.doesNotContain=" + UPDATED_DEBIT_MAX);
     }
 
-    private void defaultOffreFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
-        defaultOffreShouldBeFound(shouldBeFound);
-        defaultOffreShouldNotBeFound(shouldNotBeFound);
+    @Test
+    @Transactional
+    void getAllOffresByClientIsEqualToSomething() throws Exception {
+        Client client;
+        if (TestUtil.findAll(em, Client.class).isEmpty()) {
+            offreRepository.saveAndFlush(offre);
+            client = ClientResourceIT.createEntity(em);
+        } else {
+            client = TestUtil.findAll(em, Client.class).get(0);
+        }
+        em.persist(client);
+        em.flush();
+        offre.addClient(client);
+        offreRepository.saveAndFlush(offre);
+        Long clientId = client.getId();
+        // Get all the offreList where client equals to clientId
+        defaultOffreShouldBeFound("clientId.equals=" + clientId);
+
+        // Get all the offreList where client equals to (clientId + 1)
+        defaultOffreShouldNotBeFound("clientId.equals=" + (clientId + 1));
     }
 
     /**
@@ -368,7 +433,7 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
 
         // Update the offre
         Offre updatedOffre = offreRepository.findById(offre.getId()).orElseThrow();
@@ -382,19 +447,22 @@ class OffreResourceIT {
                 put(ENTITY_API_URL_ID, offreDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(offreDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
             )
             .andExpect(status().isOk());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertPersistedOffreToMatchAllProperties(updatedOffre);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
+        Offre testOffre = offreList.get(offreList.size() - 1);
+        assertThat(testOffre.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testOffre.getDebitMax()).isEqualTo(UPDATED_DEBIT_MAX);
     }
 
     @Test
     @Transactional
     void putNonExistingOffre() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
         offre.setId(longCount.incrementAndGet());
 
         // Create the Offre
@@ -406,18 +474,19 @@ class OffreResourceIT {
                 put(ENTITY_API_URL_ID, offreDTO.getId())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(offreDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithIdMismatchOffre() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
         offre.setId(longCount.incrementAndGet());
 
         // Create the Offre
@@ -429,18 +498,19 @@ class OffreResourceIT {
                 put(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(om.writeValueAsBytes(offreDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void putWithMissingIdPathParamOffre() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
         offre.setId(longCount.incrementAndGet());
 
         // Create the Offre
@@ -448,11 +518,17 @@ class OffreResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restOffreMockMvc
-            .perform(put(ENTITY_API_URL).with(csrf()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(offreDTO)))
+            .perform(
+                put(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -461,7 +537,7 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
 
         // Update the offre using partial update
         Offre partialUpdatedOffre = new Offre();
@@ -474,14 +550,16 @@ class OffreResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedOffre.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedOffre))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedOffre))
             )
             .andExpect(status().isOk());
 
         // Validate the Offre in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertOffreUpdatableFieldsEquals(createUpdateProxyForBean(partialUpdatedOffre, offre), getPersistedOffre(offre));
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
+        Offre testOffre = offreList.get(offreList.size() - 1);
+        assertThat(testOffre.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testOffre.getDebitMax()).isEqualTo(UPDATED_DEBIT_MAX);
     }
 
     @Test
@@ -490,7 +568,7 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
 
         // Update the offre using partial update
         Offre partialUpdatedOffre = new Offre();
@@ -503,20 +581,22 @@ class OffreResourceIT {
                 patch(ENTITY_API_URL_ID, partialUpdatedOffre.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(partialUpdatedOffre))
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedOffre))
             )
             .andExpect(status().isOk());
 
         // Validate the Offre in the database
-
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
-        assertOffreUpdatableFieldsEquals(partialUpdatedOffre, getPersistedOffre(partialUpdatedOffre));
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
+        Offre testOffre = offreList.get(offreList.size() - 1);
+        assertThat(testOffre.getLibelle()).isEqualTo(UPDATED_LIBELLE);
+        assertThat(testOffre.getDebitMax()).isEqualTo(UPDATED_DEBIT_MAX);
     }
 
     @Test
     @Transactional
     void patchNonExistingOffre() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
         offre.setId(longCount.incrementAndGet());
 
         // Create the Offre
@@ -528,18 +608,19 @@ class OffreResourceIT {
                 patch(ENTITY_API_URL_ID, offreDTO.getId())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(offreDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithIdMismatchOffre() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
         offre.setId(longCount.incrementAndGet());
 
         // Create the Offre
@@ -551,18 +632,19 @@ class OffreResourceIT {
                 patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
                     .with(csrf())
                     .contentType("application/merge-patch+json")
-                    .content(om.writeValueAsBytes(offreDTO))
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
             )
             .andExpect(status().isBadRequest());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
     @Transactional
     void patchWithMissingIdPathParamOffre() throws Exception {
-        long databaseSizeBeforeUpdate = getRepositoryCount();
+        int databaseSizeBeforeUpdate = offreRepository.findAll().size();
         offre.setId(longCount.incrementAndGet());
 
         // Create the Offre
@@ -570,11 +652,17 @@ class OffreResourceIT {
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restOffreMockMvc
-            .perform(patch(ENTITY_API_URL).with(csrf()).contentType("application/merge-patch+json").content(om.writeValueAsBytes(offreDTO)))
+            .perform(
+                patch(ENTITY_API_URL)
+                    .with(csrf())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(offreDTO))
+            )
             .andExpect(status().isMethodNotAllowed());
 
         // Validate the Offre in the database
-        assertSameRepositoryCount(databaseSizeBeforeUpdate);
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
@@ -583,7 +671,7 @@ class OffreResourceIT {
         // Initialize the database
         offreRepository.saveAndFlush(offre);
 
-        long databaseSizeBeforeDelete = getRepositoryCount();
+        int databaseSizeBeforeDelete = offreRepository.findAll().size();
 
         // Delete the offre
         restOffreMockMvc
@@ -591,34 +679,7 @@ class OffreResourceIT {
             .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        assertDecrementedRepositoryCount(databaseSizeBeforeDelete);
-    }
-
-    protected long getRepositoryCount() {
-        return offreRepository.count();
-    }
-
-    protected void assertIncrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore + 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertDecrementedRepositoryCount(long countBefore) {
-        assertThat(countBefore - 1).isEqualTo(getRepositoryCount());
-    }
-
-    protected void assertSameRepositoryCount(long countBefore) {
-        assertThat(countBefore).isEqualTo(getRepositoryCount());
-    }
-
-    protected Offre getPersistedOffre(Offre offre) {
-        return offreRepository.findById(offre.getId()).orElseThrow();
-    }
-
-    protected void assertPersistedOffreToMatchAllProperties(Offre expectedOffre) {
-        assertOffreAllPropertiesEquals(expectedOffre, getPersistedOffre(expectedOffre));
-    }
-
-    protected void assertPersistedOffreToMatchUpdatableProperties(Offre expectedOffre) {
-        assertOffreAllUpdatablePropertiesEquals(expectedOffre, getPersistedOffre(expectedOffre));
+        List<Offre> offreList = offreRepository.findAll();
+        assertThat(offreList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

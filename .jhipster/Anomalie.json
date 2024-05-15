@@ -6,11 +6,26 @@
   "clientRootFolder": "SaytuBackend",
   "databaseType": "sql",
   "dto": "mapstruct",
+  "entityTableName": "anomalie",
   "fields": [
     {
       "fieldName": "libelle",
       "fieldType": "String",
       "fieldValidateRules": ["required", "unique"]
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text"
+    },
+    {
+      "fieldName": "etat",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "recommandation",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "text"
     }
   ],
   "jpaMetamodelFiltering": true,

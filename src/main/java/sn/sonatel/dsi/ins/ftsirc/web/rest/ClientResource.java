@@ -65,10 +65,11 @@ public class ClientResource {
         if (clientDTO.getId() != null) {
             throw new BadRequestAlertException("A new client cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        clientDTO = clientService.save(clientDTO);
-        return ResponseEntity.created(new URI("/api/clients/" + clientDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, clientDTO.getId().toString()))
-            .body(clientDTO);
+        ClientDTO result = clientService.save(clientDTO);
+        return ResponseEntity
+            .created(new URI("/api/clients/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -98,10 +99,11 @@ public class ClientResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        clientDTO = clientService.update(clientDTO);
-        return ResponseEntity.ok()
+        ClientDTO result = clientService.update(clientDTO);
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, clientDTO.getId().toString()))
-            .body(clientDTO);
+            .body(result);
     }
 
     /**
@@ -194,7 +196,8 @@ public class ClientResource {
     public ResponseEntity<Void> deleteClient(@PathVariable("id") Long id) {
         log.debug("REST request to delete Client : {}", id);
         clientService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

@@ -1,6 +1,8 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.SignalDTO;
 
 /**
@@ -30,6 +32,14 @@ public interface SignalService {
      * @return the persisted entity.
      */
     Optional<SignalDTO> partialUpdate(SignalDTO signalDTO);
+
+    /**
+     * Get all the signals.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<SignalDTO> findAll(Pageable pageable);
 
     /**
      * Get the "id" signal.

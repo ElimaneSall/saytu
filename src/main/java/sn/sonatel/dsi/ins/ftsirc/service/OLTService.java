@@ -1,6 +1,8 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
 
 /**
@@ -32,6 +34,14 @@ public interface OLTService {
     Optional<OLTDTO> partialUpdate(OLTDTO oLTDTO);
 
     /**
+     * Get all the oLTS.
+     *
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    Page<OLTDTO> findAll(Pageable pageable);
+
+    /**
      * Get the "id" oLT.
      *
      * @param id the id of the entity.
@@ -45,6 +55,4 @@ public interface OLTService {
      * @param id the id of the entity.
      */
     void delete(Long id);
-
-    void updateOLT(String path);
 }
