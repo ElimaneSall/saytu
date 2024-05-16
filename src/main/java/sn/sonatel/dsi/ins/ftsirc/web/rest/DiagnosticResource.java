@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +19,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.DiagnosticRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.DiagnosticQueryService;
@@ -216,13 +221,17 @@ public class DiagnosticResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
     @GetMapping("/diagnostic-fibre/{serviceId}")
-    public ResponseEntity<String> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
+    public ResponseEntity<Diagnostic> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
         ONT ont = ontRepository.findByServiceId(serviceId);
-        diagnosticService.diagnosticFiberCut(ont);
-        diagnosticService.diagnosticOLTPowerUnderLimit(ont);
-        diagnosticService.diagnosticOLTPowerUnderLimit(ont);
-
-        return ResponseEntity.ok().body("Ok");
+        Anomalie anomalieModemOff = diagnosticService.diagnosticPowerSupply(ont);
+        Anomalie anomalieFiberCut = diagnosticService.diagnosticFiberCut(ont);
+        Anomalie anomaliePowerOLT = diagnosticService.diagnosticOLTPowerUnderLimit(ont);
+        Anomalie anomaliePowerONT =  diagnosticService.diagnosticONTPowerUnderLimit(ont);
+        Diagnostic diagnostic = new Diagnostic();
+        diagnostic.setOnt(ont);
+        diagnostic.setStatutONT(StatutONT.ACTIF);
+        diagnostic.setAnomalies(Set.of( anomalieModemOff, anomalieFiberCut,  anomaliePowerONT, anomaliePowerOLT));
+        return ResponseEntity.ok().body(diagnostic);
     }
 }
