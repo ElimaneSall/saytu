@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.DiagnosticDTO;
 
@@ -73,4 +74,5 @@ public interface DiagnosticService {
     public String diagnosticDebit(ONT ont) throws IOException;
     public Anomalie diagnosticPowerSupply(ONT ont) throws IOException;
     public Anomalie diagnosticFiberCut(ONT ont);
+    public Diagnostic diagnosticFiber(String serviceId) throws IOException;
 }

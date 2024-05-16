@@ -217,21 +217,12 @@ public class DiagnosticResource {
     /**
      * {@code GET  /diagnostics/diagnostic-fibre} : count all the diagnostics.
      *
-     * @param criteria the criteria which the requested entities should match.
+     * @param serviceId the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
     @GetMapping("/diagnostic-fibre/{serviceId}")
     public ResponseEntity<Diagnostic> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
-        ONT ont = ontRepository.findByServiceId(serviceId);
-        Anomalie anomalieModemOff = diagnosticService.diagnosticPowerSupply(ont);
-        Anomalie anomalieFiberCut = diagnosticService.diagnosticFiberCut(ont);
-        Anomalie anomaliePowerOLT = diagnosticService.diagnosticOLTPowerUnderLimit(ont);
-        Anomalie anomaliePowerONT =  diagnosticService.diagnosticONTPowerUnderLimit(ont);
-        Diagnostic diagnostic = new Diagnostic();
-        diagnostic.setOnt(ont);
-        diagnostic.setStatutONT(StatutONT.ACTIF);
-        diagnostic.setAnomalies(Set.of( anomalieModemOff, anomalieFiberCut,  anomaliePowerONT, anomaliePowerOLT));
-        return ResponseEntity.ok().body(diagnostic);
+        return ResponseEntity.ok().body(diagnosticService.diagnosticFiber(serviceId));
     }
 }

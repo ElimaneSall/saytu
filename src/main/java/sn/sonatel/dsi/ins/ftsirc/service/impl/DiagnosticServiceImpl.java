@@ -3,6 +3,8 @@ package sn.sonatel.dsi.ins.ftsirc.service.impl;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,7 @@ import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.domain.Signal;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.AnomalieRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.DiagnosticRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
@@ -154,6 +157,22 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public Diagnostic diagnosticFiber(String serviceId) throws IOException {
+        ONT ont = ontRepository.findByServiceId(serviceId);
+        Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
+        Anomalie anomalieFiberCut = this.diagnosticFiberCut(ont);
+        Anomalie anomaliePowerOLT = this.diagnosticOLTPowerUnderLimit(ont);
+        Anomalie anomaliePowerONT =  this.diagnosticONTPowerUnderLimit(ont);
+        Diagnostic diagnostic = new Diagnostic();
+        diagnostic.setOnt(ont);
+        diagnostic.setStatutONT(scriptsDiagnostic.getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(),
+            ont.getOlt().getVendeur()).equalsIgnoreCase("OK")? StatutONT.ACTIF: StatutONT.INACTIF);
+
+        diagnostic.setAnomalies(Set.of( anomaliePowerSupply, anomalieFiberCut,  anomaliePowerONT, anomaliePowerOLT));
+        return diagnostic;
     }
 
     public Anomalie  diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
