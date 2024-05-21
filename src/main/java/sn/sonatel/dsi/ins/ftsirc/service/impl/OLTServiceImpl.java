@@ -28,6 +28,7 @@ import sn.sonatel.dsi.ins.ftsirc.service.mapper.OLTMapper;
 @Service
 @Transactional
 public class OLTServiceImpl implements OLTService {
+
     private final Logger log = LoggerFactory.getLogger(OLTServiceImpl.class);
     private final OLTRepository oLTRepository;
 
