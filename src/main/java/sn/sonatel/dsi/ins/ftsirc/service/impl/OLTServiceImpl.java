@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -29,6 +28,7 @@ import sn.sonatel.dsi.ins.ftsirc.service.mapper.OLTMapper;
 @Service
 @Transactional
 public class OLTServiceImpl implements OLTService {
+
     private final Logger log = LoggerFactory.getLogger(OLTServiceImpl.class);
     private final OLTRepository oLTRepository;
 
@@ -54,6 +54,9 @@ public class OLTServiceImpl implements OLTService {
         oLT = oLTRepository.save(oLT);
         return oLTMapper.toDto(oLT);
     }
+
+    //@Override
+    //public void updateOLT(String path) {}
 
     @Override
     public Optional<OLTDTO> partialUpdate(OLTDTO oLTDTO) {
@@ -94,15 +97,21 @@ public class OLTServiceImpl implements OLTService {
         String excelFilePath = path;
 
         try {
+            // Establishing connection to MySQL database
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/saytubackend", "root", "");
+
+            // Prepared statement to truncate OLT table
+            //            PreparedStatement pstmt = con.prepareStatement("TRUNCATE TABLE OLT");
+            //            pstmt.executeUpdate();
+
             // Reading data from Excel
             FileInputStream fis = new FileInputStream(excelFilePath);
             Workbook workbook = WorkbookFactory.create(fis);
             Sheet sheet = workbook.getSheetAt(0);
 
             // Iterating over rows and inserting into database
-            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+            for (int rowIndex = 1; rowIndex < sheet.getLastRowNum() + 1; rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
-                if(row.getCell(5) != null){
                 String type_equipement = row.getCell(1).getStringCellValue();
                 Number tmp_code = row.getCell(2).getNumericCellValue();
                 String code_equipement = tmp_code.toString();
@@ -117,27 +126,33 @@ public class OLTServiceImpl implements OLTService {
                 String capacite = temp_capacite.toString();
                 LocalDateTime currentDateTime = LocalDateTime.now();
 
-                OLT olt = new OLT();
-
-                olt.typeEquipment(type_equipement);
-                olt.setLibelle(libelle);
-                olt.setAdresse(adresse);
-                olt.setIp(ip);
-                olt.setTypeCarte(type_carte);
-                olt.setVendeur(vendeur);
-                olt.setLatitude(latitude);
-                olt.setLongitude(longitude);
-                olt.setCapacite(capacite);
-                olt.setCreatedAt(LocalDate.from(currentDateTime));
-                olt.setUpdatedAt(LocalDate.from(currentDateTime));
-                olt.setCodeEquipment(code_equipement);
-                oLTRepository.save(olt);
-        }
-            else{
-                break;
+                // Prepared statement to insert data into OLT table
+                PreparedStatement pstmt = con.prepareStatement(
+                    "INSERT INTO OLT (type_equipment,  libelle, adresse, ip, type_carte, vendeur, latitude, longitude, capacite, created_at, updated_at, code_equipment) VALUES ( ?, ?, ?, ?,?,?,?,?,?,?,?,?)"
+                );
+                pstmt.setString(1, type_equipement);
+                //                pstmt.setString(2, code_equipement);
+                pstmt.setString(2, libelle);
+                pstmt.setString(3, adresse);
+                pstmt.setString(4, ip);
+                pstmt.setString(5, type_carte);
+                pstmt.setString(6, vendeur);
+                pstmt.setString(7, latitude);
+                pstmt.setString(8, longitude);
+                pstmt.setString(9, capacite);
+                pstmt.setObject(10, currentDateTime);
+                pstmt.setObject(11, currentDateTime);
+                pstmt.setString(12, code_equipement);
+                pstmt.executeUpdate();
             }
-    }}  catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
-    }}
+            // Closing resources
+            workbook.close();
+            fis.close();
+            //pstmt.close();
+            con.close();
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
