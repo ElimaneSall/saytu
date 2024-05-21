@@ -177,8 +177,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         diagnosticResult.setStatutONT(scriptsDiagnostic.getOperStatus(ont.getOlt().getIp(), ont.getIndex(),
             ont.getOntID(), ont.getOlt().getVendeur()).equalsIgnoreCase("Ok")?StatutONT.ACTIF: StatutONT.INACTIF);
 
-        diagnosticResult.setPowerOLT((String) resultOLTPowerUnderLimit.get("signal"));
-        diagnosticResult.setPowerONT((String) resultONTPowerUnderLimit.get("signal"));
+        diagnosticResult.setPowerOLT(resultOLTPowerUnderLimit.get("signal").toString());
+        diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
         LocalDateTime currentDateTime = LocalDateTime.now();
         diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
 //        diagnosticResult.setSignal();
@@ -304,10 +304,12 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 if (oltPower == 2147483647) {
                     result.put("anomalie", anomalieRepository.findByCode("100"));
                     result.put("signal", 0);
+
                     return result;
 
                 } else if (oltPower != 2147483647) {
                     Long oltPower_dbm = oltPower / 100;
+                    result.put("signal", oltPower_dbm);
                     if (sfpclass != 102 && oltPower_dbm <= -30) {
                         result.put("anomalie", anomalieRepository.findByCode("101"));
                         return result;
@@ -324,6 +326,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 }
             }
         }
+
         return null;
     }
 

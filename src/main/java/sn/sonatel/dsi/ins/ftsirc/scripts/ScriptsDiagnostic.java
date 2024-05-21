@@ -30,7 +30,8 @@ public class ScriptsDiagnostic {
             PDU pdu = new PDU();
             pdu.add(new VariableBinding(new OID(oid)));
             pdu.setType(PDU.GET);
-            return snmp.send(pdu, target);
+            ResponseEvent event = snmp.send(pdu, target);
+            return event;
         }catch (Exception e){
             System.err.println(e);
         }
@@ -264,11 +265,11 @@ public class ScriptsDiagnostic {
 
     public Long getPowerOLT(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
             String oidPowerOLT = "";
-            Integer slot_index = 4352 + slot + 1;
+            Integer slot_index = 4353 + slot + 1;
             oidPowerOLT =
                 vendeur.equalsIgnoreCase("NOKIA")
                     ? "1.3.6.1.4.1.637.61.1.56.6.1.13" + "." + slot_index + "." + pon
-                    : "1.3.6.1.4.1.2011.6.128.1.1.2.22.1.28" + "." + _ont_;
+                    : "1.3.6.1.4.1.2011.6.128.1.1.2.22.1.28" + "." + index;
 
             ResponseEvent event = this.connectToOID(ip, oidPowerOLT, vendeur.toUpperCase());
             if (event != null && event.getResponse() != null) {

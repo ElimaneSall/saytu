@@ -17,6 +17,7 @@ import org.snmp4j.util.TreeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.DiagnosticService;
@@ -50,17 +51,21 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //                                        Long id = Long.parseLong("1620");
-        //                                        List<ONTDTO> listONTs;
-        //                                        Optional<OLTDTO> oltdto = oltService.findOne(id);
-        //                                        OLTDTO ontdto = oltdto.orElseThrow();
-        //                                        listONTs = getAllONTOnOLT(ontdto);
-        //                                        ontService.saveListONT(ontMapper.toEntity(listONTs));
-        System.out.println("Debut diagnostic:");
-        ONT ont = ontRepository.findByServiceId("338674808");
-        diagnosticService.diagnosticPowerSupply(ont);
-
-//        oltService.updateOLT("C:\\\\Users\\\\Surface\\\\Desktop\\\\Sonatel_2023\\\\saytou\\\\saytu-project\\\\saytu-backend\\\\OLT_OSN_22.04.24.xlsx");
+//                                                Long id = Long.parseLong("4139");
+//                                                List<ONTDTO> listONTs;
+//                                                Optional<OLTDTO> oltdto = oltService.findOne(id);
+//                                                OLTDTO ontdto = oltdto.orElseThrow();
+//                                                listONTs = getAllONTOnOLT(ontdto);
+//                                                ontService.saveListONT(ontMapper.toEntity(listONTs));
+                                                System.out.println("Debut diagnostic:");
+//        338257692 >> Nokia Siege1
+//        338674808 >> Huawei Foire
+//                                                ONT ont = ontRepository.findByServiceId("338257692");
+//
+//                                                Map<String,Object>  map = diagnosticService.diagnosticONTPowerUnderLimit(ont);
+//
+//                                                Anomalie anomalie = (Anomalie) map.get("anomalie");
+//                                                System.out.println(anomalie.getCode());
     }
 
     public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {

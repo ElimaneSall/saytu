@@ -218,7 +218,7 @@ public class DiagnosticResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
     @GetMapping("/diagnostic-fibre/{serviceId}")
-    public ResponseEntity<Diagnostic> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
+    public ResponseEntity<Diagnostic> DiagnosticFibre(@PathVariable("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
         return ResponseEntity.ok().body(diagnosticService.diagnosticFiber(serviceId));
     }
