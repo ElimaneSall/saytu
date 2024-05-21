@@ -26,14 +26,6 @@ public interface OLTService {
     OLTDTO update(OLTDTO oLTDTO);
 
     /**
-     * Updates a oLT.
-     *
-     * @param path the path.
-     * @return the persisted entity.
-     */
-    void updateOLT(String path);
-
-    /**
      * Partially updates a oLT.
      *
      * @param oLTDTO the entity to update partially.
@@ -63,4 +55,5 @@ public interface OLTService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+    public void updateOLT(String path);
 }

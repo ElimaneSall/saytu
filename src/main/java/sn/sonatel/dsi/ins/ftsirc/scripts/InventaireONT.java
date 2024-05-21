@@ -50,17 +50,18 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-                                Long id = Long.parseLong("2522");
+                                Long id = Long.parseLong("3851");
                                 List<ONTDTO> listONTs;
                                 Optional<OLTDTO> oltdto = oltService.findOne(id);
                                 OLTDTO ontdto = oltdto.orElseThrow();
                                 listONTs = getAllONTOnOLT(ontdto);
                                 ontService.saveListONT(ontMapper.toEntity(listONTs));
-        System.out.println("Debut diagnostic:");
-        ONT ont = ontRepository.findByServiceId("338709931");
-        diagnosticService.diagnosticPowerSupply(ont);
+                                System.out.println("Debut diagnostic:");
+                                ONT ont = ontRepository.findByServiceId("338709931");
+                        //        diagnosticService.diagnosticPowerSupply(ont);
+                        //        System.out.println("Fin diagnostic:");
 
-        System.out.println("Fin diagnostic:");
+//        oltService.updateOLT("C:\\\\Users\\\\Surface\\\\Desktop\\\\Sonatel_2023\\\\saytou\\\\saytu-project\\\\saytu-backend\\\\OLT_OSN_22.04.24.xlsx");
     }
 
     public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {

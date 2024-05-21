@@ -17,13 +17,13 @@ public interface ONTRepository extends JpaRepository<ONT, Long>, JpaSpecificatio
     default Optional<ONT> findOneWithEagerRelationships(Long id) {
         return this.findOneWithToOneRelationships(id);
     }
-    @Query("select oNT from ONT oNT  where oNT.serviceId =:serviceId")
-    ONT findByServiceId(String serviceId);
 
     default List<ONT> findAllWithEagerRelationships() {
         return this.findAllWithToOneRelationships();
     }
 
+    @Query("select oNT from ONT oNT  where oNT.serviceId =:serviceId")
+    ONT findByServiceId(String serviceId);
     default Page<ONT> findAllWithEagerRelationships(Pageable pageable) {
         return this.findAllWithToOneRelationships(pageable);
     }

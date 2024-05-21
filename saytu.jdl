@@ -39,12 +39,13 @@ enum StatutONT {
 }
 
 entity Diagnostic {
-    index String required,
     statutONT StatutONT,
+    dateDiagnostic LocalDate,
+    typeDiagnostic TypeDiagnostic,
     debitUp String,
     debitDown String,
-    dateDiagnostic LocalDate,
-    typeDiagnostic TypeDiagnostic
+    powerONT String,
+    powerOLT String
 }
 
 enum TypeDiagnostic {
@@ -63,7 +64,8 @@ entity Anomalie {
     description TextBlob,
     etat String,
     description TextBlob,
-    recommandation TextBlob
+    recommandation TextBlob,
+    code Integer
 }
 
 entity Signal {
@@ -102,9 +104,8 @@ relationship ManyToOne {
     ONT{olt} to OLT{ont}
     Diagnostic{ont} to ONT{diagnostic}
     Metrique{ont} to ONT{metrique}
-
-
 }
+
 
 relationship ManyToMany {
     Diagnostic{anomalie} to Anomalie{diagnostic}

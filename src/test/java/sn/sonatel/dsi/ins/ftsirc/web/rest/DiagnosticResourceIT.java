@@ -48,17 +48,8 @@ import sn.sonatel.dsi.ins.ftsirc.service.mapper.DiagnosticMapper;
 @WithMockUser
 class DiagnosticResourceIT {
 
-    private static final String DEFAULT_INDEX = "AAAAAAAAAA";
-    private static final String UPDATED_INDEX = "BBBBBBBBBB";
-
     private static final StatutONT DEFAULT_STATUT_ONT = StatutONT.ACTIF;
     private static final StatutONT UPDATED_STATUT_ONT = StatutONT.INACTIF;
-
-    private static final String DEFAULT_DEBIT_UP = "AAAAAAAAAA";
-    private static final String UPDATED_DEBIT_UP = "BBBBBBBBBB";
-
-    private static final String DEFAULT_DEBIT_DOWN = "AAAAAAAAAA";
-    private static final String UPDATED_DEBIT_DOWN = "BBBBBBBBBB";
 
     private static final LocalDate DEFAULT_DATE_DIAGNOSTIC = LocalDate.ofEpochDay(0L);
     private static final LocalDate UPDATED_DATE_DIAGNOSTIC = LocalDate.now(ZoneId.systemDefault());
@@ -66,6 +57,18 @@ class DiagnosticResourceIT {
 
     private static final TypeDiagnostic DEFAULT_TYPE_DIAGNOSTIC = TypeDiagnostic.AUTOMATIQUE;
     private static final TypeDiagnostic UPDATED_TYPE_DIAGNOSTIC = TypeDiagnostic.MANUEL;
+
+    private static final String DEFAULT_DEBIT_UP = "AAAAAAAAAA";
+    private static final String UPDATED_DEBIT_UP = "BBBBBBBBBB";
+
+    private static final String DEFAULT_DEBIT_DOWN = "AAAAAAAAAA";
+    private static final String UPDATED_DEBIT_DOWN = "BBBBBBBBBB";
+
+    private static final String DEFAULT_POWER_ONT = "AAAAAAAAAA";
+    private static final String UPDATED_POWER_ONT = "BBBBBBBBBB";
+
+    private static final String DEFAULT_POWER_OLT = "AAAAAAAAAA";
+    private static final String UPDATED_POWER_OLT = "BBBBBBBBBB";
 
     private static final String ENTITY_API_URL = "/api/diagnostics";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
@@ -101,12 +104,13 @@ class DiagnosticResourceIT {
      */
     public static Diagnostic createEntity(EntityManager em) {
         Diagnostic diagnostic = new Diagnostic()
-            .index(DEFAULT_INDEX)
             .statutONT(DEFAULT_STATUT_ONT)
+            .dateDiagnostic(DEFAULT_DATE_DIAGNOSTIC)
+            .typeDiagnostic(DEFAULT_TYPE_DIAGNOSTIC)
             .debitUp(DEFAULT_DEBIT_UP)
             .debitDown(DEFAULT_DEBIT_DOWN)
-            .dateDiagnostic(DEFAULT_DATE_DIAGNOSTIC)
-            .typeDiagnostic(DEFAULT_TYPE_DIAGNOSTIC);
+            .powerONT(DEFAULT_POWER_ONT)
+            .powerOLT(DEFAULT_POWER_OLT);
         return diagnostic;
     }
 
@@ -118,12 +122,13 @@ class DiagnosticResourceIT {
      */
     public static Diagnostic createUpdatedEntity(EntityManager em) {
         Diagnostic diagnostic = new Diagnostic()
-            .index(UPDATED_INDEX)
             .statutONT(UPDATED_STATUT_ONT)
+            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
+            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC)
             .debitUp(UPDATED_DEBIT_UP)
             .debitDown(UPDATED_DEBIT_DOWN)
-            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
-            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC);
+            .powerONT(UPDATED_POWER_ONT)
+            .powerOLT(UPDATED_POWER_OLT);
         return diagnostic;
     }
 
@@ -151,12 +156,13 @@ class DiagnosticResourceIT {
         List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
         assertThat(diagnosticList).hasSize(databaseSizeBeforeCreate + 1);
         Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
-        assertThat(testDiagnostic.getIndex()).isEqualTo(DEFAULT_INDEX);
         assertThat(testDiagnostic.getStatutONT()).isEqualTo(DEFAULT_STATUT_ONT);
-        assertThat(testDiagnostic.getDebitUp()).isEqualTo(DEFAULT_DEBIT_UP);
-        assertThat(testDiagnostic.getDebitDown()).isEqualTo(DEFAULT_DEBIT_DOWN);
         assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(DEFAULT_DATE_DIAGNOSTIC);
         assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(DEFAULT_TYPE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(DEFAULT_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(DEFAULT_DEBIT_DOWN);
+        assertThat(testDiagnostic.getPowerONT()).isEqualTo(DEFAULT_POWER_ONT);
+        assertThat(testDiagnostic.getPowerOLT()).isEqualTo(DEFAULT_POWER_OLT);
     }
 
     @Test
@@ -185,29 +191,6 @@ class DiagnosticResourceIT {
 
     @Test
     @Transactional
-    void checkIndexIsRequired() throws Exception {
-        int databaseSizeBeforeTest = diagnosticRepository.findAll().size();
-        // set the field null
-        diagnostic.setIndex(null);
-
-        // Create the Diagnostic, which fails.
-        DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(diagnostic);
-
-        restDiagnosticMockMvc
-            .perform(
-                post(ENTITY_API_URL)
-                    .with(csrf())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(TestUtil.convertObjectToJsonBytes(diagnosticDTO))
-            )
-            .andExpect(status().isBadRequest());
-
-        List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
-        assertThat(diagnosticList).hasSize(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     void getAllDiagnostics() throws Exception {
         // Initialize the database
         diagnosticRepository.saveAndFlush(diagnostic);
@@ -218,12 +201,13 @@ class DiagnosticResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(diagnostic.getId().intValue())))
-            .andExpect(jsonPath("$.[*].index").value(hasItem(DEFAULT_INDEX)))
             .andExpect(jsonPath("$.[*].statutONT").value(hasItem(DEFAULT_STATUT_ONT.toString())))
+            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())))
+            .andExpect(jsonPath("$.[*].typeDiagnostic").value(hasItem(DEFAULT_TYPE_DIAGNOSTIC.toString())))
             .andExpect(jsonPath("$.[*].debitUp").value(hasItem(DEFAULT_DEBIT_UP)))
             .andExpect(jsonPath("$.[*].debitDown").value(hasItem(DEFAULT_DEBIT_DOWN)))
-            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())))
-            .andExpect(jsonPath("$.[*].typeDiagnostic").value(hasItem(DEFAULT_TYPE_DIAGNOSTIC.toString())));
+            .andExpect(jsonPath("$.[*].powerONT").value(hasItem(DEFAULT_POWER_ONT)))
+            .andExpect(jsonPath("$.[*].powerOLT").value(hasItem(DEFAULT_POWER_OLT)));
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -255,12 +239,13 @@ class DiagnosticResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.id").value(diagnostic.getId().intValue()))
-            .andExpect(jsonPath("$.index").value(DEFAULT_INDEX))
             .andExpect(jsonPath("$.statutONT").value(DEFAULT_STATUT_ONT.toString()))
+            .andExpect(jsonPath("$.dateDiagnostic").value(DEFAULT_DATE_DIAGNOSTIC.toString()))
+            .andExpect(jsonPath("$.typeDiagnostic").value(DEFAULT_TYPE_DIAGNOSTIC.toString()))
             .andExpect(jsonPath("$.debitUp").value(DEFAULT_DEBIT_UP))
             .andExpect(jsonPath("$.debitDown").value(DEFAULT_DEBIT_DOWN))
-            .andExpect(jsonPath("$.dateDiagnostic").value(DEFAULT_DATE_DIAGNOSTIC.toString()))
-            .andExpect(jsonPath("$.typeDiagnostic").value(DEFAULT_TYPE_DIAGNOSTIC.toString()));
+            .andExpect(jsonPath("$.powerONT").value(DEFAULT_POWER_ONT))
+            .andExpect(jsonPath("$.powerOLT").value(DEFAULT_POWER_OLT));
     }
 
     @Test
@@ -279,71 +264,6 @@ class DiagnosticResourceIT {
 
         defaultDiagnosticShouldBeFound("id.lessThanOrEqual=" + id);
         defaultDiagnosticShouldNotBeFound("id.lessThan=" + id);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByIndexIsEqualToSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where index equals to DEFAULT_INDEX
-        defaultDiagnosticShouldBeFound("index.equals=" + DEFAULT_INDEX);
-
-        // Get all the diagnosticList where index equals to UPDATED_INDEX
-        defaultDiagnosticShouldNotBeFound("index.equals=" + UPDATED_INDEX);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByIndexIsInShouldWork() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where index in DEFAULT_INDEX or UPDATED_INDEX
-        defaultDiagnosticShouldBeFound("index.in=" + DEFAULT_INDEX + "," + UPDATED_INDEX);
-
-        // Get all the diagnosticList where index equals to UPDATED_INDEX
-        defaultDiagnosticShouldNotBeFound("index.in=" + UPDATED_INDEX);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByIndexIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where index is not null
-        defaultDiagnosticShouldBeFound("index.specified=true");
-
-        // Get all the diagnosticList where index is null
-        defaultDiagnosticShouldNotBeFound("index.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByIndexContainsSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where index contains DEFAULT_INDEX
-        defaultDiagnosticShouldBeFound("index.contains=" + DEFAULT_INDEX);
-
-        // Get all the diagnosticList where index contains UPDATED_INDEX
-        defaultDiagnosticShouldNotBeFound("index.contains=" + UPDATED_INDEX);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByIndexNotContainsSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where index does not contain DEFAULT_INDEX
-        defaultDiagnosticShouldNotBeFound("index.doesNotContain=" + DEFAULT_INDEX);
-
-        // Get all the diagnosticList where index does not contain UPDATED_INDEX
-        defaultDiagnosticShouldBeFound("index.doesNotContain=" + UPDATED_INDEX);
     }
 
     @Test
@@ -383,136 +303,6 @@ class DiagnosticResourceIT {
 
         // Get all the diagnosticList where statutONT is null
         defaultDiagnosticShouldNotBeFound("statutONT.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitUpIsEqualToSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitUp equals to DEFAULT_DEBIT_UP
-        defaultDiagnosticShouldBeFound("debitUp.equals=" + DEFAULT_DEBIT_UP);
-
-        // Get all the diagnosticList where debitUp equals to UPDATED_DEBIT_UP
-        defaultDiagnosticShouldNotBeFound("debitUp.equals=" + UPDATED_DEBIT_UP);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitUpIsInShouldWork() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitUp in DEFAULT_DEBIT_UP or UPDATED_DEBIT_UP
-        defaultDiagnosticShouldBeFound("debitUp.in=" + DEFAULT_DEBIT_UP + "," + UPDATED_DEBIT_UP);
-
-        // Get all the diagnosticList where debitUp equals to UPDATED_DEBIT_UP
-        defaultDiagnosticShouldNotBeFound("debitUp.in=" + UPDATED_DEBIT_UP);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitUpIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitUp is not null
-        defaultDiagnosticShouldBeFound("debitUp.specified=true");
-
-        // Get all the diagnosticList where debitUp is null
-        defaultDiagnosticShouldNotBeFound("debitUp.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitUpContainsSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitUp contains DEFAULT_DEBIT_UP
-        defaultDiagnosticShouldBeFound("debitUp.contains=" + DEFAULT_DEBIT_UP);
-
-        // Get all the diagnosticList where debitUp contains UPDATED_DEBIT_UP
-        defaultDiagnosticShouldNotBeFound("debitUp.contains=" + UPDATED_DEBIT_UP);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitUpNotContainsSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitUp does not contain DEFAULT_DEBIT_UP
-        defaultDiagnosticShouldNotBeFound("debitUp.doesNotContain=" + DEFAULT_DEBIT_UP);
-
-        // Get all the diagnosticList where debitUp does not contain UPDATED_DEBIT_UP
-        defaultDiagnosticShouldBeFound("debitUp.doesNotContain=" + UPDATED_DEBIT_UP);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitDownIsEqualToSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitDown equals to DEFAULT_DEBIT_DOWN
-        defaultDiagnosticShouldBeFound("debitDown.equals=" + DEFAULT_DEBIT_DOWN);
-
-        // Get all the diagnosticList where debitDown equals to UPDATED_DEBIT_DOWN
-        defaultDiagnosticShouldNotBeFound("debitDown.equals=" + UPDATED_DEBIT_DOWN);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitDownIsInShouldWork() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitDown in DEFAULT_DEBIT_DOWN or UPDATED_DEBIT_DOWN
-        defaultDiagnosticShouldBeFound("debitDown.in=" + DEFAULT_DEBIT_DOWN + "," + UPDATED_DEBIT_DOWN);
-
-        // Get all the diagnosticList where debitDown equals to UPDATED_DEBIT_DOWN
-        defaultDiagnosticShouldNotBeFound("debitDown.in=" + UPDATED_DEBIT_DOWN);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitDownIsNullOrNotNull() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitDown is not null
-        defaultDiagnosticShouldBeFound("debitDown.specified=true");
-
-        // Get all the diagnosticList where debitDown is null
-        defaultDiagnosticShouldNotBeFound("debitDown.specified=false");
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitDownContainsSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitDown contains DEFAULT_DEBIT_DOWN
-        defaultDiagnosticShouldBeFound("debitDown.contains=" + DEFAULT_DEBIT_DOWN);
-
-        // Get all the diagnosticList where debitDown contains UPDATED_DEBIT_DOWN
-        defaultDiagnosticShouldNotBeFound("debitDown.contains=" + UPDATED_DEBIT_DOWN);
-    }
-
-    @Test
-    @Transactional
-    void getAllDiagnosticsByDebitDownNotContainsSomething() throws Exception {
-        // Initialize the database
-        diagnosticRepository.saveAndFlush(diagnostic);
-
-        // Get all the diagnosticList where debitDown does not contain DEFAULT_DEBIT_DOWN
-        defaultDiagnosticShouldNotBeFound("debitDown.doesNotContain=" + DEFAULT_DEBIT_DOWN);
-
-        // Get all the diagnosticList where debitDown does not contain UPDATED_DEBIT_DOWN
-        defaultDiagnosticShouldBeFound("debitDown.doesNotContain=" + UPDATED_DEBIT_DOWN);
     }
 
     @Test
@@ -647,6 +437,266 @@ class DiagnosticResourceIT {
 
     @Test
     @Transactional
+    void getAllDiagnosticsByDebitUpIsEqualToSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitUp equals to DEFAULT_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.equals=" + DEFAULT_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp equals to UPDATED_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.equals=" + UPDATED_DEBIT_UP);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitUpIsInShouldWork() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitUp in DEFAULT_DEBIT_UP or UPDATED_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.in=" + DEFAULT_DEBIT_UP + "," + UPDATED_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp equals to UPDATED_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.in=" + UPDATED_DEBIT_UP);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitUpIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitUp is not null
+        defaultDiagnosticShouldBeFound("debitUp.specified=true");
+
+        // Get all the diagnosticList where debitUp is null
+        defaultDiagnosticShouldNotBeFound("debitUp.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitUpContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitUp contains DEFAULT_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.contains=" + DEFAULT_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp contains UPDATED_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.contains=" + UPDATED_DEBIT_UP);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitUpNotContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitUp does not contain DEFAULT_DEBIT_UP
+        defaultDiagnosticShouldNotBeFound("debitUp.doesNotContain=" + DEFAULT_DEBIT_UP);
+
+        // Get all the diagnosticList where debitUp does not contain UPDATED_DEBIT_UP
+        defaultDiagnosticShouldBeFound("debitUp.doesNotContain=" + UPDATED_DEBIT_UP);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitDownIsEqualToSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitDown equals to DEFAULT_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.equals=" + DEFAULT_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown equals to UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.equals=" + UPDATED_DEBIT_DOWN);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitDownIsInShouldWork() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitDown in DEFAULT_DEBIT_DOWN or UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.in=" + DEFAULT_DEBIT_DOWN + "," + UPDATED_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown equals to UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.in=" + UPDATED_DEBIT_DOWN);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitDownIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitDown is not null
+        defaultDiagnosticShouldBeFound("debitDown.specified=true");
+
+        // Get all the diagnosticList where debitDown is null
+        defaultDiagnosticShouldNotBeFound("debitDown.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitDownContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitDown contains DEFAULT_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.contains=" + DEFAULT_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown contains UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.contains=" + UPDATED_DEBIT_DOWN);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByDebitDownNotContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where debitDown does not contain DEFAULT_DEBIT_DOWN
+        defaultDiagnosticShouldNotBeFound("debitDown.doesNotContain=" + DEFAULT_DEBIT_DOWN);
+
+        // Get all the diagnosticList where debitDown does not contain UPDATED_DEBIT_DOWN
+        defaultDiagnosticShouldBeFound("debitDown.doesNotContain=" + UPDATED_DEBIT_DOWN);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerONTIsEqualToSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerONT equals to DEFAULT_POWER_ONT
+        defaultDiagnosticShouldBeFound("powerONT.equals=" + DEFAULT_POWER_ONT);
+
+        // Get all the diagnosticList where powerONT equals to UPDATED_POWER_ONT
+        defaultDiagnosticShouldNotBeFound("powerONT.equals=" + UPDATED_POWER_ONT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerONTIsInShouldWork() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerONT in DEFAULT_POWER_ONT or UPDATED_POWER_ONT
+        defaultDiagnosticShouldBeFound("powerONT.in=" + DEFAULT_POWER_ONT + "," + UPDATED_POWER_ONT);
+
+        // Get all the diagnosticList where powerONT equals to UPDATED_POWER_ONT
+        defaultDiagnosticShouldNotBeFound("powerONT.in=" + UPDATED_POWER_ONT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerONTIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerONT is not null
+        defaultDiagnosticShouldBeFound("powerONT.specified=true");
+
+        // Get all the diagnosticList where powerONT is null
+        defaultDiagnosticShouldNotBeFound("powerONT.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerONTContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerONT contains DEFAULT_POWER_ONT
+        defaultDiagnosticShouldBeFound("powerONT.contains=" + DEFAULT_POWER_ONT);
+
+        // Get all the diagnosticList where powerONT contains UPDATED_POWER_ONT
+        defaultDiagnosticShouldNotBeFound("powerONT.contains=" + UPDATED_POWER_ONT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerONTNotContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerONT does not contain DEFAULT_POWER_ONT
+        defaultDiagnosticShouldNotBeFound("powerONT.doesNotContain=" + DEFAULT_POWER_ONT);
+
+        // Get all the diagnosticList where powerONT does not contain UPDATED_POWER_ONT
+        defaultDiagnosticShouldBeFound("powerONT.doesNotContain=" + UPDATED_POWER_ONT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerOLTIsEqualToSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerOLT equals to DEFAULT_POWER_OLT
+        defaultDiagnosticShouldBeFound("powerOLT.equals=" + DEFAULT_POWER_OLT);
+
+        // Get all the diagnosticList where powerOLT equals to UPDATED_POWER_OLT
+        defaultDiagnosticShouldNotBeFound("powerOLT.equals=" + UPDATED_POWER_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerOLTIsInShouldWork() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerOLT in DEFAULT_POWER_OLT or UPDATED_POWER_OLT
+        defaultDiagnosticShouldBeFound("powerOLT.in=" + DEFAULT_POWER_OLT + "," + UPDATED_POWER_OLT);
+
+        // Get all the diagnosticList where powerOLT equals to UPDATED_POWER_OLT
+        defaultDiagnosticShouldNotBeFound("powerOLT.in=" + UPDATED_POWER_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerOLTIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerOLT is not null
+        defaultDiagnosticShouldBeFound("powerOLT.specified=true");
+
+        // Get all the diagnosticList where powerOLT is null
+        defaultDiagnosticShouldNotBeFound("powerOLT.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerOLTContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerOLT contains DEFAULT_POWER_OLT
+        defaultDiagnosticShouldBeFound("powerOLT.contains=" + DEFAULT_POWER_OLT);
+
+        // Get all the diagnosticList where powerOLT contains UPDATED_POWER_OLT
+        defaultDiagnosticShouldNotBeFound("powerOLT.contains=" + UPDATED_POWER_OLT);
+    }
+
+    @Test
+    @Transactional
+    void getAllDiagnosticsByPowerOLTNotContainsSomething() throws Exception {
+        // Initialize the database
+        diagnosticRepository.saveAndFlush(diagnostic);
+
+        // Get all the diagnosticList where powerOLT does not contain DEFAULT_POWER_OLT
+        defaultDiagnosticShouldNotBeFound("powerOLT.doesNotContain=" + DEFAULT_POWER_OLT);
+
+        // Get all the diagnosticList where powerOLT does not contain UPDATED_POWER_OLT
+        defaultDiagnosticShouldBeFound("powerOLT.doesNotContain=" + UPDATED_POWER_OLT);
+    }
+
+    @Test
+    @Transactional
     void getAllDiagnosticsBySignalIsEqualToSomething() throws Exception {
         Signal signal;
         if (TestUtil.findAll(em, Signal.class).isEmpty()) {
@@ -720,12 +770,13 @@ class DiagnosticResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(diagnostic.getId().intValue())))
-            .andExpect(jsonPath("$.[*].index").value(hasItem(DEFAULT_INDEX)))
             .andExpect(jsonPath("$.[*].statutONT").value(hasItem(DEFAULT_STATUT_ONT.toString())))
+            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())))
+            .andExpect(jsonPath("$.[*].typeDiagnostic").value(hasItem(DEFAULT_TYPE_DIAGNOSTIC.toString())))
             .andExpect(jsonPath("$.[*].debitUp").value(hasItem(DEFAULT_DEBIT_UP)))
             .andExpect(jsonPath("$.[*].debitDown").value(hasItem(DEFAULT_DEBIT_DOWN)))
-            .andExpect(jsonPath("$.[*].dateDiagnostic").value(hasItem(DEFAULT_DATE_DIAGNOSTIC.toString())))
-            .andExpect(jsonPath("$.[*].typeDiagnostic").value(hasItem(DEFAULT_TYPE_DIAGNOSTIC.toString())));
+            .andExpect(jsonPath("$.[*].powerONT").value(hasItem(DEFAULT_POWER_ONT)))
+            .andExpect(jsonPath("$.[*].powerOLT").value(hasItem(DEFAULT_POWER_OLT)));
 
         // Check, that the count call also returns 1
         restDiagnosticMockMvc
@@ -774,12 +825,13 @@ class DiagnosticResourceIT {
         // Disconnect from session so that the updates on updatedDiagnostic are not directly saved in db
         em.detach(updatedDiagnostic);
         updatedDiagnostic
-            .index(UPDATED_INDEX)
             .statutONT(UPDATED_STATUT_ONT)
+            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
+            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC)
             .debitUp(UPDATED_DEBIT_UP)
             .debitDown(UPDATED_DEBIT_DOWN)
-            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
-            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC);
+            .powerONT(UPDATED_POWER_ONT)
+            .powerOLT(UPDATED_POWER_OLT);
         DiagnosticDTO diagnosticDTO = diagnosticMapper.toDto(updatedDiagnostic);
 
         restDiagnosticMockMvc
@@ -795,12 +847,13 @@ class DiagnosticResourceIT {
         List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
         assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
         Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
-        assertThat(testDiagnostic.getIndex()).isEqualTo(UPDATED_INDEX);
         assertThat(testDiagnostic.getStatutONT()).isEqualTo(UPDATED_STATUT_ONT);
-        assertThat(testDiagnostic.getDebitUp()).isEqualTo(UPDATED_DEBIT_UP);
-        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
         assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(UPDATED_DATE_DIAGNOSTIC);
         assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(UPDATED_TYPE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(UPDATED_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
+        assertThat(testDiagnostic.getPowerONT()).isEqualTo(UPDATED_POWER_ONT);
+        assertThat(testDiagnostic.getPowerOLT()).isEqualTo(UPDATED_POWER_OLT);
     }
 
     @Test
@@ -887,7 +940,7 @@ class DiagnosticResourceIT {
         Diagnostic partialUpdatedDiagnostic = new Diagnostic();
         partialUpdatedDiagnostic.setId(diagnostic.getId());
 
-        partialUpdatedDiagnostic.index(UPDATED_INDEX).statutONT(UPDATED_STATUT_ONT).dateDiagnostic(UPDATED_DATE_DIAGNOSTIC);
+        partialUpdatedDiagnostic.statutONT(UPDATED_STATUT_ONT).dateDiagnostic(UPDATED_DATE_DIAGNOSTIC).debitDown(UPDATED_DEBIT_DOWN);
 
         restDiagnosticMockMvc
             .perform(
@@ -902,12 +955,13 @@ class DiagnosticResourceIT {
         List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
         assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
         Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
-        assertThat(testDiagnostic.getIndex()).isEqualTo(UPDATED_INDEX);
         assertThat(testDiagnostic.getStatutONT()).isEqualTo(UPDATED_STATUT_ONT);
-        assertThat(testDiagnostic.getDebitUp()).isEqualTo(DEFAULT_DEBIT_UP);
-        assertThat(testDiagnostic.getDebitDown()).isEqualTo(DEFAULT_DEBIT_DOWN);
         assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(UPDATED_DATE_DIAGNOSTIC);
         assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(DEFAULT_TYPE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(DEFAULT_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
+        assertThat(testDiagnostic.getPowerONT()).isEqualTo(DEFAULT_POWER_ONT);
+        assertThat(testDiagnostic.getPowerOLT()).isEqualTo(DEFAULT_POWER_OLT);
     }
 
     @Test
@@ -923,12 +977,13 @@ class DiagnosticResourceIT {
         partialUpdatedDiagnostic.setId(diagnostic.getId());
 
         partialUpdatedDiagnostic
-            .index(UPDATED_INDEX)
             .statutONT(UPDATED_STATUT_ONT)
+            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
+            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC)
             .debitUp(UPDATED_DEBIT_UP)
             .debitDown(UPDATED_DEBIT_DOWN)
-            .dateDiagnostic(UPDATED_DATE_DIAGNOSTIC)
-            .typeDiagnostic(UPDATED_TYPE_DIAGNOSTIC);
+            .powerONT(UPDATED_POWER_ONT)
+            .powerOLT(UPDATED_POWER_OLT);
 
         restDiagnosticMockMvc
             .perform(
@@ -943,12 +998,13 @@ class DiagnosticResourceIT {
         List<Diagnostic> diagnosticList = diagnosticRepository.findAll();
         assertThat(diagnosticList).hasSize(databaseSizeBeforeUpdate);
         Diagnostic testDiagnostic = diagnosticList.get(diagnosticList.size() - 1);
-        assertThat(testDiagnostic.getIndex()).isEqualTo(UPDATED_INDEX);
         assertThat(testDiagnostic.getStatutONT()).isEqualTo(UPDATED_STATUT_ONT);
-        assertThat(testDiagnostic.getDebitUp()).isEqualTo(UPDATED_DEBIT_UP);
-        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
         assertThat(testDiagnostic.getDateDiagnostic()).isEqualTo(UPDATED_DATE_DIAGNOSTIC);
         assertThat(testDiagnostic.getTypeDiagnostic()).isEqualTo(UPDATED_TYPE_DIAGNOSTIC);
+        assertThat(testDiagnostic.getDebitUp()).isEqualTo(UPDATED_DEBIT_UP);
+        assertThat(testDiagnostic.getDebitDown()).isEqualTo(UPDATED_DEBIT_DOWN);
+        assertThat(testDiagnostic.getPowerONT()).isEqualTo(UPDATED_POWER_ONT);
+        assertThat(testDiagnostic.getPowerOLT()).isEqualTo(UPDATED_POWER_OLT);
     }
 
     @Test

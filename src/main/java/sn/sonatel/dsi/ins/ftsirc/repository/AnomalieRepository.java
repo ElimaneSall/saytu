@@ -11,7 +11,6 @@ import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 @SuppressWarnings("unused")
 @Repository
 public interface AnomalieRepository extends JpaRepository<Anomalie, Long>, JpaSpecificationExecutor<Anomalie> {
-    @Query("select anomalie from Anomalie anomalie  where anomalie.etat =:etat and anomalie.libelle like % :libelle %")
-    Anomalie findAllByEtatAndLibelle(String etat, String libelle);
-
+    @Query("select anomalie from Anomalie anomalie  where anomalie.code =:code")
+    Anomalie findByCode(String code);
 }

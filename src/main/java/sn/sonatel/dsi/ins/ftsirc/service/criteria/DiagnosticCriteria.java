@@ -59,17 +59,19 @@ public class DiagnosticCriteria implements Serializable, Criteria {
 
     private LongFilter id;
 
-    private StringFilter index;
-
     private StatutONTFilter statutONT;
+
+    private LocalDateFilter dateDiagnostic;
+
+    private TypeDiagnosticFilter typeDiagnostic;
 
     private StringFilter debitUp;
 
     private StringFilter debitDown;
 
-    private LocalDateFilter dateDiagnostic;
+    private StringFilter powerONT;
 
-    private TypeDiagnosticFilter typeDiagnostic;
+    private StringFilter powerOLT;
 
     private LongFilter signalId;
 
@@ -83,12 +85,13 @@ public class DiagnosticCriteria implements Serializable, Criteria {
 
     public DiagnosticCriteria(DiagnosticCriteria other) {
         this.id = other.id == null ? null : other.id.copy();
-        this.index = other.index == null ? null : other.index.copy();
         this.statutONT = other.statutONT == null ? null : other.statutONT.copy();
-        this.debitUp = other.debitUp == null ? null : other.debitUp.copy();
-        this.debitDown = other.debitDown == null ? null : other.debitDown.copy();
         this.dateDiagnostic = other.dateDiagnostic == null ? null : other.dateDiagnostic.copy();
         this.typeDiagnostic = other.typeDiagnostic == null ? null : other.typeDiagnostic.copy();
+        this.debitUp = other.debitUp == null ? null : other.debitUp.copy();
+        this.debitDown = other.debitDown == null ? null : other.debitDown.copy();
+        this.powerONT = other.powerONT == null ? null : other.powerONT.copy();
+        this.powerOLT = other.powerOLT == null ? null : other.powerOLT.copy();
         this.signalId = other.signalId == null ? null : other.signalId.copy();
         this.ontId = other.ontId == null ? null : other.ontId.copy();
         this.anomalieId = other.anomalieId == null ? null : other.anomalieId.copy();
@@ -115,21 +118,6 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         this.id = id;
     }
 
-    public StringFilter getIndex() {
-        return index;
-    }
-
-    public StringFilter index() {
-        if (index == null) {
-            index = new StringFilter();
-        }
-        return index;
-    }
-
-    public void setIndex(StringFilter index) {
-        this.index = index;
-    }
-
     public StatutONTFilter getStatutONT() {
         return statutONT;
     }
@@ -143,6 +131,36 @@ public class DiagnosticCriteria implements Serializable, Criteria {
 
     public void setStatutONT(StatutONTFilter statutONT) {
         this.statutONT = statutONT;
+    }
+
+    public LocalDateFilter getDateDiagnostic() {
+        return dateDiagnostic;
+    }
+
+    public LocalDateFilter dateDiagnostic() {
+        if (dateDiagnostic == null) {
+            dateDiagnostic = new LocalDateFilter();
+        }
+        return dateDiagnostic;
+    }
+
+    public void setDateDiagnostic(LocalDateFilter dateDiagnostic) {
+        this.dateDiagnostic = dateDiagnostic;
+    }
+
+    public TypeDiagnosticFilter getTypeDiagnostic() {
+        return typeDiagnostic;
+    }
+
+    public TypeDiagnosticFilter typeDiagnostic() {
+        if (typeDiagnostic == null) {
+            typeDiagnostic = new TypeDiagnosticFilter();
+        }
+        return typeDiagnostic;
+    }
+
+    public void setTypeDiagnostic(TypeDiagnosticFilter typeDiagnostic) {
+        this.typeDiagnostic = typeDiagnostic;
     }
 
     public StringFilter getDebitUp() {
@@ -175,34 +193,34 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         this.debitDown = debitDown;
     }
 
-    public LocalDateFilter getDateDiagnostic() {
-        return dateDiagnostic;
+    public StringFilter getPowerONT() {
+        return powerONT;
     }
 
-    public LocalDateFilter dateDiagnostic() {
-        if (dateDiagnostic == null) {
-            dateDiagnostic = new LocalDateFilter();
+    public StringFilter powerONT() {
+        if (powerONT == null) {
+            powerONT = new StringFilter();
         }
-        return dateDiagnostic;
+        return powerONT;
     }
 
-    public void setDateDiagnostic(LocalDateFilter dateDiagnostic) {
-        this.dateDiagnostic = dateDiagnostic;
+    public void setPowerONT(StringFilter powerONT) {
+        this.powerONT = powerONT;
     }
 
-    public TypeDiagnosticFilter getTypeDiagnostic() {
-        return typeDiagnostic;
+    public StringFilter getPowerOLT() {
+        return powerOLT;
     }
 
-    public TypeDiagnosticFilter typeDiagnostic() {
-        if (typeDiagnostic == null) {
-            typeDiagnostic = new TypeDiagnosticFilter();
+    public StringFilter powerOLT() {
+        if (powerOLT == null) {
+            powerOLT = new StringFilter();
         }
-        return typeDiagnostic;
+        return powerOLT;
     }
 
-    public void setTypeDiagnostic(TypeDiagnosticFilter typeDiagnostic) {
-        this.typeDiagnostic = typeDiagnostic;
+    public void setPowerOLT(StringFilter powerOLT) {
+        this.powerOLT = powerOLT;
     }
 
     public LongFilter getSignalId() {
@@ -269,12 +287,13 @@ public class DiagnosticCriteria implements Serializable, Criteria {
         final DiagnosticCriteria that = (DiagnosticCriteria) o;
         return (
             Objects.equals(id, that.id) &&
-            Objects.equals(index, that.index) &&
             Objects.equals(statutONT, that.statutONT) &&
-            Objects.equals(debitUp, that.debitUp) &&
-            Objects.equals(debitDown, that.debitDown) &&
             Objects.equals(dateDiagnostic, that.dateDiagnostic) &&
             Objects.equals(typeDiagnostic, that.typeDiagnostic) &&
+            Objects.equals(debitUp, that.debitUp) &&
+            Objects.equals(debitDown, that.debitDown) &&
+            Objects.equals(powerONT, that.powerONT) &&
+            Objects.equals(powerOLT, that.powerOLT) &&
             Objects.equals(signalId, that.signalId) &&
             Objects.equals(ontId, that.ontId) &&
             Objects.equals(anomalieId, that.anomalieId) &&
@@ -286,12 +305,13 @@ public class DiagnosticCriteria implements Serializable, Criteria {
     public int hashCode() {
         return Objects.hash(
             id,
-            index,
             statutONT,
-            debitUp,
-            debitDown,
             dateDiagnostic,
             typeDiagnostic,
+            debitUp,
+            debitDown,
+            powerONT,
+            powerOLT,
             signalId,
             ontId,
             anomalieId,
@@ -304,12 +324,13 @@ public class DiagnosticCriteria implements Serializable, Criteria {
     public String toString() {
         return "DiagnosticCriteria{" +
             (id != null ? "id=" + id + ", " : "") +
-            (index != null ? "index=" + index + ", " : "") +
             (statutONT != null ? "statutONT=" + statutONT + ", " : "") +
-            (debitUp != null ? "debitUp=" + debitUp + ", " : "") +
-            (debitDown != null ? "debitDown=" + debitDown + ", " : "") +
             (dateDiagnostic != null ? "dateDiagnostic=" + dateDiagnostic + ", " : "") +
             (typeDiagnostic != null ? "typeDiagnostic=" + typeDiagnostic + ", " : "") +
+            (debitUp != null ? "debitUp=" + debitUp + ", " : "") +
+            (debitDown != null ? "debitDown=" + debitDown + ", " : "") +
+            (powerONT != null ? "powerONT=" + powerONT + ", " : "") +
+            (powerOLT != null ? "powerOLT=" + powerOLT + ", " : "") +
             (signalId != null ? "signalId=" + signalId + ", " : "") +
             (ontId != null ? "ontId=" + ontId + ", " : "") +
             (anomalieId != null ? "anomalieId=" + anomalieId + ", " : "") +

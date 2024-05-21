@@ -14,10 +14,13 @@
             <column name="id" type="bigint" autoIncrement="true" startWith="1500">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="jhi_index" type="varchar(255)">
-                <constraints nullable="false" />
-            </column>
             <column name="statut_ont" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="date_diagnostic" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="type_diagnostic" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
             <column name="debit_up" type="varchar(255)">
@@ -26,10 +29,10 @@
             <column name="debit_down" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="date_diagnostic" type="date">
+            <column name="power_ont" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
-            <column name="type_diagnostic" type="varchar(255)">
+            <column name="power_olt" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
             <column name="signal_id" type="bigint">
@@ -73,12 +76,13 @@
                   tableName="diagnostic"
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
-            <column name="jhi_index" type="string"/>
             <column name="statut_ont" type="string"/>
-            <column name="debit_up" type="string"/>
-            <column name="debit_down" type="string"/>
             <column name="date_diagnostic" type="date"/>
             <column name="type_diagnostic" type="string"/>
+            <column name="debit_up" type="string"/>
+            <column name="debit_down" type="string"/>
+            <column name="power_ont" type="string"/>
+            <column name="power_olt" type="string"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

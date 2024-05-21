@@ -2,7 +2,6 @@ package sn.sonatel.dsi.ins.ftsirc.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -28,19 +27,9 @@ public class Diagnostic implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @NotNull
-    @Column(name = "jhi_index", nullable = false)
-    private String index;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "statut_ont")
     private StatutONT statutONT;
-
-    @Column(name = "debit_up")
-    private String debitUp;
-
-    @Column(name = "debit_down")
-    private String debitDown;
 
     @Column(name = "date_diagnostic")
     private LocalDate dateDiagnostic;
@@ -48,6 +37,18 @@ public class Diagnostic implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "type_diagnostic")
     private TypeDiagnostic typeDiagnostic;
+
+    @Column(name = "debit_up")
+    private String debitUp;
+
+    @Column(name = "debit_down")
+    private String debitDown;
+
+    @Column(name = "power_ont")
+    private String powerONT;
+
+    @Column(name = "power_olt")
+    private String powerOLT;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "diagnostics" }, allowSetters = true)
@@ -82,19 +83,6 @@ public class Diagnostic implements Serializable {
         this.id = id;
     }
 
-    public String getIndex() {
-        return this.index;
-    }
-
-    public Diagnostic index(String index) {
-        this.setIndex(index);
-        return this;
-    }
-
-    public void setIndex(String index) {
-        this.index = index;
-    }
-
     public StatutONT getStatutONT() {
         return this.statutONT;
     }
@@ -106,6 +94,32 @@ public class Diagnostic implements Serializable {
 
     public void setStatutONT(StatutONT statutONT) {
         this.statutONT = statutONT;
+    }
+
+    public LocalDate getDateDiagnostic() {
+        return this.dateDiagnostic;
+    }
+
+    public Diagnostic dateDiagnostic(LocalDate dateDiagnostic) {
+        this.setDateDiagnostic(dateDiagnostic);
+        return this;
+    }
+
+    public void setDateDiagnostic(LocalDate dateDiagnostic) {
+        this.dateDiagnostic = dateDiagnostic;
+    }
+
+    public TypeDiagnostic getTypeDiagnostic() {
+        return this.typeDiagnostic;
+    }
+
+    public Diagnostic typeDiagnostic(TypeDiagnostic typeDiagnostic) {
+        this.setTypeDiagnostic(typeDiagnostic);
+        return this;
+    }
+
+    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
+        this.typeDiagnostic = typeDiagnostic;
     }
 
     public String getDebitUp() {
@@ -134,30 +148,30 @@ public class Diagnostic implements Serializable {
         this.debitDown = debitDown;
     }
 
-    public LocalDate getDateDiagnostic() {
-        return this.dateDiagnostic;
+    public String getPowerONT() {
+        return this.powerONT;
     }
 
-    public Diagnostic dateDiagnostic(LocalDate dateDiagnostic) {
-        this.setDateDiagnostic(dateDiagnostic);
+    public Diagnostic powerONT(String powerONT) {
+        this.setPowerONT(powerONT);
         return this;
     }
 
-    public void setDateDiagnostic(LocalDate dateDiagnostic) {
-        this.dateDiagnostic = dateDiagnostic;
+    public void setPowerONT(String powerONT) {
+        this.powerONT = powerONT;
     }
 
-    public TypeDiagnostic getTypeDiagnostic() {
-        return this.typeDiagnostic;
+    public String getPowerOLT() {
+        return this.powerOLT;
     }
 
-    public Diagnostic typeDiagnostic(TypeDiagnostic typeDiagnostic) {
-        this.setTypeDiagnostic(typeDiagnostic);
+    public Diagnostic powerOLT(String powerOLT) {
+        this.setPowerOLT(powerOLT);
         return this;
     }
 
-    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
-        this.typeDiagnostic = typeDiagnostic;
+    public void setPowerOLT(String powerOLT) {
+        this.powerOLT = powerOLT;
     }
 
     public Signal getSignal() {
@@ -233,12 +247,13 @@ public class Diagnostic implements Serializable {
     public String toString() {
         return "Diagnostic{" +
             "id=" + getId() +
-            ", index='" + getIndex() + "'" +
             ", statutONT='" + getStatutONT() + "'" +
-            ", debitUp='" + getDebitUp() + "'" +
-            ", debitDown='" + getDebitDown() + "'" +
             ", dateDiagnostic='" + getDateDiagnostic() + "'" +
             ", typeDiagnostic='" + getTypeDiagnostic() + "'" +
+            ", debitUp='" + getDebitUp() + "'" +
+            ", debitDown='" + getDebitDown() + "'" +
+            ", powerONT='" + getPowerONT() + "'" +
+            ", powerOLT='" + getPowerOLT() + "'" +
             "}";
     }
 }

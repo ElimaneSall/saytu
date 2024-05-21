@@ -1,10 +1,11 @@
 package sn.sonatel.dsi.ins.ftsirc.service.impl;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -14,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
-import sn.sonatel.dsi.ins.ftsirc.domain.Signal;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
 import sn.sonatel.dsi.ins.ftsirc.repository.AnomalieRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.DiagnosticRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
@@ -121,11 +122,9 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ranging = scriptsDiagnostic.getRanging(ip, index, ontId, vendeur);
 
                 if (operStatus.equals("KO") && rowStatus.equals("OK") && ranging.equals("KO") && currentAlarmList.equals("KO")) {
-                    return anomalieRepository.findAllByEtatAndLibelle("Critique", "modem");
-
+                    return anomalieRepository.findByCode("500");
                 } else {
-                    System.out.println("{'status': 'ok', 'description': 'Pas de defaut alimentation electrique'}");
-                }
+                    return anomalieRepository.findByCode("205");                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,8 +135,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     public Anomalie diagnosticFiberCut(ONT ont) {
         try {
             if (ont != null) {
-                //Verifer que les elements ne sont pas null
-
                 String index = ont.getIndex();
                 String ip = ont.getOlt().getIp();
                 String ontId = ont.getOntID();
@@ -147,10 +144,9 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ontpower = scriptsDiagnostic.getRxOpticalPower(ip, index, ontId, vendeur);
 
                 if (ontpower.equals("KO") && currentAlarmList.equals("KO")) {
-                  return anomalieRepository.findAllByEtatAndLibelle("Critique", "coupure fibre");
-
+                    return anomalieRepository.findByCode("400");
                 } else {
-                    System.out.println("{'status': 'ok', 'description': 'coupure fibre Non'}");
+                    return anomalieRepository.findByCode("204");
                 }
             }
         } catch (IOException e) {
@@ -161,30 +157,47 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     @Override
     public Diagnostic diagnosticFiber(String serviceId) throws IOException {
-        ONT ont = ontRepository.findByServiceId(serviceId);
-        Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
-        Anomalie anomalieFiberCut = this.diagnosticFiberCut(ont);
-        Anomalie anomaliePowerOLT = this.diagnosticOLTPowerUnderLimit(ont);
-        Anomalie anomaliePowerONT =  this.diagnosticONTPowerUnderLimit(ont);
-        Diagnostic diagnostic = new Diagnostic();
-        diagnostic.setOnt(ont);
-        diagnostic.setStatutONT(scriptsDiagnostic.getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(),
-            ont.getOlt().getVendeur()).equalsIgnoreCase("OK")? StatutONT.ACTIF: StatutONT.INACTIF);
+        Diagnostic diagnosticResult = new Diagnostic();
 
-        diagnostic.setAnomalies(Set.of( anomaliePowerSupply, anomalieFiberCut,  anomaliePowerONT, anomaliePowerOLT));
-        return diagnostic;
+        ONT ont = ontRepository.findByServiceId(serviceId);
+        Anomalie anomalieFiberCut =  this.diagnosticFiberCut(ont);
+        Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
+        Map<String, Object> resultOLTPowerUnderLimit =  this.diagnosticOLTPowerUnderLimit(ont);
+        Map<String, Object> resultONTPowerUnderLimit =  this.diagnosticONTPowerUnderLimit(ont);
+
+        Set<Anomalie> anomalieSet = new HashSet<>();
+        anomalieSet.add(anomalieFiberCut);
+        anomalieSet.add((Anomalie) resultOLTPowerUnderLimit.get("anomalie"));
+        anomalieSet.add((Anomalie) resultONTPowerUnderLimit.get("anomalie"));
+        anomalieSet.add(anomaliePowerSupply);
+
+        diagnosticResult.setTypeDiagnostic(TypeDiagnostic.MANUEL);
+        diagnosticResult.setAnomalies(anomalieSet);
+        diagnosticResult.setOnt(ont);
+        diagnosticResult.setStatutONT(scriptsDiagnostic.getOperStatus(ont.getOlt().getIp(), ont.getIndex(),
+            ont.getOntID(), ont.getOlt().getVendeur()).equalsIgnoreCase("Ok")?StatutONT.ACTIF: StatutONT.INACTIF);
+
+        diagnosticResult.setPowerOLT((String) resultOLTPowerUnderLimit.get("signal"));
+        diagnosticResult.setPowerONT((String) resultONTPowerUnderLimit.get("signal"));
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
+//        diagnosticResult.setSignal();
+//        diagnosticResult.setDebitDown();
+//        diagnosticResult.setDebitUp();
+        return diagnosticResult;
     }
 
-    public Anomalie  diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
-        Diagnostic diagnostic = new Diagnostic();
+    public Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
+        Map<String, Object> result = new HashMap<>();
+
         if (ont != null) {
-            Double oltPower = scriptsDiagnostic.getOLTRxPower(
+            Long oltPower = scriptsDiagnostic.getOLTRxPower(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
                 ont.getOntID()
             );
-            Double sfpclass = scriptsDiagnostic.getPowerOLT(
+            Long sfpclass = scriptsDiagnostic.getPowerOLT(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
@@ -194,42 +207,52 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             );
 
             if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
-                if (oltPower == 32768) {
-                    diagnostic.setOnt(ont);
-                    return anomalieRepository.findAllByEtatAndLibelle("Critique", "OLT");
-                } else if (oltPower != 32768) {
-                    Double oltPower_dbm = oltPower / 10;
-                    if ((sfpclass == 7 || sfpclass == 8) && oltPower_dbm <= -30) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Majeur", "OLT");
+                result.put("signal", 0);
 
+                if (oltPower == 32768) {
+
+                    result.put("anomalie", anomalieRepository.findByCode("300"));
+                    result.put("signal", oltPower);
+
+                    return result;
+
+                } else if (oltPower != 32768) {
+                    Long oltPower_dbm = oltPower / 10;
+                    result.put("signal", oltPower_dbm);
+                    if ((sfpclass == 7 || sfpclass == 8) && oltPower_dbm <= -30) {
+
+                        result.put("anomalie", anomalieRepository.findByCode("301"));
+
+                        return result;
                     } else if (((sfpclass == 7 || sfpclass == 8) && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Moyen", "OLT");
+                        result.put("anomalie", anomalieRepository.findByCode("302"));
+                        return result;
                     } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT reçu par OLT OK',
-                        //                       'signal_optique': oltpower_dbm
+                        result.put("anomalie", anomalieRepository.findByCode("203"));
+                        return result;
                     }
                 }
             } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
                 if (oltPower == 2147483647) {
-         diagnostic.setOnt(ont);
-                    return anomalieRepository.findAllByEtatAndLibelle("Critique", "OLT");
+                    result.put("signal", 0);
+                    result.put("anomalie", anomalieRepository.findByCode("300"));
+                    return result;
 
                 } else if (oltPower != 2147483647) {
-                    Double oltPower_dbm = (oltPower - 10000) / 100;
+                    Long oltPower_dbm = (oltPower - 10000) / 100;
+                    result.put("signal", oltPower_dbm);
                     if (sfpclass != 102 && oltPower_dbm <= -30) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Majeur", "OLT");
-
+                        result.put("anomalie", anomalieRepository.findByCode("301"));
+                        return result;
                     } else if (
                         ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                            (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
                     ) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Moyen", "OLT");
-
+                        result.put("anomalie", anomalieRepository.findByCode("302"));
+                        return result;
                     } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT reçu par OLT OK',
-                        //                       'signal_optique': oltpower_dbm
+                        result.put("anomalie", anomalieRepository.findByCode("203"));
+                        return result;
                     }
                 }
             }
@@ -237,17 +260,17 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         return null;
     }
 
-    public Anomalie diagnosticONTPowerUnderLimit(ONT ont) throws IOException {
-        Diagnostic diagnostic = new Diagnostic();
+    public Map<String, Object> diagnosticONTPowerUnderLimit(ONT ont) throws IOException {
+        Map<String, Object> result = new HashMap<>();
 
         if (ont != null) {
-            Double oltPower = scriptsDiagnostic.getONTRxPower(
+            Long oltPower = scriptsDiagnostic.getONTRxPower(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
                 ont.getOntID()
             );
-            Double sfpclass = scriptsDiagnostic.getPowerOLT(
+            Long sfpclass = scriptsDiagnostic.getPowerOLT(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
@@ -258,36 +281,45 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
             if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
                 if (oltPower == 32768) {
-                    return anomalieRepository.findAllByEtatAndLibelle("Critique", "ONT");
+                    result.put("anomalie", anomalieRepository.findByCode("100"));
+                    result.put("signal", 0);
+                    return result;
+
                 } else if (oltPower != 32768) {
-                    Double oltPower_dbm = (oltPower * 2) / 10;
+                    Long oltPower_dbm = (oltPower * 2) / 10;
+                    result.put("signal", oltPower_dbm);
                     if (oltPower_dbm <= -30) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Majeur", "ONT");
+                        result.put("anomalie", anomalieRepository.findByCode("101"));
+                        return result;
                     } else if ((oltPower_dbm > -30 && oltPower_dbm <= -27) || oltPower_dbm > 10) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Moyen", "ONT");
+                        result.put("anomalie", anomalieRepository.findByCode("102"));
+                        return result;
+
                     } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT OK',
-                        //                       'signal_optique': oltpower_dbm
+                        result.put("anomalie", anomalieRepository.findByCode("201"));
+                        return result;
                     }
                 }
             } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
                 if (oltPower == 2147483647) {
-                    diagnostic.setOnt(ont);
-                    return anomalieRepository.findAllByEtatAndLibelle("Critique", "ONT");
+                    result.put("anomalie", anomalieRepository.findByCode("100"));
+                    result.put("signal", 0);
+                    return result;
+
                 } else if (oltPower != 2147483647) {
-                    Double oltPower_dbm = oltPower / 100;
+                    Long oltPower_dbm = oltPower / 100;
                     if (sfpclass != 102 && oltPower_dbm <= -30) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Majeur", "ONT");
+                        result.put("anomalie", anomalieRepository.findByCode("101"));
+                        return result;
                     } else if (
                         ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                            (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
                     ) {
-                        return anomalieRepository.findAllByEtatAndLibelle("Moyen", "ONT");
+                        result.put("anomalie", anomalieRepository.findByCode("102"));
+                        return result;
                     } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT reçu par OLT OK',
-                        //                       'signal_optique': oltpower_dbm
+                        result.put("anomalie", anomalieRepository.findByCode("201"));
+                        return result;
                     }
                 }
             }
@@ -296,7 +328,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     }
 
     @Override
-    public String diagnosticDebit(ONT ont) throws IOException {
+    public Anomalie diagnosticDebit(ONT ont) throws IOException {
         return null;
     }
 }

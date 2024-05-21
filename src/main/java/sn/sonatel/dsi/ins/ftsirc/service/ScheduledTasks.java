@@ -18,13 +18,13 @@ public class ScheduledTasks {
         this.ontService = ontService;
     }
 
-    @Scheduled(cron = " 0 25 16 * * *")
+    @Scheduled(cron = " 0 30 13 * * *")
     public void updateOLT() {
         log.debug("Started OLT UPDATE CRON");
         oltService.updateOLT("C:\\Users\\Surface\\Desktop\\Sonatel_2023\\saytou\\saytu-project\\saytu-backend\\OLT_OSN_22.04.24.xlsx");
     }
 
-    @Scheduled(cron = " 0 17 13 * * *")
+    @Scheduled(cron = " 0 20 13 * * *")
     public void updateAllONT() {
         log.debug("Started ONT UPDATE CRON");
         ontService.updateALLONTS();

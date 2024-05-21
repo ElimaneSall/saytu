@@ -68,8 +68,6 @@ public class ONTServiceImpl implements ONTService {
         oNT = oNTRepository.save(oNT);
         return oNTMapper.toDto(oNT);
     }
-
-    @Override
     public void updateALLONTS() {
         List<OLT> oltList = oltRepository.findAll();
 

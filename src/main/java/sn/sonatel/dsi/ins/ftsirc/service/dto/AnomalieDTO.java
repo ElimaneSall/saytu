@@ -24,6 +24,8 @@ public class AnomalieDTO implements Serializable {
     @Lob
     private String recommandation;
 
+    private Integer code;
+
     public Long getId() {
         return id;
     }
@@ -64,6 +66,14 @@ public class AnomalieDTO implements Serializable {
         this.recommandation = recommandation;
     }
 
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -94,6 +104,7 @@ public class AnomalieDTO implements Serializable {
             ", description='" + getDescription() + "'" +
             ", etat='" + getEtat() + "'" +
             ", recommandation='" + getRecommandation() + "'" +
+            ", code=" + getCode() +
             "}";
     }
 }

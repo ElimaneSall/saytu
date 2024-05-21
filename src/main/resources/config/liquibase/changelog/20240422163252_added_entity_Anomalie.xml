@@ -17,6 +17,18 @@
             <column name="libelle" type="varchar(255)">
                 <constraints nullable="false" unique="true" uniqueConstraintName="ux_anomalie__libelle" />
             </column>
+            <column name="description" type="${clobType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="etat" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="recommandation" type="${clobType}">
+                <constraints nullable="true" />
+            </column>
+            <column name="code" type="integer">
+                <constraints nullable="true" />
+            </column>
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here -->
         </createTable>
     </changeSet>
@@ -39,6 +51,10 @@
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
             <column name="libelle" type="string"/>
+            <column name="description" type="clob"/>
+            <column name="etat" type="string"/>
+            <column name="recommandation" type="clob"/>
+            <column name="code" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->
         </loadData>
     </changeSet>

@@ -17,6 +17,9 @@
             <column name="libelle" type="varchar(255)">
                 <constraints nullable="false" unique="true" uniqueConstraintName="ux_jhi_signal__libelle" />
             </column>
+            <column name="value_signal" type="double">
+                <constraints nullable="true" />
+            </column>
             <column name="seuil_min" type="double">
                 <constraints nullable="false" />
             </column>
@@ -45,6 +48,7 @@
                   usePreparedStatements="true">
             <column name="id" type="numeric"/>
             <column name="libelle" type="string"/>
+            <column name="value_signal" type="numeric"/>
             <column name="seuil_min" type="numeric"/>
             <column name="seuil_max" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here -->

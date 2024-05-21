@@ -27,6 +27,8 @@ public class AnomalieCriteria implements Serializable, Criteria {
 
     private StringFilter etat;
 
+    private IntegerFilter code;
+
     private LongFilter diagnosticId;
 
     private Boolean distinct;
@@ -37,6 +39,7 @@ public class AnomalieCriteria implements Serializable, Criteria {
         this.id = other.id == null ? null : other.id.copy();
         this.libelle = other.libelle == null ? null : other.libelle.copy();
         this.etat = other.etat == null ? null : other.etat.copy();
+        this.code = other.code == null ? null : other.code.copy();
         this.diagnosticId = other.diagnosticId == null ? null : other.diagnosticId.copy();
         this.distinct = other.distinct;
     }
@@ -91,6 +94,21 @@ public class AnomalieCriteria implements Serializable, Criteria {
         this.etat = etat;
     }
 
+    public IntegerFilter getCode() {
+        return code;
+    }
+
+    public IntegerFilter code() {
+        if (code == null) {
+            code = new IntegerFilter();
+        }
+        return code;
+    }
+
+    public void setCode(IntegerFilter code) {
+        this.code = code;
+    }
+
     public LongFilter getDiagnosticId() {
         return diagnosticId;
     }
@@ -127,6 +145,7 @@ public class AnomalieCriteria implements Serializable, Criteria {
             Objects.equals(id, that.id) &&
             Objects.equals(libelle, that.libelle) &&
             Objects.equals(etat, that.etat) &&
+            Objects.equals(code, that.code) &&
             Objects.equals(diagnosticId, that.diagnosticId) &&
             Objects.equals(distinct, that.distinct)
         );
@@ -134,7 +153,7 @@ public class AnomalieCriteria implements Serializable, Criteria {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, libelle, etat, diagnosticId, distinct);
+        return Objects.hash(id, libelle, etat, code, diagnosticId, distinct);
     }
 
     // prettier-ignore
@@ -144,6 +163,7 @@ public class AnomalieCriteria implements Serializable, Criteria {
             (id != null ? "id=" + id + ", " : "") +
             (libelle != null ? "libelle=" + libelle + ", " : "") +
             (etat != null ? "etat=" + etat + ", " : "") +
+            (code != null ? "code=" + code + ", " : "") +
             (diagnosticId != null ? "diagnosticId=" + diagnosticId + ", " : "") +
             (distinct != null ? "distinct=" + distinct + ", " : "") +
             "}";

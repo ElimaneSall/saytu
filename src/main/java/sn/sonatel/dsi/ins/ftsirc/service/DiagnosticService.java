@@ -69,10 +69,15 @@ public interface DiagnosticService {
      */
     void delete(Long id);
 
-    public Anomalie diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
-    public Anomalie diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
-    public String diagnosticDebit(ONT ont) throws IOException;
+    public  Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
+
+    public  Map<String, Object>  diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
+
+    public Anomalie diagnosticDebit(ONT ont) throws IOException;
+
     public Anomalie diagnosticPowerSupply(ONT ont) throws IOException;
+
     public Anomalie diagnosticFiberCut(ONT ont);
     public Diagnostic diagnosticFiber(String serviceId) throws IOException;
+
 }
