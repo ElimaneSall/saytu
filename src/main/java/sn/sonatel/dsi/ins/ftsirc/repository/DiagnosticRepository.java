@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
-import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 
 /**
  * Spring Data JPA repository for the Diagnostic entity.
@@ -21,6 +20,7 @@ public interface DiagnosticRepository
     default Optional<Diagnostic> findOneWithEagerRelationships(Long id) {
         return this.fetchBagRelationships(this.findById(id));
     }
+
     default List<Diagnostic> findAllWithEagerRelationships() {
         return this.fetchBagRelationships(this.findAll());
     }

@@ -1,11 +1,11 @@
-id;jhi_index;statut_ont;debit_up;debit_down;date_diagnostic;type_diagnostic
-1;serviable;INACTIF;collègue;observer smack;2024-04-22;MANUEL
-2;tantôt dring;ACTIF;lectorat;pschitt foule;2024-04-21;MANUEL
-3;atchoum magnifique aïe;ACTIF;en faveur de bzzz;davantage officier adepte;2024-04-22;AUTOMATIQUE
-4;avant que;INACTIF;peindre par rapport à en bas de;moins bientôt ha ha;2024-04-21;AUTOMATIQUE
-5;déshabiller sous couleur de regrouper;INACTIF;membre à vie à partir de;tic-tac de par commis de cuisine;2024-04-21;AUTOMATIQUE
-6;lever;INACTIF;clac mesurer mairie;brave de la part de ainsi;2024-04-22;AUTOMATIQUE
-7;derechef élaborer;ACTIF;en plus de conseil municipal derrière;prendre géométrique euh;2024-04-22;AUTOMATIQUE
-8;insuffisamment en plus de propre;ACTIF;sentir commenter pendant que;oui;2024-04-21;AUTOMATIQUE
-9;membre de l’équipe;INACTIF;afin que relier demain;conseil d’administration;2024-04-22;AUTOMATIQUE
-10;dans la mesure où pauvre;INACTIF;débile;encore dès;2024-04-22;AUTOMATIQUE
+id;statut_ont;date_diagnostic;type_diagnostic;debit_up;debit_down;power_ont;power_olt
+1;ACTIF;2024-04-22;AUTOMATIQUE;ci;soupçonner en dedans de;naguère;tantôt dring
+2;ACTIF;2024-04-22;MANUEL;abriter groin groin;déborder spécialiste;magnifique;à peu près lectorat
+3;INACTIF;2024-04-22;MANUEL;grrr;coin-coin coin-coin;si bien que;équipe peindre par rapport à
+4;ACTIF;2024-04-22;AUTOMATIQUE;vétuste sous couleur de;cocorico secouriste;réussir avare;pouvoir
+5;INACTIF;2024-04-22;AUTOMATIQUE;moins suffisamment;tsoin-tsoin;dynamique;dévorer
+6;INACTIF;2024-04-22;AUTOMATIQUE;de manière à ce que diplomate pff;moderne gens bzzz;oh;touriste présidence apte
+7;INACTIF;2024-04-22;MANUEL;derrière comme;géométrique;en brusque;adhérer zzzz
+8;INACTIF;2024-04-22;MANUEL;distinguer simple;clientèle sans que;ha;aboutir population du Québec
+9;ACTIF;2024-04-21;AUTOMATIQUE;même si horrible approximativement;minuscule hebdomadaire après;vis-à-vie de tant concernant;aider glouglou
+10;ACTIF;2024-04-21;MANUEL;aux alentours de vroum;assez à demi quoique;neutre écarter d’autant que;ouin cocorico

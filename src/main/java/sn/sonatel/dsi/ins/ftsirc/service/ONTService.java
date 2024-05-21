@@ -20,14 +20,6 @@ public interface ONTService {
     ONTDTO save(ONTDTO oNTDTO);
 
     /**
-     * Save a oNT list.
-     *
-     * @param listONTs the entities to save.
-     * @return the persisted entity.
-     */
-    public List<ONTDTO> saveListONT(List<ONT> listONTs);
-
-    /**
      * Updates a oNT.
      *
      * @param oNTDTO the entity to update.
@@ -73,6 +65,6 @@ public interface ONTService {
      * @param id the id of the entity.
      */
     void delete(Long id);
-
-    public void updateALLONTS();
+    List<ONTDTO> saveListONT(List<ONT> listONTDTOs);
+    void updateALLONTS();
 }

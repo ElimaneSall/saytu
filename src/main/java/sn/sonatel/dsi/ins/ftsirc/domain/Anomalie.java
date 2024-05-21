@@ -40,6 +40,9 @@ public class Anomalie implements Serializable {
     @Column(name = "recommandation")
     private String recommandation;
 
+    @Column(name = "code")
+    private Integer code;
+
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "anomalies")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "signal", "ont", "anomalies" }, allowSetters = true)
@@ -112,6 +115,19 @@ public class Anomalie implements Serializable {
         this.recommandation = recommandation;
     }
 
+    public Integer getCode() {
+        return this.code;
+    }
+
+    public Anomalie code(Integer code) {
+        this.setCode(code);
+        return this;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
     public Set<Diagnostic> getDiagnostics() {
         return this.diagnostics;
     }
@@ -171,6 +187,7 @@ public class Anomalie implements Serializable {
             ", description='" + getDescription() + "'" +
             ", etat='" + getEtat() + "'" +
             ", recommandation='" + getRecommandation() + "'" +
+            ", code=" + getCode() +
             "}";
     }
 }

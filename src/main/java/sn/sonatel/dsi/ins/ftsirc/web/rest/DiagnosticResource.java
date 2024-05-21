@@ -1,7 +1,5 @@
 package sn.sonatel.dsi.ins.ftsirc.web.rest;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.DiagnosticRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
@@ -48,14 +47,14 @@ public class DiagnosticResource {
     private final DiagnosticRepository diagnosticRepository;
 
     private final DiagnosticQueryService diagnosticQueryService;
+
     private final ONTRepository ontRepository;
 
     public DiagnosticResource(
         DiagnosticService diagnosticService,
         DiagnosticRepository diagnosticRepository,
         DiagnosticQueryService diagnosticQueryService,
-        ONTRepository ontRepository
-    ) {
+        ONTRepository ontRepository) {
         this.diagnosticService = diagnosticService;
         this.diagnosticRepository = diagnosticRepository;
         this.diagnosticQueryService = diagnosticQueryService;
@@ -70,13 +69,14 @@ public class DiagnosticResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
-    public ResponseEntity<DiagnosticDTO> createDiagnostic(@Valid @RequestBody DiagnosticDTO diagnosticDTO) throws URISyntaxException {
+    public ResponseEntity<DiagnosticDTO> createDiagnostic(@RequestBody DiagnosticDTO diagnosticDTO) throws URISyntaxException {
         log.debug("REST request to save Diagnostic : {}", diagnosticDTO);
         if (diagnosticDTO.getId() != null) {
             throw new BadRequestAlertException("A new diagnostic cannot already have an ID", ENTITY_NAME, "idexists");
         }
         DiagnosticDTO result = diagnosticService.save(diagnosticDTO);
-        return ResponseEntity.created(new URI("/api/diagnostics/" + result.getId()))
+        return ResponseEntity
+            .created(new URI("/api/diagnostics/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
@@ -84,7 +84,7 @@ public class DiagnosticResource {
     /**
      * {@code PUT  /diagnostics/:id} : Updates an existing diagnostic.
      *
-     * @param id the id of the diagnosticDTO to save.
+     * @param id            the id of the diagnosticDTO to save.
      * @param diagnosticDTO the diagnosticDTO to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated diagnosticDTO,
      * or with status {@code 400 (Bad Request)} if the diagnosticDTO is not valid,
@@ -94,7 +94,7 @@ public class DiagnosticResource {
     @PutMapping("/{id}")
     public ResponseEntity<DiagnosticDTO> updateDiagnostic(
         @PathVariable(value = "id", required = false) final Long id,
-        @Valid @RequestBody DiagnosticDTO diagnosticDTO
+        @RequestBody DiagnosticDTO diagnosticDTO
     ) throws URISyntaxException {
         log.debug("REST request to update Diagnostic : {}, {}", id, diagnosticDTO);
         if (diagnosticDTO.getId() == null) {
@@ -109,7 +109,8 @@ public class DiagnosticResource {
         }
 
         DiagnosticDTO result = diagnosticService.update(diagnosticDTO);
-        return ResponseEntity.ok()
+        return ResponseEntity
+            .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, diagnosticDTO.getId().toString()))
             .body(result);
     }
@@ -117,7 +118,7 @@ public class DiagnosticResource {
     /**
      * {@code PATCH  /diagnostics/:id} : Partial updates given fields of an existing diagnostic, field will ignore if it is null
      *
-     * @param id the id of the diagnosticDTO to save.
+     * @param id            the id of the diagnosticDTO to save.
      * @param diagnosticDTO the diagnosticDTO to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated diagnosticDTO,
      * or with status {@code 400 (Bad Request)} if the diagnosticDTO is not valid,
@@ -125,10 +126,10 @@ public class DiagnosticResource {
      * or with status {@code 500 (Internal Server Error)} if the diagnosticDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
+    @PatchMapping(value = "/{id}", consumes = {"application/json", "application/merge-patch+json"})
     public ResponseEntity<DiagnosticDTO> partialUpdateDiagnostic(
         @PathVariable(value = "id", required = false) final Long id,
-        @NotNull @RequestBody DiagnosticDTO diagnosticDTO
+        @RequestBody DiagnosticDTO diagnosticDTO
     ) throws URISyntaxException {
         log.debug("REST request to partial update Diagnostic partially : {}, {}", id, diagnosticDTO);
         if (diagnosticDTO.getId() == null) {
@@ -204,7 +205,8 @@ public class DiagnosticResource {
     public ResponseEntity<Void> deleteDiagnostic(@PathVariable("id") Long id) {
         log.debug("REST request to delete Diagnostic : {}", id);
         diagnosticService.delete(id);
-        return ResponseEntity.noContent()
+        return ResponseEntity
+            .noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
@@ -216,13 +218,8 @@ public class DiagnosticResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
      */
     @GetMapping("/diagnostic-fibre/{serviceId}")
-    public ResponseEntity<String> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
+    public ResponseEntity<Diagnostic> DiagnosticFibre(@RequestParam("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
-        ONT ont = ontRepository.findByServiceId(serviceId);
-        diagnosticService.diagnosticFiberCut(ont);
-        diagnosticService.diagnosticOLTPowerUnderLimit(ont);
-        diagnosticService.diagnosticOLTPowerUnderLimit(ont);
-
-        return ResponseEntity.ok().body("Ok");
+        return ResponseEntity.ok().body(diagnosticService.diagnosticFiber(serviceId));
     }
 }

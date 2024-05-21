@@ -90,11 +90,14 @@ public class DiagnosticQueryService extends QueryService<Diagnostic> {
             if (criteria.getId() != null) {
                 specification = specification.and(buildRangeSpecification(criteria.getId(), Diagnostic_.id));
             }
-            if (criteria.getIndex() != null) {
-                specification = specification.and(buildStringSpecification(criteria.getIndex(), Diagnostic_.index));
-            }
             if (criteria.getStatutONT() != null) {
                 specification = specification.and(buildSpecification(criteria.getStatutONT(), Diagnostic_.statutONT));
+            }
+            if (criteria.getDateDiagnostic() != null) {
+                specification = specification.and(buildRangeSpecification(criteria.getDateDiagnostic(), Diagnostic_.dateDiagnostic));
+            }
+            if (criteria.getTypeDiagnostic() != null) {
+                specification = specification.and(buildSpecification(criteria.getTypeDiagnostic(), Diagnostic_.typeDiagnostic));
             }
             if (criteria.getDebitUp() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getDebitUp(), Diagnostic_.debitUp));
@@ -102,11 +105,11 @@ public class DiagnosticQueryService extends QueryService<Diagnostic> {
             if (criteria.getDebitDown() != null) {
                 specification = specification.and(buildStringSpecification(criteria.getDebitDown(), Diagnostic_.debitDown));
             }
-            if (criteria.getDateDiagnostic() != null) {
-                specification = specification.and(buildRangeSpecification(criteria.getDateDiagnostic(), Diagnostic_.dateDiagnostic));
+            if (criteria.getPowerONT() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getPowerONT(), Diagnostic_.powerONT));
             }
-            if (criteria.getTypeDiagnostic() != null) {
-                specification = specification.and(buildSpecification(criteria.getTypeDiagnostic(), Diagnostic_.typeDiagnostic));
+            if (criteria.getPowerOLT() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getPowerOLT(), Diagnostic_.powerOLT));
             }
             if (criteria.getSignalId() != null) {
                 specification =

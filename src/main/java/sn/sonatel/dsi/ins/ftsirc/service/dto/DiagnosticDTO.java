@@ -1,6 +1,5 @@
 package sn.sonatel.dsi.ins.ftsirc.service.dto;
 
-import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -17,18 +16,19 @@ public class DiagnosticDTO implements Serializable {
 
     private Long id;
 
-    @NotNull
-    private String index;
-
     private StatutONT statutONT;
+
+    private LocalDate dateDiagnostic;
+
+    private TypeDiagnostic typeDiagnostic;
 
     private String debitUp;
 
     private String debitDown;
 
-    private LocalDate dateDiagnostic;
+    private String powerONT;
 
-    private TypeDiagnostic typeDiagnostic;
+    private String powerOLT;
 
     private SignalDTO signal;
 
@@ -44,20 +44,28 @@ public class DiagnosticDTO implements Serializable {
         this.id = id;
     }
 
-    public String getIndex() {
-        return index;
-    }
-
-    public void setIndex(String index) {
-        this.index = index;
-    }
-
     public StatutONT getStatutONT() {
         return statutONT;
     }
 
     public void setStatutONT(StatutONT statutONT) {
         this.statutONT = statutONT;
+    }
+
+    public LocalDate getDateDiagnostic() {
+        return dateDiagnostic;
+    }
+
+    public void setDateDiagnostic(LocalDate dateDiagnostic) {
+        this.dateDiagnostic = dateDiagnostic;
+    }
+
+    public TypeDiagnostic getTypeDiagnostic() {
+        return typeDiagnostic;
+    }
+
+    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
+        this.typeDiagnostic = typeDiagnostic;
     }
 
     public String getDebitUp() {
@@ -76,20 +84,20 @@ public class DiagnosticDTO implements Serializable {
         this.debitDown = debitDown;
     }
 
-    public LocalDate getDateDiagnostic() {
-        return dateDiagnostic;
+    public String getPowerONT() {
+        return powerONT;
     }
 
-    public void setDateDiagnostic(LocalDate dateDiagnostic) {
-        this.dateDiagnostic = dateDiagnostic;
+    public void setPowerONT(String powerONT) {
+        this.powerONT = powerONT;
     }
 
-    public TypeDiagnostic getTypeDiagnostic() {
-        return typeDiagnostic;
+    public String getPowerOLT() {
+        return powerOLT;
     }
 
-    public void setTypeDiagnostic(TypeDiagnostic typeDiagnostic) {
-        this.typeDiagnostic = typeDiagnostic;
+    public void setPowerOLT(String powerOLT) {
+        this.powerOLT = powerOLT;
     }
 
     public SignalDTO getSignal() {
@@ -142,12 +150,13 @@ public class DiagnosticDTO implements Serializable {
     public String toString() {
         return "DiagnosticDTO{" +
             "id=" + getId() +
-            ", index='" + getIndex() + "'" +
             ", statutONT='" + getStatutONT() + "'" +
-            ", debitUp='" + getDebitUp() + "'" +
-            ", debitDown='" + getDebitDown() + "'" +
             ", dateDiagnostic='" + getDateDiagnostic() + "'" +
             ", typeDiagnostic='" + getTypeDiagnostic() + "'" +
+            ", debitUp='" + getDebitUp() + "'" +
+            ", debitDown='" + getDebitDown() + "'" +
+            ", powerONT='" + getPowerONT() + "'" +
+            ", powerOLT='" + getPowerOLT() + "'" +
             ", signal=" + getSignal() +
             ", ont=" + getOnt() +
             ", anomalies=" + getAnomalies() +

@@ -45,6 +45,10 @@ class AnomalieResourceIT {
     private static final String DEFAULT_RECOMMANDATION = "AAAAAAAAAA";
     private static final String UPDATED_RECOMMANDATION = "BBBBBBBBBB";
 
+    private static final Integer DEFAULT_CODE = 1;
+    private static final Integer UPDATED_CODE = 2;
+    private static final Integer SMALLER_CODE = 1 - 1;
+
     private static final String ENTITY_API_URL = "/api/anomalies";
     private static final String ENTITY_API_URL_ID = ENTITY_API_URL + "/{id}";
 
@@ -76,7 +80,8 @@ class AnomalieResourceIT {
             .libelle(DEFAULT_LIBELLE)
             .description(DEFAULT_DESCRIPTION)
             .etat(DEFAULT_ETAT)
-            .recommandation(DEFAULT_RECOMMANDATION);
+            .recommandation(DEFAULT_RECOMMANDATION)
+            .code(DEFAULT_CODE);
         return anomalie;
     }
 
@@ -91,7 +96,8 @@ class AnomalieResourceIT {
             .libelle(UPDATED_LIBELLE)
             .description(UPDATED_DESCRIPTION)
             .etat(UPDATED_ETAT)
-            .recommandation(UPDATED_RECOMMANDATION);
+            .recommandation(UPDATED_RECOMMANDATION)
+            .code(UPDATED_CODE);
         return anomalie;
     }
 
@@ -123,6 +129,7 @@ class AnomalieResourceIT {
         assertThat(testAnomalie.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testAnomalie.getEtat()).isEqualTo(DEFAULT_ETAT);
         assertThat(testAnomalie.getRecommandation()).isEqualTo(DEFAULT_RECOMMANDATION);
+        assertThat(testAnomalie.getCode()).isEqualTo(DEFAULT_CODE);
     }
 
     @Test
@@ -187,7 +194,8 @@ class AnomalieResourceIT {
             .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
             .andExpect(jsonPath("$.[*].etat").value(hasItem(DEFAULT_ETAT)))
-            .andExpect(jsonPath("$.[*].recommandation").value(hasItem(DEFAULT_RECOMMANDATION.toString())));
+            .andExpect(jsonPath("$.[*].recommandation").value(hasItem(DEFAULT_RECOMMANDATION.toString())))
+            .andExpect(jsonPath("$.[*].code").value(hasItem(DEFAULT_CODE)));
     }
 
     @Test
@@ -205,7 +213,8 @@ class AnomalieResourceIT {
             .andExpect(jsonPath("$.libelle").value(DEFAULT_LIBELLE))
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()))
             .andExpect(jsonPath("$.etat").value(DEFAULT_ETAT))
-            .andExpect(jsonPath("$.recommandation").value(DEFAULT_RECOMMANDATION.toString()));
+            .andExpect(jsonPath("$.recommandation").value(DEFAULT_RECOMMANDATION.toString()))
+            .andExpect(jsonPath("$.code").value(DEFAULT_CODE));
     }
 
     @Test
@@ -358,6 +367,97 @@ class AnomalieResourceIT {
 
     @Test
     @Transactional
+    void getAllAnomaliesByCodeIsEqualToSomething() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code equals to DEFAULT_CODE
+        defaultAnomalieShouldBeFound("code.equals=" + DEFAULT_CODE);
+
+        // Get all the anomalieList where code equals to UPDATED_CODE
+        defaultAnomalieShouldNotBeFound("code.equals=" + UPDATED_CODE);
+    }
+
+    @Test
+    @Transactional
+    void getAllAnomaliesByCodeIsInShouldWork() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code in DEFAULT_CODE or UPDATED_CODE
+        defaultAnomalieShouldBeFound("code.in=" + DEFAULT_CODE + "," + UPDATED_CODE);
+
+        // Get all the anomalieList where code equals to UPDATED_CODE
+        defaultAnomalieShouldNotBeFound("code.in=" + UPDATED_CODE);
+    }
+
+    @Test
+    @Transactional
+    void getAllAnomaliesByCodeIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code is not null
+        defaultAnomalieShouldBeFound("code.specified=true");
+
+        // Get all the anomalieList where code is null
+        defaultAnomalieShouldNotBeFound("code.specified=false");
+    }
+
+    @Test
+    @Transactional
+    void getAllAnomaliesByCodeIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code is greater than or equal to DEFAULT_CODE
+        defaultAnomalieShouldBeFound("code.greaterThanOrEqual=" + DEFAULT_CODE);
+
+        // Get all the anomalieList where code is greater than or equal to UPDATED_CODE
+        defaultAnomalieShouldNotBeFound("code.greaterThanOrEqual=" + UPDATED_CODE);
+    }
+
+    @Test
+    @Transactional
+    void getAllAnomaliesByCodeIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code is less than or equal to DEFAULT_CODE
+        defaultAnomalieShouldBeFound("code.lessThanOrEqual=" + DEFAULT_CODE);
+
+        // Get all the anomalieList where code is less than or equal to SMALLER_CODE
+        defaultAnomalieShouldNotBeFound("code.lessThanOrEqual=" + SMALLER_CODE);
+    }
+
+    @Test
+    @Transactional
+    void getAllAnomaliesByCodeIsLessThanSomething() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code is less than DEFAULT_CODE
+        defaultAnomalieShouldNotBeFound("code.lessThan=" + DEFAULT_CODE);
+
+        // Get all the anomalieList where code is less than UPDATED_CODE
+        defaultAnomalieShouldBeFound("code.lessThan=" + UPDATED_CODE);
+    }
+
+    @Test
+    @Transactional
+    void getAllAnomaliesByCodeIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        anomalieRepository.saveAndFlush(anomalie);
+
+        // Get all the anomalieList where code is greater than DEFAULT_CODE
+        defaultAnomalieShouldNotBeFound("code.greaterThan=" + DEFAULT_CODE);
+
+        // Get all the anomalieList where code is greater than SMALLER_CODE
+        defaultAnomalieShouldBeFound("code.greaterThan=" + SMALLER_CODE);
+    }
+
+    @Test
+    @Transactional
     void getAllAnomaliesByDiagnosticIsEqualToSomething() throws Exception {
         Diagnostic diagnostic;
         if (TestUtil.findAll(em, Diagnostic.class).isEmpty()) {
@@ -390,7 +490,8 @@ class AnomalieResourceIT {
             .andExpect(jsonPath("$.[*].libelle").value(hasItem(DEFAULT_LIBELLE)))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
             .andExpect(jsonPath("$.[*].etat").value(hasItem(DEFAULT_ETAT)))
-            .andExpect(jsonPath("$.[*].recommandation").value(hasItem(DEFAULT_RECOMMANDATION.toString())));
+            .andExpect(jsonPath("$.[*].recommandation").value(hasItem(DEFAULT_RECOMMANDATION.toString())))
+            .andExpect(jsonPath("$.[*].code").value(hasItem(DEFAULT_CODE)));
 
         // Check, that the count call also returns 1
         restAnomalieMockMvc
@@ -438,7 +539,12 @@ class AnomalieResourceIT {
         Anomalie updatedAnomalie = anomalieRepository.findById(anomalie.getId()).orElseThrow();
         // Disconnect from session so that the updates on updatedAnomalie are not directly saved in db
         em.detach(updatedAnomalie);
-        updatedAnomalie.libelle(UPDATED_LIBELLE).description(UPDATED_DESCRIPTION).etat(UPDATED_ETAT).recommandation(UPDATED_RECOMMANDATION);
+        updatedAnomalie
+            .libelle(UPDATED_LIBELLE)
+            .description(UPDATED_DESCRIPTION)
+            .etat(UPDATED_ETAT)
+            .recommandation(UPDATED_RECOMMANDATION)
+            .code(UPDATED_CODE);
         AnomalieDTO anomalieDTO = anomalieMapper.toDto(updatedAnomalie);
 
         restAnomalieMockMvc
@@ -458,6 +564,7 @@ class AnomalieResourceIT {
         assertThat(testAnomalie.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testAnomalie.getEtat()).isEqualTo(UPDATED_ETAT);
         assertThat(testAnomalie.getRecommandation()).isEqualTo(UPDATED_RECOMMANDATION);
+        assertThat(testAnomalie.getCode()).isEqualTo(UPDATED_CODE);
     }
 
     @Test
@@ -544,7 +651,7 @@ class AnomalieResourceIT {
         Anomalie partialUpdatedAnomalie = new Anomalie();
         partialUpdatedAnomalie.setId(anomalie.getId());
 
-        partialUpdatedAnomalie.etat(UPDATED_ETAT).recommandation(UPDATED_RECOMMANDATION);
+        partialUpdatedAnomalie.etat(UPDATED_ETAT).recommandation(UPDATED_RECOMMANDATION).code(UPDATED_CODE);
 
         restAnomalieMockMvc
             .perform(
@@ -563,6 +670,7 @@ class AnomalieResourceIT {
         assertThat(testAnomalie.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testAnomalie.getEtat()).isEqualTo(UPDATED_ETAT);
         assertThat(testAnomalie.getRecommandation()).isEqualTo(UPDATED_RECOMMANDATION);
+        assertThat(testAnomalie.getCode()).isEqualTo(UPDATED_CODE);
     }
 
     @Test
@@ -581,7 +689,8 @@ class AnomalieResourceIT {
             .libelle(UPDATED_LIBELLE)
             .description(UPDATED_DESCRIPTION)
             .etat(UPDATED_ETAT)
-            .recommandation(UPDATED_RECOMMANDATION);
+            .recommandation(UPDATED_RECOMMANDATION)
+            .code(UPDATED_CODE);
 
         restAnomalieMockMvc
             .perform(
@@ -600,6 +709,7 @@ class AnomalieResourceIT {
         assertThat(testAnomalie.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testAnomalie.getEtat()).isEqualTo(UPDATED_ETAT);
         assertThat(testAnomalie.getRecommandation()).isEqualTo(UPDATED_RECOMMANDATION);
+        assertThat(testAnomalie.getCode()).isEqualTo(UPDATED_CODE);
     }
 
     @Test

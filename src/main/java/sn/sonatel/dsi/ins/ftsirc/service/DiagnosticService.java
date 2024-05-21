@@ -1,9 +1,12 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
+import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.DiagnosticDTO;
 
@@ -66,13 +69,15 @@ public interface DiagnosticService {
      */
     void delete(Long id);
 
-    public String diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
+    public  Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
 
-    public String diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
+    public  Map<String, Object>  diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
 
-    public String diagnosticDebit(ONT ont) throws IOException;
+    public Anomalie diagnosticDebit(ONT ont) throws IOException;
 
-    public String diagnosticPowerSupply(ONT ont) throws IOException;
+    public Anomalie diagnosticPowerSupply(ONT ont) throws IOException;
 
-    public String diagnosticFiberCut(ONT ont);
+    public Anomalie diagnosticFiberCut(ONT ont);
+    public Diagnostic diagnosticFiber(String serviceId) throws IOException;
+
 }

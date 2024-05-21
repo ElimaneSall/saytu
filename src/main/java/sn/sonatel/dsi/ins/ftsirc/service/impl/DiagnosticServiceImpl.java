@@ -1,16 +1,13 @@
 package sn.sonatel.dsi.ins.ftsirc.service.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snmp4j.*;
-import org.snmp4j.event.*;
-import org.snmp4j.mp.SnmpConstants;
-import org.snmp4j.smi.*;
-import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
-import sn.sonatel.dsi.ins.ftsirc.domain.Signal;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
+import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
+import sn.sonatel.dsi.ins.ftsirc.repository.AnomalieRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.DiagnosticRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
 import sn.sonatel.dsi.ins.ftsirc.scripts.ScriptsDiagnostic;
@@ -39,17 +38,19 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     private final DiagnosticMapper diagnosticMapper;
     private final ONTRepository ontRepository;
+    private final AnomalieRepository anomalieRepository;
 
     ScriptsDiagnostic scriptsDiagnostic = new ScriptsDiagnostic();
 
     public DiagnosticServiceImpl(
         DiagnosticRepository diagnosticRepository,
         DiagnosticMapper diagnosticMapper,
-        ONTRepository ontRepository
-    ) {
+        ONTRepository ontRepository,
+        AnomalieRepository anomalieRepository) {
         this.diagnosticRepository = diagnosticRepository;
         this.diagnosticMapper = diagnosticMapper;
         this.ontRepository = ontRepository;
+        this.anomalieRepository = anomalieRepository;
     }
 
     @Override
@@ -105,7 +106,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         diagnosticRepository.deleteById(id);
     }
 
-    public String diagnosticPowerSupply(ONT ont) {
+    public Anomalie diagnosticPowerSupply(ONT ont) {
         try {
             if (ont != null) {
                 //Verifer que les elements ne sont pas null
@@ -121,24 +122,19 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ranging = scriptsDiagnostic.getRanging(ip, index, ontId, vendeur);
 
                 if (operStatus.equals("KO") && rowStatus.equals("OK") && ranging.equals("KO") && currentAlarmList.equals("KO")) {
-                    System.out.println(
-                        "{'status': 'ko', 'anomalie': 'Modem éteint', 'etat': 'Critique', 'description': 'Défaut d'alimentation électrique', 'Recommandation': ['Demander au client de vérifier si le modem est bien alimenté électriquement.']}"
-                    );
+                    return anomalieRepository.findByCode("500");
                 } else {
-                    System.out.println("{'status': 'ok', 'description': 'Pas de defaut alimentation electrique'}");
-                }
+                    return anomalieRepository.findByCode("205");                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return null;
     }
 
-    public String diagnosticFiberCut(ONT ont) {
+    public Anomalie diagnosticFiberCut(ONT ont) {
         try {
             if (ont != null) {
-                //Verifer que les elements ne sont pas null
-
                 String index = ont.getIndex();
                 String ip = ont.getOlt().getIp();
                 String ontId = ont.getOntID();
@@ -148,238 +144,191 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ontpower = scriptsDiagnostic.getRxOpticalPower(ip, index, ontId, vendeur);
 
                 if (ontpower.equals("KO") && currentAlarmList.equals("KO")) {
-                    System.out.println(
-                        "{'status': 'ko', 'anomalie': 'Coupure fibre', 'etat': 'Critique', 'description': 'Coupure de fibre optique', 'Recommandation': ['Remonter l'anomalie à l'équipe intervention terrain', 'Faire une mesure de réflectometrie pour localisation du point de coupure.']}"
-                    );
+                    return anomalieRepository.findByCode("400");
                 } else {
-                    System.out.println("{'status': 'ok', 'description': 'coupure fibre Non'}");
+                    return anomalieRepository.findByCode("204");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
-    }
-
-    public String diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
-        Diagnostic diagnostic = new Diagnostic();
-
-        if (ont != null) {
-            Double oltPower = scriptsDiagnostic.getOLTRxPower(
-                ont.getOlt().getVendeur(),
-                ont.getIndex(),
-                ont.getOlt().getIp(),
-                ont.getOntID()
-            );
-            Double sfpclass = scriptsDiagnostic.getPowerOLT(
-                ont.getOlt().getVendeur(),
-                ont.getIndex(),
-                ont.getOlt().getIp(),
-                ont.getOntID(),
-                Integer.parseInt(ont.getSlot()),
-                ont.getPon()
-            );
-
-            if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
-                if (oltPower == 32768) {
-                    //                    'status': 'ko',
-                    //                        "anomalie": "Puissance optique OLT indisponible",
-                    //                        "etat": "Critique",
-                    //                        "description": "Interruption du service",
-                    //                        "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                    //                        "Demander au technicien de faire une mesure de réflectometrie pour localisation du point de coupure."]
-
-                    diagnostic.setOnt(ont);
-                    //                    diagnostic.addAnomalie();
-
-                } else if (oltPower != 32768) {
-                    Double oltPower_dbm = oltPower / 10;
-                    if ((sfpclass == 7 || sfpclass == 8) && oltPower_dbm <= -30) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique OLT très faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Majeur",
-                        //                           "description": "Dégradation du signal optique",
-                        //                           "Description": "Dégradation du signal optique",
-                        //                           "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                        //                           "Demander au technicien de qualifier les differentes sections de la liaison pour identifier la cause de(s) la forte(s) attenuation(s) par mesures de puissance et de réflectomètrie"]
-
-                        //                   diagnostic.setStatutONT();
-                        //                       diagnostic.setSignal();
-                    } else if (((sfpclass == 7 || sfpclass == 8) && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique OLT faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Moyen",
-                        //                           "description": "Puissance optique admissible, pas forcément de dégradation de service",
-                        //                           "Recommandation": ["Voir dans l'historique si existant que l'anomalie était déjà présente",
-                        //                           "Remonter à l'équipe intervention terrain si l'anomalie est persistante"]
-
-                    } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT reçu par OLT OK',
-                        //                       'signal_optique': oltpower_dbm
-                    }
-                }
-            } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
-                if (oltPower == 2147483647) {
-                    //                    'status': 'ko',
-                    //                        "anomalie": "Puissance optique OLT indisponible",
-                    //                        "etat": "Critique",
-                    //                        "description": "Interruption du service",
-                    //                        "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                    //                        "Demander au technicien de faire une mesure de réflectometrie pour localisation du point de coupure."]
-
-                    diagnostic.setOnt(ont);
-                    //                    diagnostic.addAnomalie();
-
-                } else if (oltPower != 2147483647) {
-                    Double oltPower_dbm = (oltPower - 10000) / 100;
-                    if (sfpclass != 102 && oltPower_dbm <= -30) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique OLT très faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Majeur",
-                        //                           "description": "Dégradation du signal optique",
-                        //                           "Description": "Dégradation du signal optique",
-                        //                           "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                        //                           "Demander au technicien de qualifier les differentes sections de la liaison pour identifier la cause de(s) la forte(s) attenuation(s) par mesures de puissance et de réflectomètrie"]
-
-                        //                   diagnostic.setStatutONT();
-                        //                       diagnostic.setSignal();
-                    } else if (
-                        ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
-                    ) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique OLT faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Moyen",
-                        //                           "description": "Puissance optique admissible, pas forcément de dégradation de service",
-                        //                           "Recommandation": ["Voir dans l'historique si existant que l'anomalie était déjà présente",
-                        //                           "Remonter à l'équipe intervention terrain si l'anomalie est persistante"]
-
-                    } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT reçu par OLT OK',
-                        //                       'signal_optique': oltpower_dbm
-                    }
-                }
-            }
-        }
-        return "";
-    }
-
-    public String diagnosticONTPowerUnderLimit(ONT ont) throws IOException {
-        Diagnostic diagnostic = new Diagnostic();
-
-        if (ont != null) {
-            Double oltPower = scriptsDiagnostic.getONTRxPower(
-                ont.getOlt().getVendeur(),
-                ont.getIndex(),
-                ont.getOlt().getIp(),
-                ont.getOntID()
-            );
-            Double sfpclass = scriptsDiagnostic.getPowerOLT(
-                ont.getOlt().getVendeur(),
-                ont.getIndex(),
-                ont.getOlt().getIp(),
-                ont.getOntID(),
-                Integer.parseInt(ont.getSlot()),
-                ont.getPon()
-            );
-
-            if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
-                if (oltPower == 32768) {
-                    //                    'status': 'ko',
-                    //                        "anomalie": "Puissance optique OLT indisponible",
-                    //                        "etat": "Critique",
-                    //                        "description": "Interruption du service",
-                    //                        "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                    //                        "Demander au technicien de faire une mesure de réflectometrie pour localisation du point de coupure."]
-
-                    diagnostic.setOnt(ont);
-                    //                    diagnostic.addAnomalie();
-
-                } else if (oltPower != 32768) {
-                    Double oltPower_dbm = (oltPower * 2) / 10;
-                    if (oltPower_dbm <= -30) {
-                        //                       'status': 'ko',
-                        //                    "anomalie": "Puissance optique ONT très faible",
-                        //                    "signal_optique": ontpower_dbm,
-                        //                    "etat": "Majeur",
-                        //                    "description": "Dégradation du signal optique",
-                        //                    "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                        //                                       "Demander au technicien de qualifier les differentes sections de la liaison pour identifier la cause de(s) la forte(s) attenuation(s) par mesures de puissance et de réflectomètrie"]
-                        //
-                        //                   diagnostic.setStatutONT();
-                        //                       diagnostic.setSignal();
-                    } else if ((oltPower_dbm > -30 && oltPower_dbm <= -27) || oltPower_dbm > 10) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique ONT faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Moyen",
-                        //                           "description": "Puissance optique admissible, pas forcément de dégradation de service",
-                        //                           "Recommandation": ["Voir dans l'historique si existant que l'anomalie était déjà présente",
-                        //                           "Remonter à l'équipe intervention terrain si l'anomalie est persistante"]
-
-                    } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT OK',
-                        //                       'signal_optique': oltpower_dbm
-                    }
-                }
-            } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
-                if (oltPower == 2147483647) {
-                    //                    'status': 'ko',
-                    //                        "anomalie": "Puissance optique OLT indisponible",
-                    //                        "etat": "Critique",
-                    //                        "description": "Interruption du service",
-                    //                        "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                    //                        "Demander au technicien de faire une mesure de réflectometrie pour localisation du point de coupure."]
-
-                    diagnostic.setOnt(ont);
-                    //                    diagnostic.addAnomalie();
-
-                } else if (oltPower != 2147483647) {
-                    Double oltPower_dbm = oltPower / 100;
-                    if (sfpclass != 102 && oltPower_dbm <= -30) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique OLT très faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Majeur",
-                        //                           "description": "Dégradation du signal optique",
-                        //                           "Description": "Dégradation du signal optique",
-                        //                           "Recommandation": ["Remonter l'anomalie à l'équipe intervention terrain",
-                        //                           "Demander au technicien de qualifier les differentes sections de la liaison pour identifier la cause de(s) la forte(s) attenuation(s) par mesures de puissance et de réflectomètrie"]
-
-                        //                   diagnostic.setStatutONT();
-                        //                       diagnostic.setSignal();
-                    } else if (
-                        ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
-                    ) {
-                        //                       'status': 'ko',
-                        //                           "anomalie": "Puissance optique ONT faible",
-                        //                           "signal_optique": oltpower_dbm,
-                        //                           "etat": "Moyen",
-                        //                           "description": "Puissance optique admissible, pas forcément de dégradation de service",
-                        //                           "Recommandation": ["Voir dans l'historique si existant que l'anomalie était déjà présente",
-                        //                           "Remonter à l'équipe intervention terrain si l'anomalie est persistante"]
-
-                    } else {
-                        //                       'status': 'ok',
-                        //                       'description': 'Puissance signal ONT reçu par OLT OK',
-                        //                       'signal_optique': oltpower_dbm
-                    }
-                }
-            }
-        }
-        return "";
+        return null;
     }
 
     @Override
-    public String diagnosticDebit(ONT ont) throws IOException {
+    public Diagnostic diagnosticFiber(String serviceId) throws IOException {
+        Diagnostic diagnosticResult = new Diagnostic();
+
+        ONT ont = ontRepository.findByServiceId(serviceId);
+        Anomalie anomalieFiberCut =  this.diagnosticFiberCut(ont);
+        Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
+        Map<String, Object> resultOLTPowerUnderLimit =  this.diagnosticOLTPowerUnderLimit(ont);
+        Map<String, Object> resultONTPowerUnderLimit =  this.diagnosticONTPowerUnderLimit(ont);
+
+        Set<Anomalie> anomalieSet = new HashSet<>();
+        anomalieSet.add(anomalieFiberCut);
+        anomalieSet.add((Anomalie) resultOLTPowerUnderLimit.get("anomalie"));
+        anomalieSet.add((Anomalie) resultONTPowerUnderLimit.get("anomalie"));
+        anomalieSet.add(anomaliePowerSupply);
+
+        diagnosticResult.setTypeDiagnostic(TypeDiagnostic.MANUEL);
+        diagnosticResult.setAnomalies(anomalieSet);
+        diagnosticResult.setOnt(ont);
+        diagnosticResult.setStatutONT(scriptsDiagnostic.getOperStatus(ont.getOlt().getIp(), ont.getIndex(),
+            ont.getOntID(), ont.getOlt().getVendeur()).equalsIgnoreCase("Ok")?StatutONT.ACTIF: StatutONT.INACTIF);
+
+        diagnosticResult.setPowerOLT((String) resultOLTPowerUnderLimit.get("signal"));
+        diagnosticResult.setPowerONT((String) resultONTPowerUnderLimit.get("signal"));
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
+//        diagnosticResult.setSignal();
+//        diagnosticResult.setDebitDown();
+//        diagnosticResult.setDebitUp();
+        return diagnosticResult;
+    }
+
+    public Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
+        Map<String, Object> result = new HashMap<>();
+
+        if (ont != null) {
+            Long oltPower = scriptsDiagnostic.getOLTRxPower(
+                ont.getOlt().getVendeur(),
+                ont.getIndex(),
+                ont.getOlt().getIp(),
+                ont.getOntID()
+            );
+            Long sfpclass = scriptsDiagnostic.getPowerOLT(
+                ont.getOlt().getVendeur(),
+                ont.getIndex(),
+                ont.getOlt().getIp(),
+                ont.getOntID(),
+                Integer.parseInt(ont.getSlot()),
+                ont.getPon()
+            );
+
+            if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
+                result.put("signal", 0);
+
+                if (oltPower == 32768) {
+
+                    result.put("anomalie", anomalieRepository.findByCode("300"));
+                    result.put("signal", oltPower);
+
+                    return result;
+
+                } else if (oltPower != 32768) {
+                    Long oltPower_dbm = oltPower / 10;
+                    result.put("signal", oltPower_dbm);
+                    if ((sfpclass == 7 || sfpclass == 8) && oltPower_dbm <= -30) {
+
+                        result.put("anomalie", anomalieRepository.findByCode("301"));
+
+                        return result;
+                    } else if (((sfpclass == 7 || sfpclass == 8) && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) {
+                        result.put("anomalie", anomalieRepository.findByCode("302"));
+                        return result;
+                    } else {
+                        result.put("anomalie", anomalieRepository.findByCode("203"));
+                        return result;
+                    }
+                }
+            } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
+                if (oltPower == 2147483647) {
+                    result.put("signal", 0);
+                    result.put("anomalie", anomalieRepository.findByCode("300"));
+                    return result;
+
+                } else if (oltPower != 2147483647) {
+                    Long oltPower_dbm = (oltPower - 10000) / 100;
+                    result.put("signal", oltPower_dbm);
+                    if (sfpclass != 102 && oltPower_dbm <= -30) {
+                        result.put("anomalie", anomalieRepository.findByCode("301"));
+                        return result;
+                    } else if (
+                        ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
+                            (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                    ) {
+                        result.put("anomalie", anomalieRepository.findByCode("302"));
+                        return result;
+                    } else {
+                        result.put("anomalie", anomalieRepository.findByCode("203"));
+                        return result;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public Map<String, Object> diagnosticONTPowerUnderLimit(ONT ont) throws IOException {
+        Map<String, Object> result = new HashMap<>();
+
+        if (ont != null) {
+            Long oltPower = scriptsDiagnostic.getONTRxPower(
+                ont.getOlt().getVendeur(),
+                ont.getIndex(),
+                ont.getOlt().getIp(),
+                ont.getOntID()
+            );
+            Long sfpclass = scriptsDiagnostic.getPowerOLT(
+                ont.getOlt().getVendeur(),
+                ont.getIndex(),
+                ont.getOlt().getIp(),
+                ont.getOntID(),
+                Integer.parseInt(ont.getSlot()),
+                ont.getPon()
+            );
+
+            if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
+                if (oltPower == 32768) {
+                    result.put("anomalie", anomalieRepository.findByCode("100"));
+                    result.put("signal", 0);
+                    return result;
+
+                } else if (oltPower != 32768) {
+                    Long oltPower_dbm = (oltPower * 2) / 10;
+                    result.put("signal", oltPower_dbm);
+                    if (oltPower_dbm <= -30) {
+                        result.put("anomalie", anomalieRepository.findByCode("101"));
+                        return result;
+                    } else if ((oltPower_dbm > -30 && oltPower_dbm <= -27) || oltPower_dbm > 10) {
+                        result.put("anomalie", anomalieRepository.findByCode("102"));
+                        return result;
+
+                    } else {
+                        result.put("anomalie", anomalieRepository.findByCode("201"));
+                        return result;
+                    }
+                }
+            } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
+                if (oltPower == 2147483647) {
+                    result.put("anomalie", anomalieRepository.findByCode("100"));
+                    result.put("signal", 0);
+                    return result;
+
+                } else if (oltPower != 2147483647) {
+                    Long oltPower_dbm = oltPower / 100;
+                    if (sfpclass != 102 && oltPower_dbm <= -30) {
+                        result.put("anomalie", anomalieRepository.findByCode("101"));
+                        return result;
+                    } else if (
+                        ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
+                            (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                    ) {
+                        result.put("anomalie", anomalieRepository.findByCode("102"));
+                        return result;
+                    } else {
+                        result.put("anomalie", anomalieRepository.findByCode("201"));
+                        return result;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Anomalie diagnosticDebit(ONT ont) throws IOException {
         return null;
     }
 }

@@ -9,14 +9,18 @@
   "entityTableName": "diagnostic",
   "fields": [
     {
-      "fieldName": "index",
-      "fieldType": "String",
-      "fieldValidateRules": ["required"]
-    },
-    {
       "fieldName": "statutONT",
       "fieldType": "StatutONT",
       "fieldValues": "ACTIF,INACTIF"
+    },
+    {
+      "fieldName": "dateDiagnostic",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "typeDiagnostic",
+      "fieldType": "TypeDiagnostic",
+      "fieldValues": "AUTOMATIQUE,MANUEL"
     },
     {
       "fieldName": "debitUp",
@@ -27,13 +31,12 @@
       "fieldType": "String"
     },
     {
-      "fieldName": "dateDiagnostic",
-      "fieldType": "LocalDate"
+      "fieldName": "powerONT",
+      "fieldType": "String"
     },
     {
-      "fieldName": "typeDiagnostic",
-      "fieldType": "TypeDiagnostic",
-      "fieldValues": "AUTOMATIQUE,MANUEL"
+      "fieldName": "powerOLT",
+      "fieldType": "String"
     }
   ],
   "jpaMetamodelFiltering": true,

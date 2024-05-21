@@ -60,7 +60,7 @@ public class InventaireONT implements CommandLineRunner {
         ONT ont = ontRepository.findByServiceId("338674808");
         diagnosticService.diagnosticPowerSupply(ont);
 
-        System.out.println("Fin diagnostic:");
+//        oltService.updateOLT("C:\\\\Users\\\\Surface\\\\Desktop\\\\Sonatel_2023\\\\saytou\\\\saytu-project\\\\saytu-backend\\\\OLT_OSN_22.04.24.xlsx");
     }
 
     public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {

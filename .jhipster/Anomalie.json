@@ -26,6 +26,10 @@
       "fieldName": "recommandation",
       "fieldType": "byte[]",
       "fieldTypeBlobContent": "text"
+    },
+    {
+      "fieldName": "code",
+      "fieldType": "Integer"
     }
   ],
   "jpaMetamodelFiltering": true,
