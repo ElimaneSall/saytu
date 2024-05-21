@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-
 import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         DiagnosticRepository diagnosticRepository,
         DiagnosticMapper diagnosticMapper,
         ONTRepository ontRepository,
-        AnomalieRepository anomalieRepository) {
+        AnomalieRepository anomalieRepository
+    ) {
         this.diagnosticRepository = diagnosticRepository;
         this.diagnosticMapper = diagnosticMapper;
         this.ontRepository = ontRepository;
@@ -124,7 +124,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 if (operStatus.equals("KO") && rowStatus.equals("OK") && ranging.equals("KO") && currentAlarmList.equals("KO")) {
                     return anomalieRepository.findByCode("500");
                 } else {
-                    return anomalieRepository.findByCode("205");                }
+                    return anomalieRepository.findByCode("205");
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -160,10 +161,10 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         Diagnostic diagnosticResult = new Diagnostic();
 
         ONT ont = ontRepository.findByServiceId(serviceId);
-        Anomalie anomalieFiberCut =  this.diagnosticFiberCut(ont);
+        Anomalie anomalieFiberCut = this.diagnosticFiberCut(ont);
         Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
-        Map<String, Object> resultOLTPowerUnderLimit =  this.diagnosticOLTPowerUnderLimit(ont);
-        Map<String, Object> resultONTPowerUnderLimit =  this.diagnosticONTPowerUnderLimit(ont);
+        Map<String, Object> resultOLTPowerUnderLimit = this.diagnosticOLTPowerUnderLimit(ont);
+        Map<String, Object> resultONTPowerUnderLimit = this.diagnosticONTPowerUnderLimit(ont);
 
         Set<Anomalie> anomalieSet = new HashSet<>();
         anomalieSet.add(anomalieFiberCut);
@@ -174,16 +175,21 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         diagnosticResult.setTypeDiagnostic(TypeDiagnostic.MANUEL);
         diagnosticResult.setAnomalies(anomalieSet);
         diagnosticResult.setOnt(ont);
-        diagnosticResult.setStatutONT(scriptsDiagnostic.getOperStatus(ont.getOlt().getIp(), ont.getIndex(),
-            ont.getOntID(), ont.getOlt().getVendeur()).equalsIgnoreCase("Ok")?StatutONT.ACTIF: StatutONT.INACTIF);
+        diagnosticResult.setStatutONT(
+            scriptsDiagnostic
+                    .getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(), ont.getOlt().getVendeur())
+                    .equalsIgnoreCase("Ok")
+                ? StatutONT.ACTIF
+                : StatutONT.INACTIF
+        );
 
-        diagnosticResult.setPowerOLT((String) resultOLTPowerUnderLimit.get("signal"));
-        diagnosticResult.setPowerONT((String) resultONTPowerUnderLimit.get("signal"));
+        diagnosticResult.setPowerOLT(resultOLTPowerUnderLimit.get("signal").toString());
+        diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
         LocalDateTime currentDateTime = LocalDateTime.now();
         diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
-//        diagnosticResult.setSignal();
-//        diagnosticResult.setDebitDown();
-//        diagnosticResult.setDebitUp();
+        //        diagnosticResult.setSignal();
+        //        diagnosticResult.setDebitDown();
+        //        diagnosticResult.setDebitUp();
         return diagnosticResult;
     }
 
@@ -210,17 +216,14 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 result.put("signal", 0);
 
                 if (oltPower == 32768) {
-
                     result.put("anomalie", anomalieRepository.findByCode("300"));
                     result.put("signal", oltPower);
 
                     return result;
-
                 } else if (oltPower != 32768) {
                     Long oltPower_dbm = oltPower / 10;
                     result.put("signal", oltPower_dbm);
                     if ((sfpclass == 7 || sfpclass == 8) && oltPower_dbm <= -30) {
-
                         result.put("anomalie", anomalieRepository.findByCode("301"));
 
                         return result;
@@ -237,7 +240,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                     result.put("signal", 0);
                     result.put("anomalie", anomalieRepository.findByCode("300"));
                     return result;
-
                 } else if (oltPower != 2147483647) {
                     Long oltPower_dbm = (oltPower - 10000) / 100;
                     result.put("signal", oltPower_dbm);
@@ -246,7 +248,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                         return result;
                     } else if (
                         ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                            (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
                     ) {
                         result.put("anomalie", anomalieRepository.findByCode("302"));
                         return result;
@@ -284,7 +286,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                     result.put("anomalie", anomalieRepository.findByCode("100"));
                     result.put("signal", 0);
                     return result;
-
                 } else if (oltPower != 32768) {
                     Long oltPower_dbm = (oltPower * 2) / 10;
                     result.put("signal", oltPower_dbm);
@@ -294,7 +295,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                     } else if ((oltPower_dbm > -30 && oltPower_dbm <= -27) || oltPower_dbm > 10) {
                         result.put("anomalie", anomalieRepository.findByCode("102"));
                         return result;
-
                     } else {
                         result.put("anomalie", anomalieRepository.findByCode("201"));
                         return result;
@@ -304,16 +304,17 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 if (oltPower == 2147483647) {
                     result.put("anomalie", anomalieRepository.findByCode("100"));
                     result.put("signal", 0);
-                    return result;
 
+                    return result;
                 } else if (oltPower != 2147483647) {
                     Long oltPower_dbm = oltPower / 100;
+                    result.put("signal", oltPower_dbm);
                     if (sfpclass != 102 && oltPower_dbm <= -30) {
                         result.put("anomalie", anomalieRepository.findByCode("101"));
                         return result;
                     } else if (
                         ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                            (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
                     ) {
                         result.put("anomalie", anomalieRepository.findByCode("102"));
                         return result;
@@ -324,6 +325,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 }
             }
         }
+
         return null;
     }
 
