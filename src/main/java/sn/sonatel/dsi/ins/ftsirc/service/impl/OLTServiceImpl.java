@@ -102,42 +102,42 @@ public class OLTServiceImpl implements OLTService {
             // Iterating over rows and inserting into database
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
-                if(row.getCell(5) != null){
-                String type_equipement = row.getCell(1).getStringCellValue();
-                Number tmp_code = row.getCell(2).getNumericCellValue();
-                String code_equipement = tmp_code.toString();
-                String libelle = row.getCell(3).getStringCellValue();
-                String adresse = row.getCell(4).getStringCellValue();
-                String ip = row.getCell(5).getStringCellValue();
-                String type_carte = row.getCell(7).getStringCellValue();
-                String vendeur = row.getCell(8).getStringCellValue();
-                String latitude = String.valueOf(row.getCell(9).getNumericCellValue());
-                String longitude = String.valueOf(row.getCell(10).getNumericCellValue());
-                Number temp_capacite = row.getCell(11).getNumericCellValue();
-                String capacite = temp_capacite.toString();
-                LocalDateTime currentDateTime = LocalDateTime.now();
+                if (row.getCell(5) != null) {
+                    String type_equipement = row.getCell(1).getStringCellValue();
+                    Number tmp_code = row.getCell(2).getNumericCellValue();
+                    String code_equipement = tmp_code.toString();
+                    String libelle = row.getCell(3).getStringCellValue();
+                    String adresse = row.getCell(4).getStringCellValue();
+                    String ip = row.getCell(5).getStringCellValue();
+                    String type_carte = row.getCell(7).getStringCellValue();
+                    String vendeur = row.getCell(8).getStringCellValue();
+                    String latitude = String.valueOf(row.getCell(9).getNumericCellValue());
+                    String longitude = String.valueOf(row.getCell(10).getNumericCellValue());
+                    Number temp_capacite = row.getCell(11).getNumericCellValue();
+                    String capacite = temp_capacite.toString();
+                    LocalDateTime currentDateTime = LocalDateTime.now();
 
-                OLT olt = new OLT();
+                    OLT olt = new OLT();
 
-                olt.typeEquipment(type_equipement);
-                olt.setLibelle(libelle);
-                olt.setAdresse(adresse);
-                olt.setIp(ip);
-                olt.setTypeCarte(type_carte);
-                olt.setVendeur(vendeur);
-                olt.setLatitude(latitude);
-                olt.setLongitude(longitude);
-                olt.setCapacite(capacite);
-                olt.setCreatedAt(LocalDate.from(currentDateTime));
-                olt.setUpdatedAt(LocalDate.from(currentDateTime));
-                olt.setCodeEquipment(code_equipement);
-                oLTRepository.save(olt);
-        }
-            else{
-                break;
+                    olt.typeEquipment(type_equipement);
+                    olt.setLibelle(libelle);
+                    olt.setAdresse(adresse);
+                    olt.setIp(ip);
+                    olt.setTypeCarte(type_carte);
+                    olt.setVendeur(vendeur);
+                    olt.setLatitude(latitude);
+                    olt.setLongitude(longitude);
+                    olt.setCapacite(capacite);
+                    olt.setCreatedAt(LocalDate.from(currentDateTime));
+                    olt.setUpdatedAt(LocalDate.from(currentDateTime));
+                    olt.setCodeEquipment(code_equipement);
+                    oLTRepository.save(olt);
+                } else {
+                    break;
+                }
             }
-    }}  catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-    }}
+    }
+}
