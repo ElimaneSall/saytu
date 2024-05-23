@@ -54,7 +54,8 @@ public class DiagnosticResource {
         DiagnosticService diagnosticService,
         DiagnosticRepository diagnosticRepository,
         DiagnosticQueryService diagnosticQueryService,
-        ONTRepository ontRepository) {
+        ONTRepository ontRepository
+    ) {
         this.diagnosticService = diagnosticService;
         this.diagnosticRepository = diagnosticRepository;
         this.diagnosticQueryService = diagnosticQueryService;
@@ -75,8 +76,7 @@ public class DiagnosticResource {
             throw new BadRequestAlertException("A new diagnostic cannot already have an ID", ENTITY_NAME, "idexists");
         }
         DiagnosticDTO result = diagnosticService.save(diagnosticDTO);
-        return ResponseEntity
-            .created(new URI("/api/diagnostics/" + result.getId()))
+        return ResponseEntity.created(new URI("/api/diagnostics/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
@@ -109,8 +109,7 @@ public class DiagnosticResource {
         }
 
         DiagnosticDTO result = diagnosticService.update(diagnosticDTO);
-        return ResponseEntity
-            .ok()
+        return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, diagnosticDTO.getId().toString()))
             .body(result);
     }
@@ -126,7 +125,7 @@ public class DiagnosticResource {
      * or with status {@code 500 (Internal Server Error)} if the diagnosticDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PatchMapping(value = "/{id}", consumes = {"application/json", "application/merge-patch+json"})
+    @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<DiagnosticDTO> partialUpdateDiagnostic(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody DiagnosticDTO diagnosticDTO
@@ -205,8 +204,7 @@ public class DiagnosticResource {
     public ResponseEntity<Void> deleteDiagnostic(@PathVariable("id") Long id) {
         log.debug("REST request to delete Diagnostic : {}", id);
         diagnosticService.delete(id);
-        return ResponseEntity
-            .noContent()
+        return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }

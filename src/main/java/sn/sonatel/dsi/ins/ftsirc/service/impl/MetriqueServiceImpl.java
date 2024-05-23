@@ -1,5 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.Metrique;
+import sn.sonatel.dsi.ins.ftsirc.domain.OLT;
+import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.MetriqueRepository;
+import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
 import sn.sonatel.dsi.ins.ftsirc.service.MetriqueService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.MetriqueDTO;
 import sn.sonatel.dsi.ins.ftsirc.service.mapper.MetriqueMapper;
@@ -25,10 +30,12 @@ public class MetriqueServiceImpl implements MetriqueService {
     private final MetriqueRepository metriqueRepository;
 
     private final MetriqueMapper metriqueMapper;
+    private final ONTRepository ontRepository;
 
-    public MetriqueServiceImpl(MetriqueRepository metriqueRepository, MetriqueMapper metriqueMapper) {
+    public MetriqueServiceImpl(MetriqueRepository metriqueRepository, MetriqueMapper metriqueMapper, ONTRepository ontRepository) {
         this.metriqueRepository = metriqueRepository;
         this.metriqueMapper = metriqueMapper;
+        this.ontRepository = ontRepository;
     }
 
     @Override
@@ -80,5 +87,10 @@ public class MetriqueServiceImpl implements MetriqueService {
     public void delete(Long id) {
         log.debug("Request to delete Metrique : {}", id);
         metriqueRepository.deleteById(id);
+    }
+
+    public List<Metrique> getAllMetrics(Long id) {
+        ONT ont = ontRepository.findById(id).get();
+        List<Metrique> listMetrics = new ArrayList<>();
     }
 }
