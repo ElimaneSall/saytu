@@ -188,10 +188,11 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
         LocalDateTime currentDateTime = LocalDateTime.now();
         diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
-
         //        diagnosticResult.setSignal();
         //        diagnosticResult.setDebitDown();
         //        diagnosticResult.setDebitUp();
+
+        diagnosticRepository.save(diagnosticResult);
         return diagnosticResult;
     }
 
