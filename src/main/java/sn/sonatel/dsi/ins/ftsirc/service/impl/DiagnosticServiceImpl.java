@@ -184,6 +184,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 //        diagnosticResult.setSignal();
 //        diagnosticResult.setDebitDown();
 //        diagnosticResult.setDebitUp();
+
+        diagnosticRepository.save(diagnosticResult);
         return diagnosticResult;
     }
 
