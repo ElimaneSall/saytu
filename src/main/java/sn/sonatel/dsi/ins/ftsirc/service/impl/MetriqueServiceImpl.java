@@ -30,18 +30,11 @@ public class MetriqueServiceImpl implements MetriqueService {
 
     private final MetriqueMapper metriqueMapper;
     private final ONTRepository ontRepository;
-    private final ScriptsDiagnostic scriptsDiagnostic;
 
-    public MetriqueServiceImpl(
-        MetriqueRepository metriqueRepository,
-        MetriqueMapper metriqueMapper,
-        ONTRepository ontRepository,
-        ScriptsDiagnostic scriptsDiagnostic
-    ) {
+    public MetriqueServiceImpl(MetriqueRepository metriqueRepository, MetriqueMapper metriqueMapper, ONTRepository ontRepository) {
         this.metriqueRepository = metriqueRepository;
         this.metriqueMapper = metriqueMapper;
         this.ontRepository = ontRepository;
-        this.scriptsDiagnostic = scriptsDiagnostic;
     }
 
     @Override
@@ -93,56 +86,5 @@ public class MetriqueServiceImpl implements MetriqueService {
     public void delete(Long id) {
         log.debug("Request to delete Metrique : {}", id);
         metriqueRepository.deleteById(id);
-    }
-
-    public Map<String, Object> getAllMetrics(Long id) throws IOException {
-        ONT ont = ontRepository.findById(id).get();
-        Map<String, Object> listMetrics = new HashMap<>();
-        Long oltPower_dBm, ontPower_dBm;
-
-        System.out.println("debut de l'inventaire Metrics");
-
-        if (ont != null) {
-            Long oltPower = scriptsDiagnostic.getOLTRxPower(
-                ont.getOlt().getVendeur(),
-                ont.getIndex(),
-                ont.getOlt().getIp(),
-                ont.getOntID()
-            );
-            Long ontPower = scriptsDiagnostic.getONTRxPower(
-                ont.getOlt().getVendeur(),
-                ont.getIndex(),
-                ont.getOlt().getIp(),
-                ont.getOntID()
-            );
-            if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
-                if (oltPower == 65534) {
-                    listMetrics.put("oltPower", 0);
-                } else if (oltPower != 65534) {
-                    oltPower_dBm = oltPower / 10;
-                    listMetrics.put("oltPower", oltPower_dBm);
-                }
-                if (ontPower == 32768) {
-                    listMetrics.put("ontPower", 0);
-                } else if (ontPower != 32768) {
-                    ontPower_dBm = (ontPower * 2) / 1000;
-                    listMetrics.put("ontPower", ontPower_dBm);
-                }
-            } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
-                if (oltPower == 2147483647) {
-                    listMetrics.put("olt_power", 0);
-                } else if (oltPower != 2147483647) {
-                    oltPower_dBm = (oltPower - 10000) / 100;
-                    listMetrics.put("olt_power", oltPower_dBm);
-                }
-                if (ontPower == 2147483647) {
-                    listMetrics.put("ont_power", 0);
-                } else if (ontPower != 2147483647) {
-                    ontPower_dBm = ontPower / 100;
-                    listMetrics.put("ont_power", ontPower_dBm);
-                }
-            }
-        }
-        return listMetrics;
     }
 }

@@ -1,5 +1,6 @@
 package sn.sonatel.dsi.ins.ftsirc.service;
 
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,10 +13,12 @@ public class ScheduledTasks {
 
     private final OLTService oltService;
     private final ONTService ontService;
+    private final DiagnosticService diagnosticService;
 
-    public ScheduledTasks(OLTService oltService, ONTService ontService) {
+    public ScheduledTasks(OLTService oltService, ONTService ontService, DiagnosticService diagnosticService) {
         this.oltService = oltService;
         this.ontService = ontService;
+        this.diagnosticService = diagnosticService;
     }
 
     //    @Scheduled(cron = " 0 33 16 * * *")
@@ -34,5 +37,11 @@ public class ScheduledTasks {
     public void updateAllONT() {
         log.debug("Started ONT UPDATE CRON");
         ontService.updateALLONTS();
+    }
+
+    @Scheduled(cron = " 0 08 13 * * *")
+    public void diagnosticFiberAutomatique() throws IOException {
+        log.debug("Started Maintenance Predictive");
+        diagnosticService.diagnosticFiberAutomatique();
     }
 }

@@ -24,6 +24,10 @@ public interface ONTRepository extends JpaRepository<ONT, Long>, JpaSpecificatio
 
     @Query("select oNT from ONT oNT  where oNT.serviceId =:serviceId")
     ONT findByServiceId(String serviceId);
+
+    //    @Query("select oNT from ONT oNT  where oNT.serviceId =:serviceId")
+    //    ONT findByServiceIdLimited(String serviceId);
+
     default Page<ONT> findAllWithEagerRelationships(Pageable pageable) {
         return this.findAllWithToOneRelationships(pageable);
     }

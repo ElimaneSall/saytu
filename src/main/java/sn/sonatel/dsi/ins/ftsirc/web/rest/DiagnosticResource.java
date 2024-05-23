@@ -218,6 +218,6 @@ public class DiagnosticResource {
     @GetMapping("/diagnostic-fibre/{serviceId}")
     public ResponseEntity<Diagnostic> DiagnosticFibre(@PathVariable("serviceId") String serviceId) throws IOException {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
-        return ResponseEntity.ok().body(diagnosticService.diagnosticFiber(serviceId));
+        return ResponseEntity.ok().body(diagnosticService.diagnosticFiberManuel(serviceId));
     }
 }
