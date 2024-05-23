@@ -1,8 +1,7 @@
 package sn.sonatel.dsi.ins.ftsirc.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -10,10 +9,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.Metrique;
-import sn.sonatel.dsi.ins.ftsirc.domain.OLT;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.repository.MetriqueRepository;
 import sn.sonatel.dsi.ins.ftsirc.repository.ONTRepository;
+import sn.sonatel.dsi.ins.ftsirc.scripts.ScriptsDiagnostic;
 import sn.sonatel.dsi.ins.ftsirc.service.MetriqueService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.MetriqueDTO;
 import sn.sonatel.dsi.ins.ftsirc.service.mapper.MetriqueMapper;
@@ -31,11 +30,18 @@ public class MetriqueServiceImpl implements MetriqueService {
 
     private final MetriqueMapper metriqueMapper;
     private final ONTRepository ontRepository;
+    private final ScriptsDiagnostic scriptsDiagnostic;
 
-    public MetriqueServiceImpl(MetriqueRepository metriqueRepository, MetriqueMapper metriqueMapper, ONTRepository ontRepository) {
+    public MetriqueServiceImpl(
+        MetriqueRepository metriqueRepository,
+        MetriqueMapper metriqueMapper,
+        ONTRepository ontRepository,
+        ScriptsDiagnostic scriptsDiagnostic
+    ) {
         this.metriqueRepository = metriqueRepository;
         this.metriqueMapper = metriqueMapper;
         this.ontRepository = ontRepository;
+        this.scriptsDiagnostic = scriptsDiagnostic;
     }
 
     @Override
@@ -89,8 +95,54 @@ public class MetriqueServiceImpl implements MetriqueService {
         metriqueRepository.deleteById(id);
     }
 
-    public List<Metrique> getAllMetrics(Long id) {
+    public Map<String, Object> getAllMetrics(Long id) throws IOException {
         ONT ont = ontRepository.findById(id).get();
-        List<Metrique> listMetrics = new ArrayList<>();
+        Map<String, Object> listMetrics = new HashMap<>();
+        Long oltPower_dBm, ontPower_dBm;
+
+        System.out.println("debut de l'inventaire Metrics");
+
+        if (ont != null) {
+            Long oltPower = scriptsDiagnostic.getOLTRxPower(
+                ont.getOlt().getVendeur(),
+                ont.getIndex(),
+                ont.getOlt().getIp(),
+                ont.getOntID()
+            );
+            Long ontPower = scriptsDiagnostic.getONTRxPower(
+                ont.getOlt().getVendeur(),
+                ont.getIndex(),
+                ont.getOlt().getIp(),
+                ont.getOntID()
+            );
+            if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
+                if (oltPower == 65534) {
+                    listMetrics.put("oltPower", 0);
+                } else if (oltPower != 65534) {
+                    oltPower_dBm = oltPower / 10;
+                    listMetrics.put("oltPower", oltPower_dBm);
+                }
+                if (ontPower == 32768) {
+                    listMetrics.put("ontPower", 0);
+                } else if (ontPower != 32768) {
+                    ontPower_dBm = (ontPower * 2) / 1000;
+                    listMetrics.put("ontPower", ontPower_dBm);
+                }
+            } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
+                if (oltPower == 2147483647) {
+                    listMetrics.put("olt_power", 0);
+                } else if (oltPower != 2147483647) {
+                    oltPower_dBm = (oltPower - 10000) / 100;
+                    listMetrics.put("olt_power", oltPower_dBm);
+                }
+                if (ontPower == 2147483647) {
+                    listMetrics.put("ont_power", 0);
+                } else if (ontPower != 2147483647) {
+                    ontPower_dBm = ontPower / 100;
+                    listMetrics.put("ont_power", ontPower_dBm);
+                }
+            }
+        }
+        return listMetrics;
     }
 }

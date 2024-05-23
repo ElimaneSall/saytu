@@ -229,53 +229,56 @@ public class ScriptsDiagnostic {
     }
 
     public Long getOLTRxPower(String vendeur, String index, String ip, String _ont_) throws IOException {
-        String oidRxPower = "";
+        String OltRxPower = "";
+        Long oltRxPowerValue = null;
 
-        oidRxPower = vendeur.equalsIgnoreCase("NOKIA")
-            ? "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + index // commentaire
-            : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6" + "." + index + "." + _ont_; // commentaire
+        OltRxPower = vendeur.equalsIgnoreCase("NOKIA")
+            ? "1.3.6.1.4.1.637.61.1.35.10.18.1.2" + "." + index
+            : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.6" + "." + index + "." + _ont_;
 
-        ResponseEvent event = this.connectToOID(ip, oidRxPower, vendeur.toUpperCase());
+        ResponseEvent event = this.connectToOID(ip, OltRxPower, vendeur.toUpperCase());
         if (event != null && event.getResponse() != null) {
             for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                return Long.valueOf(varBind.getVariable().toString());
+                oltRxPowerValue = Long.valueOf(varBind.getVariable().toString());
             }
         }
-        return null;
+        return oltRxPowerValue;
     }
 
     public Long getONTRxPower(String vendeur, String index, String ip, String _ont_) throws IOException {
-        String oidOntRxPower = "";
+        String OntRxPower = "";
+        Long ontRxPowerValue = null;
 
-        oidOntRxPower = vendeur.equalsIgnoreCase("NOKIA")
+        OntRxPower = vendeur.equalsIgnoreCase("NOKIA")
             ? "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index // commentaires
             : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + _ont_; // commentaires
 
-        ResponseEvent event = this.connectToOID(ip, oidOntRxPower, vendeur.toUpperCase());
+        ResponseEvent event = this.connectToOID(ip, OntRxPower, vendeur.toUpperCase());
 
         if (event != null && event.getResponse() != null) {
             for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                return Long.valueOf(varBind.getVariable().toString());
+                ontRxPowerValue = Long.valueOf(varBind.getVariable().toString());
             }
         }
 
-        return null;
+        return ontRxPowerValue;
     }
 
-    public Long getPowerOLT(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
-        String oidPowerOLT = "";
+    public Long getSfpClass(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
+        String SfpClass = "";
+        Long SfpClassValue = null;
         Integer slot_index = 4353 + slot + 1;
-        oidPowerOLT = vendeur.equalsIgnoreCase("NOKIA")
+        SfpClass = vendeur.equalsIgnoreCase("NOKIA")
             ? "1.3.6.1.4.1.637.61.1.56.6.1.13" + "." + slot_index + "." + pon
             : "1.3.6.1.4.1.2011.6.128.1.1.2.22.1.28" + "." + index;
 
-        ResponseEvent event = this.connectToOID(ip, oidPowerOLT, vendeur.toUpperCase());
+        ResponseEvent event = this.connectToOID(ip, SfpClass, vendeur.toUpperCase());
         if (event != null && event.getResponse() != null) {
             for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                return Long.valueOf(varBind.getVariable().toString());
+                SfpClassValue = Long.valueOf(varBind.getVariable().toString());
             }
         }
 
-        return null;
+        return SfpClassValue;
     }
 }

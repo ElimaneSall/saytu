@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.sonatel.dsi.ins.ftsirc.domain.Anomalie;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
+import sn.sonatel.dsi.ins.ftsirc.domain.Metrique;
 import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.StatutONT;
 import sn.sonatel.dsi.ins.ftsirc.domain.enumeration.TypeDiagnostic;
@@ -187,6 +188,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
         LocalDateTime currentDateTime = LocalDateTime.now();
         diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
+
         //        diagnosticResult.setSignal();
         //        diagnosticResult.setDebitDown();
         //        diagnosticResult.setDebitUp();
@@ -195,6 +197,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     public Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
         Map<String, Object> result = new HashMap<>();
+        Long oltPower_dbm;
 
         if (ont != null) {
             Long oltPower = scriptsDiagnostic.getOLTRxPower(
@@ -203,7 +206,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 ont.getOlt().getIp(),
                 ont.getOntID()
             );
-            Long sfpclass = scriptsDiagnostic.getPowerOLT(
+            Long sfpclass = scriptsDiagnostic.getSfpClass(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
@@ -213,66 +216,55 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             );
 
             if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
-                result.put("signal", 0);
-
-                if (oltPower == 32768) {
+                if (oltPower == 65534) {
                     result.put("anomalie", anomalieRepository.findByCode("300"));
-                    result.put("signal", oltPower);
-
-                    return result;
-                } else if (oltPower != 32768) {
-                    Long oltPower_dbm = oltPower / 10;
+                    result.put("signal", 0);
+                } else if (oltPower != 65534) {
+                    oltPower_dbm = oltPower / 10;
                     result.put("signal", oltPower_dbm);
                     if ((sfpclass == 7 || sfpclass == 8) && oltPower_dbm <= -30) {
                         result.put("anomalie", anomalieRepository.findByCode("301"));
-
-                        return result;
                     } else if (((sfpclass == 7 || sfpclass == 8) && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) {
                         result.put("anomalie", anomalieRepository.findByCode("302"));
-                        return result;
                     } else {
                         result.put("anomalie", anomalieRepository.findByCode("203"));
-                        return result;
                     }
                 }
             } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
                 if (oltPower == 2147483647) {
                     result.put("signal", 0);
                     result.put("anomalie", anomalieRepository.findByCode("300"));
-                    return result;
                 } else if (oltPower != 2147483647) {
-                    Long oltPower_dbm = (oltPower - 10000) / 100;
+                    oltPower_dbm = (oltPower - 10000) / 100;
                     result.put("signal", oltPower_dbm);
                     if (sfpclass != 102 && oltPower_dbm <= -30) {
                         result.put("anomalie", anomalieRepository.findByCode("301"));
-                        return result;
                     } else if (
                         ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
                         (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
                     ) {
                         result.put("anomalie", anomalieRepository.findByCode("302"));
-                        return result;
                     } else {
                         result.put("anomalie", anomalieRepository.findByCode("203"));
-                        return result;
                     }
                 }
             }
         }
-        return null;
+        return result;
     }
 
     public Map<String, Object> diagnosticONTPowerUnderLimit(ONT ont) throws IOException {
         Map<String, Object> result = new HashMap<>();
+        Long ontPower_dbm;
 
         if (ont != null) {
-            Long oltPower = scriptsDiagnostic.getONTRxPower(
+            Long ontPower = scriptsDiagnostic.getONTRxPower(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
                 ont.getOntID()
             );
-            Long sfpclass = scriptsDiagnostic.getPowerOLT(
+            Long sfpclass = scriptsDiagnostic.getSfpClass(
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
@@ -282,39 +274,33 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             );
 
             if (ont.getOlt().getVendeur().equalsIgnoreCase("NOKIA")) {
-                if (oltPower == 32768) {
+                if (ontPower == 32768) {
                     result.put("anomalie", anomalieRepository.findByCode("100"));
                     result.put("signal", 0);
-                    return result;
-                } else if (oltPower != 32768) {
-                    Long oltPower_dbm = (oltPower * 2) / 10;
-                    result.put("signal", oltPower_dbm);
-                    if (oltPower_dbm <= -30) {
+                } else if (ontPower != 32768) {
+                    ontPower_dbm = (ontPower * 2) / 1000;
+                    result.put("signal", ontPower_dbm);
+                    if (ontPower_dbm <= -30) {
                         result.put("anomalie", anomalieRepository.findByCode("101"));
-                        return result;
-                    } else if ((oltPower_dbm > -30 && oltPower_dbm <= -27) || oltPower_dbm > 10) {
+                    } else if ((ontPower_dbm > -30 && ontPower_dbm <= -27) || ontPower_dbm > 10) {
                         result.put("anomalie", anomalieRepository.findByCode("102"));
-                        return result;
                     } else {
                         result.put("anomalie", anomalieRepository.findByCode("201"));
-                        return result;
                     }
                 }
             } else if (ont.getOlt().getVendeur().equalsIgnoreCase("HUAWEI")) {
-                if (oltPower == 2147483647) {
+                if (ontPower == 2147483647) {
                     result.put("anomalie", anomalieRepository.findByCode("100"));
                     result.put("signal", 0);
-
-                    return result;
-                } else if (oltPower != 2147483647) {
-                    Long oltPower_dbm = oltPower / 100;
-                    result.put("signal", oltPower_dbm);
-                    if (sfpclass != 102 && oltPower_dbm <= -30) {
+                } else if (ontPower != 2147483647) {
+                    ontPower_dbm = ontPower / 100;
+                    result.put("signal", ontPower_dbm);
+                    if (sfpclass != 102 && ontPower_dbm <= -30) {
                         result.put("anomalie", anomalieRepository.findByCode("101"));
                         return result;
                     } else if (
-                        ((sfpclass != 102 && (oltPower_dbm > -30 && oltPower_dbm <= -27)) || oltPower_dbm > 10) ||
-                        (sfpclass == 102 && (oltPower_dbm < -30 || oltPower_dbm > 10))
+                        ((sfpclass != 102 && (ontPower_dbm > -30 && ontPower_dbm <= -27)) || ontPower_dbm > 10) ||
+                        (sfpclass == 102 && (ontPower_dbm < -30 || ontPower_dbm > 10))
                     ) {
                         result.put("anomalie", anomalieRepository.findByCode("102"));
                         return result;
@@ -326,7 +312,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             }
         }
 
-        return null;
+        return result;
     }
 
     @Override
