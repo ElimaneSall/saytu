@@ -108,6 +108,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     }
 
     public Anomalie diagnosticPowerSupply(ONT ont) {
+        Anomalie anomaliePowerSupply = new Anomalie();
         try {
             if (ont != null) {
                 //Verifer que les elements ne sont pas null
@@ -123,18 +124,19 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ranging = scriptsDiagnostic.getRanging(ip, index, ontId, vendeur);
 
                 if (operStatus.equals("KO") && rowStatus.equals("OK") && ranging.equals("KO") && currentAlarmList.equals("KO")) {
-                    return anomalieRepository.findByCode("500");
+                    anomaliePowerSupply = anomalieRepository.findByCode("500");
                 } else {
-                    return anomalieRepository.findByCode("205");
+                    anomaliePowerSupply = anomalieRepository.findByCode("205");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return anomaliePowerSupply;
     }
 
     public Anomalie diagnosticFiberCut(ONT ont) {
+        Anomalie anomalieFiberCut = new Anomalie();
         try {
             if (ont != null) {
                 String index = ont.getIndex();
@@ -146,54 +148,15 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 String ontpower = scriptsDiagnostic.getRxOpticalPower(ip, index, ontId, vendeur);
 
                 if (ontpower.equals("KO") && currentAlarmList.equals("KO")) {
-                    return anomalieRepository.findByCode("400");
+                    anomalieFiberCut = anomalieRepository.findByCode("400");
                 } else {
-                    return anomalieRepository.findByCode("204");
+                    anomalieFiberCut = anomalieRepository.findByCode("204");
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
-    }
-
-    @Override
-    public Diagnostic diagnosticFiber(String serviceId) throws IOException {
-        Diagnostic diagnosticResult = new Diagnostic();
-
-        ONT ont = ontRepository.findByServiceId(serviceId);
-        Anomalie anomalieFiberCut = this.diagnosticFiberCut(ont);
-        Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
-        Map<String, Object> resultOLTPowerUnderLimit = this.diagnosticOLTPowerUnderLimit(ont);
-        Map<String, Object> resultONTPowerUnderLimit = this.diagnosticONTPowerUnderLimit(ont);
-
-        Set<Anomalie> anomalieSet = new HashSet<>();
-        anomalieSet.add(anomalieFiberCut);
-        anomalieSet.add((Anomalie) resultOLTPowerUnderLimit.get("anomalie"));
-        anomalieSet.add((Anomalie) resultONTPowerUnderLimit.get("anomalie"));
-        anomalieSet.add(anomaliePowerSupply);
-
-        diagnosticResult.setTypeDiagnostic(TypeDiagnostic.MANUEL);
-        diagnosticResult.setAnomalies(anomalieSet);
-        diagnosticResult.setOnt(ont);
-        diagnosticResult.setStatutONT(
-            scriptsDiagnostic
-                    .getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(), ont.getOlt().getVendeur())
-                    .equalsIgnoreCase("Ok")
-                ? StatutONT.ACTIF
-                : StatutONT.INACTIF
-        );
-
-        diagnosticResult.setPowerOLT(resultOLTPowerUnderLimit.get("signal").toString());
-        diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
-        //        diagnosticResult.setSignal();
-        //        diagnosticResult.setDebitDown();
-        //        diagnosticResult.setDebitUp();
-
-        diagnosticRepository.save(diagnosticResult);
-        return diagnosticResult;
+        return anomalieFiberCut;
     }
 
     public Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException {
@@ -314,6 +277,92 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         }
 
         return result;
+    }
+
+    @Override
+    public Diagnostic diagnosticFiberManuel(String serviceId) throws IOException {
+        Diagnostic diagnosticResult = new Diagnostic();
+        Set<Anomalie> anomalieSet = new HashSet<>();
+
+        ONT ont = ontRepository.findByServiceId(serviceId);
+        if (ont != null) {
+            Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
+            anomalieSet.add(anomaliePowerSupply);
+
+            if (anomaliePowerSupply.getCode() == 205) {
+                Anomalie anomalieFiberCut = this.diagnosticFiberCut(ont);
+                anomalieSet.add(anomalieFiberCut);
+                Map<String, Object> resultOLTPowerUnderLimit = this.diagnosticOLTPowerUnderLimit(ont);
+                Map<String, Object> resultONTPowerUnderLimit = this.diagnosticONTPowerUnderLimit(ont);
+
+                anomalieSet.add((Anomalie) resultOLTPowerUnderLimit.get("anomalie"));
+                anomalieSet.add((Anomalie) resultONTPowerUnderLimit.get("anomalie"));
+                diagnosticResult.setPowerOLT(resultOLTPowerUnderLimit.get("signal").toString());
+                diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
+            }
+
+            diagnosticResult.setTypeDiagnostic(TypeDiagnostic.MANUEL);
+            diagnosticResult.setAnomalies(anomalieSet);
+            diagnosticResult.setOnt(ont);
+            diagnosticResult.setStatutONT(
+                scriptsDiagnostic
+                        .getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(), ont.getOlt().getVendeur())
+                        .equalsIgnoreCase("Ok")
+                    ? StatutONT.ACTIF
+                    : StatutONT.INACTIF
+            );
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
+            //        diagnosticResult.setSignal();
+            //        diagnosticResult.setDebitDown();
+            //        diagnosticResult.setDebitUp();
+
+            diagnosticRepository.save(diagnosticResult);
+        }
+        return diagnosticResult;
+    }
+
+    @Override
+    public void diagnosticFiberAutomatique() throws IOException {
+        Diagnostic diagnosticResult = new Diagnostic();
+        Set<Anomalie> anomalieSet = new HashSet<>();
+
+        List<ONT> onts = ontRepository.findAll();
+        for (ONT ont : onts) {
+            if (ont != null) {
+                Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
+                anomalieSet.add(anomaliePowerSupply);
+
+                if (anomaliePowerSupply.getCode() == 205) {
+                    Anomalie anomalieFiberCut = this.diagnosticFiberCut(ont);
+                    anomalieSet.add(anomalieFiberCut);
+                }
+
+                Map<String, Object> resultOLTPowerUnderLimit = this.diagnosticOLTPowerUnderLimit(ont);
+                Map<String, Object> resultONTPowerUnderLimit = this.diagnosticONTPowerUnderLimit(ont);
+
+                anomalieSet.add((Anomalie) resultOLTPowerUnderLimit.get("anomalie"));
+                anomalieSet.add((Anomalie) resultONTPowerUnderLimit.get("anomalie"));
+                diagnosticResult.setPowerOLT(resultOLTPowerUnderLimit.get("signal").toString());
+                diagnosticResult.setPowerONT(resultONTPowerUnderLimit.get("signal").toString());
+
+                diagnosticResult.setTypeDiagnostic(TypeDiagnostic.AUTOMATIQUE);
+                diagnosticResult.setAnomalies(anomalieSet);
+                diagnosticResult.setOnt(ont);
+                diagnosticResult.setStatutONT(
+                    scriptsDiagnostic
+                            .getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(), ont.getOlt().getVendeur())
+                            .equalsIgnoreCase("Ok")
+                        ? StatutONT.ACTIF
+                        : StatutONT.INACTIF
+                );
+                LocalDateTime currentDateTime = LocalDateTime.now();
+                diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
+
+                diagnosticRepository.save(diagnosticResult);
+            }
+        }
+        // envoie mail equipe DRPS
     }
 
     @Override

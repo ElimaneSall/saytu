@@ -79,5 +79,7 @@ public interface DiagnosticService {
 
     public Anomalie diagnosticFiberCut(ONT ont);
 
-    public Diagnostic diagnosticFiber(String serviceId) throws IOException;
+    public Diagnostic diagnosticFiberManuel(String serviceId) throws IOException;
+
+    public void diagnosticFiberAutomatique() throws IOException;
 }
