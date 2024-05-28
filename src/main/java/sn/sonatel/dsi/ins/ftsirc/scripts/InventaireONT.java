@@ -58,14 +58,14 @@ public class InventaireONT implements CommandLineRunner {
         //                                                listONTs = getAllONTOnOLT(ontdto);
         //                                                ontService.saveListONT(ontMapper.toEntity(listONTs));
         System.out.println("Debut diagnostic:");
+
+//        diagnosticService.diagnosticFiberManuel("338674808");
+
+
+
         //        338257692 >> Nokia Siege1
         //        338674808 >> Huawei Foire
-        //                                                ONT ont = ontRepository.findByServiceId("338257692");
-        //
-        //                                                Map<String,Object>  map = diagnosticService.diagnosticONTPowerUnderLimit(ont);
-        //
-        //                                                Anomalie anomalie = (Anomalie) map.get("anomalie");
-        //                                                System.out.println(anomalie.getCode());
+
     }
 
     public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {

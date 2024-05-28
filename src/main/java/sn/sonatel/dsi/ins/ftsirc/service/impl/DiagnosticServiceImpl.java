@@ -174,7 +174,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
-                ont.getOntID(),
                 Integer.parseInt(ont.getSlot()),
                 ont.getPon()
             );
@@ -232,7 +231,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 ont.getOlt().getVendeur(),
                 ont.getIndex(),
                 ont.getOlt().getIp(),
-                ont.getOntID(),
                 Integer.parseInt(ont.getSlot()),
                 ont.getPon()
             );
@@ -314,7 +312,8 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             LocalDateTime currentDateTime = LocalDateTime.now();
             diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
             //        diagnosticResult.setSignal();
-            //        diagnosticResult.setDebitDown();
+                    diagnosticResult.setDebitDown(scriptsDiagnostic.getDebitDown(ont.getOlt().getVendeur(), ont.getIndex(),
+                        ont.getOlt().getIp()));
             //        diagnosticResult.setDebitUp();
 
             diagnosticRepository.save(diagnosticResult);

@@ -20,7 +20,6 @@ public interface DiagnosticRepository
     default Optional<Diagnostic> findOneWithEagerRelationships(Long id) {
         return this.fetchBagRelationships(this.findById(id));
     }
-
     default List<Diagnostic> findAllWithEagerRelationships() {
         return this.fetchBagRelationships(this.findAll());
     }

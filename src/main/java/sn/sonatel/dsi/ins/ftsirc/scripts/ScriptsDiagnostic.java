@@ -264,7 +264,7 @@ public class ScriptsDiagnostic {
         return ontRxPowerValue;
     }
 
-    public Long getSfpClass(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
+    public Long getSfpClass(String vendeur, String index, String ip, Integer slot, String pon) throws IOException {
         String SfpClass = "";
         Long SfpClassValue = null;
         Integer slot_index = 4353 + slot + 1;
@@ -280,5 +280,50 @@ public class ScriptsDiagnostic {
         }
 
         return SfpClassValue;
+    }
+
+    public String getDebitDown(String vendeur, String index, String ip) throws IOException {
+
+        String debitDown = "";
+        String idService = this.getIdService(ip, index);
+        String id_upstr = this.getUpStr(ip);
+        String oid_debitDown = vendeur.equalsIgnoreCase("NOKIA")
+            ? "1.3.6.1.4.1.637.61.1.47.3.19.1.8." + "." + idService
+            : "1.3.6.1.4.1.2011.5.14.3.8.1.5" + "." + id_upstr;
+
+        ResponseEvent event = this.connectToOID(ip, oid_debitDown, vendeur.toUpperCase());
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                debitDown = varBind.getVariable().toString();
+            }
+        }
+
+        return debitDown;
+    }
+    public String getUpStr(String ip) throws IOException {
+        String upStr = "";
+        String oidUpstr = "1.3.6.1.4.1.2011.5.14.3.8.1.2";
+
+        ResponseEvent event = this.connectToOID(ip, oidUpstr,"HUAWEI");
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                upStr = varBind.getVariable().toString();
+            }
+        }
+
+        return upStr;
+    }
+    public String getIdService(String ip, String index) throws IOException {
+        String idService = "";
+        String oidIdService = "1.3.6.1.4.1.637.61.1.47.5.1.1.4."+index;
+
+        ResponseEvent event = this.connectToOID(ip, oidIdService,"HUAWEI");
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                idService = varBind.getVariable().toString();
+            }
+        }
+
+        return idService;
     }
 }
