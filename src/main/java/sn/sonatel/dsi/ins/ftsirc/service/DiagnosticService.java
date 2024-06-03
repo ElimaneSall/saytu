@@ -82,4 +82,6 @@ public interface DiagnosticService {
     public Diagnostic diagnosticFiberManuel(String serviceId) throws IOException;
 
     public void diagnosticFiberAutomatique() throws IOException;
+
+    public Map<String, String> statistiqueDiagnostic();
 }

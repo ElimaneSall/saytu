@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 import sn.sonatel.dsi.ins.ftsirc.domain.Diagnostic;
+import sn.sonatel.dsi.ins.ftsirc.domain.ONT;
 
 /**
  * Spring Data JPA repository for the Diagnostic entity.
@@ -20,6 +21,13 @@ public interface DiagnosticRepository
     default Optional<Diagnostic> findOneWithEagerRelationships(Long id) {
         return this.fetchBagRelationships(this.findById(id));
     }
+    @Query("SELECT DATE(d.dateDiagnostic) as diagnosticDate, COUNT(d) as numberOfManualDiagnostics " +
+        "FROM Diagnostic d " +
+        "WHERE d.typeDiagnostic = 'manuel' " +
+        "GROUP BY DATE(d.dateDiagnostic) " +
+        "ORDER BY DATE(d.dateDiagnostic)")
+    List<Object[]> countManualDiagnosticsPerDay();
+
     default List<Diagnostic> findAllWithEagerRelationships() {
         return this.fetchBagRelationships(this.findAll());
     }

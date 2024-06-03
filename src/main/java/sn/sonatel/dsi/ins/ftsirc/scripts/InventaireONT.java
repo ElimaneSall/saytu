@@ -60,9 +60,6 @@ public class InventaireONT implements CommandLineRunner {
         System.out.println("Debut diagnostic:");
 
 //        diagnosticService.diagnosticFiberManuel("338674808");
-
-
-
         //        338257692 >> Nokia Siege1
         //        338674808 >> Huawei Foire
 

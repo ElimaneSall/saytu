@@ -27,19 +27,19 @@ public class ScheduledTasks {
     ////        oltService.updateOLT("/Users/nfl/Documents/Sonatel/SAYTU/OLT_OSN_22.04.24 (1).xlsx");
     ////    }
 
-    @Scheduled(cron = " 0 30 13 * * *")
+    @Scheduled(cron = " 0 30 22 * * *")
     public void updateOLT() {
         log.debug("Started OLT UPDATE CRON");
         oltService.updateOLT("C:\\Users\\Surface\\Desktop\\Sonatel_2023\\saytou\\saytu-project\\saytu-backend\\OLT_OSN_22.04.24.xlsx");
     }
 
-    @Scheduled(cron = " 0 20 13 * * *")
+    @Scheduled(cron = " 0 20 22 * * *")
     public void updateAllONT() {
         log.debug("Started ONT UPDATE CRON");
         ontService.updateALLONTS();
     }
 
-    @Scheduled(cron = " 0 08 13 * * *")
+    @Scheduled(cron = " 0 08 22 * * *")
     public void diagnosticFiberAutomatique() throws IOException {
         log.debug("Started Maintenance Predictive");
         diagnosticService.diagnosticFiberAutomatique();

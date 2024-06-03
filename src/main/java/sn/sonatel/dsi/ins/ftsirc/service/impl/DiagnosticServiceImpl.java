@@ -365,6 +365,12 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     }
 
     @Override
+    public Map<String, String> statistiqueDiagnostic() {
+        Set<String> anomalieSet = new HashSet<>();
+        return null;
+    }
+
+    @Override
     public Anomalie diagnosticDebit(ONT ont) throws IOException {
         return null;
     }
