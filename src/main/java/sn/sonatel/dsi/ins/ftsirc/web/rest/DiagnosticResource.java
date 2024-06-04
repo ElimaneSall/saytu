@@ -220,4 +220,17 @@ public class DiagnosticResource {
         log.debug("REST request to Diagnostic fiber by serviceId: {}", serviceId);
         return ResponseEntity.ok().body(diagnosticService.diagnosticFiberManuel(serviceId));
     }
+
+    @GetMapping("/statistique-diagnostic-manuel")
+    public ResponseEntity<Object> getStatistiqueDiagnosticManuel() {
+        log.debug("REST request to get statistique diagnostic manuel");
+        //        Object object = diagnosticService.statistiqueDiagnostic();
+        return ResponseEntity.ok().body(diagnosticRepository.countManualDiagnosticsPerDay());
+    }
+    //    @GetMapping("/statistique-diagnostic-manuel")
+    //    public ResponseEntity<Object> getStatistiqueAnomalieDiagnostic() {
+    //        log.debug("REST request to get statistique anomalie diagnostic");
+    ////        Object object = diagnosticService.statistiqueDiagnostic();
+    //        return ResponseEntity.ok().body(diagnosticRepository.countManualDiagnosticsPerDay());
+    //    }
 }

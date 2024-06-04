@@ -269,7 +269,7 @@ public class ScriptsDiagnostic {
         return ontRxPowerValue;
     }
 
-    public Long getSfpClass(String vendeur, String index, String ip, String _ont_, Integer slot, String pon) throws IOException {
+    public Long getSfpClass(String vendeur, String index, String ip, Integer slot, String pon) throws IOException {
         String SfpClass = "";
         Long SfpClassValue = null;
         Integer slot_index = 4353 + slot + 1;
@@ -342,5 +342,77 @@ public class ScriptsDiagnostic {
         // Format the datetime to a readable string
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return dateTime.format(formatter);
+    }
+
+    public String getDebitDown(String vendeur, String index, String ip) throws IOException {
+        String debitDown = "";
+        String idService = this.getIdService(ip, index);
+        String id_upstr = this.getUpStr(ip);
+        String oid_debitDown = vendeur.equalsIgnoreCase("NOKIA")
+            ? "1.3.6.1.4.1.637.61.1.47.3.19.1.8." + "." + idService
+            : "1.3.6.1.4.1.2011.5.14.3.8.1.5" + "." + id_upstr;
+
+        ResponseEvent event = this.connectToOID(ip, oid_debitDown, vendeur.toUpperCase());
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                debitDown = varBind.getVariable().toString();
+            }
+        }
+
+        return debitDown;
+    }
+
+    public String getUpStr(String ip) throws IOException {
+        String upStr = "";
+        String oidUpstr = "1.3.6.1.4.1.2011.5.14.3.8.1.2";
+
+        ResponseEvent event = this.connectToOID(ip, oidUpstr, "HUAWEI");
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                upStr = varBind.getVariable().toString();
+            }
+        }
+
+        return upStr;
+    }
+
+    public String getIdService(String ip, String index) throws IOException {
+        String idService = "";
+        String oidIdService = "1.3.6.1.4.1.637.61.1.47.5.1.1.4." + index;
+
+        ResponseEvent event = this.connectToOID(ip, oidIdService, "HUAWEI");
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                idService = varBind.getVariable().toString();
+            }
+        }
+
+        return idService;
+    }
+
+    public Double getDistance(String ip, String index, String ontId, String vendeur) throws IOException {
+        String OntDistance = "";
+        Double varDistance = 0.0;
+        String operStatus = "";
+
+        if (vendeur.equalsIgnoreCase("NOKIA")) {
+            OntDistance = "1.3.6.1.4.1.637.61.1.35.10.4.1.3" + "." + index; //Up(1),Down(2),Testing(3),Unknown(4),Dormant(5), notPresent(6),lowerLayerDown(7)
+            ResponseEvent event = this.connectToOID(ip, OntDistance, "NOKIA");
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    varDistance = varBind.getVariable().toLong() * 0.1;
+                }
+            }
+        } else if (vendeur.equalsIgnoreCase("HUAWEI")) {
+            OntDistance = "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.20" + "." + index + "." + ontId; //Up(1),Down(2),Unknown(-1)
+
+            ResponseEvent event = this.connectToOID(ip, OntDistance, "HUAWEI");
+            if (event != null && event.getResponse() != null) {
+                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                    varDistance = varBind.getVariable().toLong() * 0.001;
+                }
+            }
+        }
+        return varDistance;
     }
 }

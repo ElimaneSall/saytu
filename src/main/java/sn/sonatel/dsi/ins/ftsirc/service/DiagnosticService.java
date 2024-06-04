@@ -86,4 +86,6 @@ public interface DiagnosticService {
     public String diagnosticLastDownTime(String serviceId) throws IOException;
 
     public String diagnosticLastUpTime(String serviceId) throws IOException;
+
+    public Map<String, String> statistiqueDiagnostic();
 }
