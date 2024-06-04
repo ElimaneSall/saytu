@@ -227,10 +227,17 @@ public class DiagnosticResource {
         //        Object object = diagnosticService.statistiqueDiagnostic();
         return ResponseEntity.ok().body(diagnosticRepository.countManualDiagnosticsPerDay());
     }
-    //    @GetMapping("/statistique-diagnostic-manuel")
-    //    public ResponseEntity<Object> getStatistiqueAnomalieDiagnostic() {
-    //        log.debug("REST request to get statistique anomalie diagnostic");
-    ////        Object object = diagnosticService.statistiqueDiagnostic();
-    //        return ResponseEntity.ok().body(diagnosticRepository.countManualDiagnosticsPerDay());
-    //    }
+
+    @GetMapping("/statistique-diagnostic-anomalie")
+    public ResponseEntity<Object> getStatistiqueAnomalieDiagnostic() {
+        log.debug("REST request to get statistique anomalie diagnostic");
+        //        Object object = diagnosticService.statistiqueDiagnostic();
+        return ResponseEntity.ok().body(diagnosticRepository.countManualDiagnosticsPerDay());
+    }
+
+    @GetMapping("/statistique-powerONT-powerOLT")
+    public ResponseEntity<Object> getPowerONTAndPowerOLT(String serviceId) {
+        log.debug("REST request to get power OLT and Power ONT:{}", serviceId);
+        return ResponseEntity.ok().body(diagnosticRepository.calculateAveragePowerPerDay(ontRepository.findByServiceId(serviceId)));
+    }
 }

@@ -83,7 +83,7 @@ public class ONT implements Serializable {
     @JsonIgnoreProperties(value = { "onts" }, allowSetters = true)
     private OLT olt;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ont")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "ont")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "signal", "ont", "anomalies" }, allowSetters = true)
     private Set<Diagnostic> diagnostics = new HashSet<>();
