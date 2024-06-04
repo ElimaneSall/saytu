@@ -54,11 +54,11 @@ public class Diagnostic implements Serializable {
     @JsonIgnoreProperties(value = { "diagnostics" }, allowSetters = true)
     private Signal signal;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = { "client", "olt", "diagnostics", "metriques" }, allowSetters = true)
     private ONT ont;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "rel_diagnostic__anomalie",
         joinColumns = @JoinColumn(name = "diagnostic_id"),

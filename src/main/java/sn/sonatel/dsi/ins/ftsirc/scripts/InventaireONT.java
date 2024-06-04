@@ -25,6 +25,7 @@ import sn.sonatel.dsi.ins.ftsirc.service.OLTService;
 import sn.sonatel.dsi.ins.ftsirc.service.ONTService;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.OLTDTO;
 import sn.sonatel.dsi.ins.ftsirc.service.dto.ONTDTO;
+import sn.sonatel.dsi.ins.ftsirc.service.impl.ONTServiceImpl;
 import sn.sonatel.dsi.ins.ftsirc.service.mapper.OLTMapperImpl;
 import sn.sonatel.dsi.ins.ftsirc.service.mapper.ONTMapper;
 
@@ -59,205 +60,53 @@ public class InventaireONT implements CommandLineRunner {
         //                                                ontService.saveListONT(ontMapper.toEntity(listONTs));
         System.out.println("Debut diagnostic:");
 
+        ontService.all
 //        diagnosticService.diagnosticFiberManuel("338674808");
+//        this.getServiceFlowUp("10.155.71.30", "4194312192", "13");
         //        338257692 >> Nokia Siege1
         //        338674808 >> Huawei Foire
 
     }
 
-    public static List<ONTDTO> getAllONTOnOLT(OLTDTO olt) {
-        List<ONTDTO> listONTs = new ArrayList<>();
 
-        System.out.println("debut de l'inventaire");
-
-        // startTime = time.time();
-
-        String[] oids = { "1.3.6.1.4.1.2011.6.128.1.1.2.43.1.9", "1.3.6.1.4.1.637.61.1.6.5.1.1" };
-        System.out.println("inventaire de l'OLT " + olt.getLibelle() + " (" + olt.getVendeur() + ")");
-        TransportMapping<?> transport = null;
-        try {
-            CommunityTarget target = new CommunityTarget();
-            target.setCommunity(new OctetString(olt.getVendeur().equals("NOKIA") ? "t1HAI2nai" : "OLT@osn_read"));
-            target.setAddress(new UdpAddress(olt.getIp() + "/161"));
-            target.setRetries(2);
-            target.setTimeout(1500);
-            target.setVersion(SnmpConstants.version2c);
-            OID oid = new OID(olt.getVendeur().equals("NOKIA") ? oids[1] : oids[0]);
-            Map<String, String> result = new TreeMap<>();
-
-            transport = new DefaultUdpTransportMapping();
-            Snmp snmp = new Snmp(transport);
-            transport.listen();
-            TreeUtils treeUtils = new TreeUtils(snmp, new DefaultPDUFactory());
-            List<TreeEvent> events = treeUtils.getSubtree(target, new OID(oid));
-
-            if (events == null || events.size() == 0) {
-                System.out.println("Error: Unable to read table...");
-                return (List<ONTDTO>) result;
-            }
-
-            for (TreeEvent event : events) {
-                if (event == null) {
-                    continue;
-                }
-                if (event.isError()) {
-                    System.out.println("Error: table OID [" + oid + "] " + event.getErrorMessage());
-                    continue;
-                }
-
-                VariableBinding[] varBindings = event.getVariableBindings();
-                if (varBindings == null || varBindings.length == 0) {
-                    continue;
-                }
-                for (VariableBinding varBinding : varBindings) {
-                    if (varBinding == null) {
-                        continue;
-                    }
-                    String binary_ = Integer.toBinaryString(Integer.parseInt(String.valueOf(varBinding.getOid().last())));
-
-                    ONTDTO ontdto = new ONTDTO();
-                    if (olt.getVendeur().equals("NOKIA")) {
-                        int len_level = binary_.length() - 21;
-                        //                          int level = Integer.parseInt(binary_.substring(0, len_level).substring(len_level - 4), 2);
-                        int len_pon = binary_.length() - 16;
-                        int pon = Integer.parseInt(binary_.substring(0, len_pon).substring(len_pon - 5), 2) + 1;
-                        int len_slot = binary_.length() - 25;
-                        System.out.println("len_slot" + binary_.length());
-                        System.out.println("slot" + binary_.substring(0, len_slot));
-                        int slot = Integer.parseInt(binary_.substring(0, len_slot), 2) - 1;
-                        int len_ont = binary_.length() - 9;
-                        int ontId = Integer.parseInt(binary_.substring(0, len_ont).substring(len_ont - 7), 2) + 1;
-                        String index = String.valueOf(varBinding.getOid().last());
-                        long ponIndex = (long) ((slot + 1) * Math.pow(2, 25) + 13 * Math.pow(2, 21) + (pon - 1) * Math.pow(2, 16));
-                        String numberPhone = varBinding.getVariable().toString().replace(" ", "");
-                        System.out.println(
-                            "ponIndex: " +
-                            ponIndex +
-                            ", ontId: " +
-                            ontId +
-                            ", index: " +
-                            index +
-                            ", numberPhone: " +
-                            numberPhone +
-                            ", slot: " +
-                            slot +
-                            ", pon: " +
-                            pon +
-                            ", " +
-                            binary_
-                        );
-                        ontdto.setOlt(olt);
-                        ontdto.setIndex(index);
-                        ontdto.setServiceId(numberPhone);
-                        ontdto.setSlot(String.valueOf(slot));
-                        ontdto.setPon(String.valueOf(pon));
-                        ontdto.setPonIndex(String.valueOf(ponIndex));
-                        ontdto.setOntID(String.valueOf(ontId));
-                        listONTs.add(ontdto);
-                    } else if (olt.getVendeur().equals("HUAWEI")) {
-                        String _oid = String.valueOf(varBinding.getOid());
-                        String[] _oidList = _oid.split("\\.");
-                        String ontId = _oidList[_oidList.length - 1];
-                        Long index = Long.parseLong(_oidList[_oidList.length - 2]);
-                        String serviceId = String.valueOf(varBinding.getVariable());
-                        int slot = Integer.parseInt(Long.toBinaryString(index).substring(13, 19), 2);
-                        //                            System.out.println(Long.toBinaryString(index).substring(19, 24));
-                        int shelf = Integer.parseInt(Long.toBinaryString(index).substring(5, 11), 2);
-
-                        int pon = Integer.parseInt(Long.toBinaryString(index).substring(19, 24), 2);
-
-                        long ponIndex = (long) (125 * Math.pow(2, 25) +
-                            shelf * Math.pow(2, 19) +
-                            slot * Math.pow(2, 13) +
-                            pon * Math.pow(2, 8));
-
-                        System.out.println(
-                            "ponIndex: " +
-                            ponIndex +
-                            ", shelf: " +
-                            shelf +
-                            ", index: " +
-                            index +
-                            ", IP: " +
-                            olt.getIp() +
-                            ", numberPhone: " +
-                            serviceId +
-                            ", slot: " +
-                            slot +
-                            ", pon: " +
-                            pon +
-                            ", " +
-                            _oid
-                        );
-
-                        ontdto.setOlt(olt);
-                        ontdto.setIndex(String.valueOf(index));
-                        ontdto.setServiceId(serviceId);
-                        ontdto.setSlot(String.valueOf(slot));
-                        ontdto.setPon(String.valueOf(pon));
-                        ontdto.setPonIndex(String.valueOf(ponIndex));
-                        ontdto.setOntID(String.valueOf(ontId));
-                        listONTs.add(ontdto);
-                    } else {
-                        System.out.println("La longueur binaire depasse 25 ou n'est pas de Huawei ni de Nokia");
-                    }
-
-                    System.out.println("Numero: " + varBinding.getVariable());
-                    result.put("." + varBinding.getOid().toString(), varBinding.getVariable().toString());
-                }
-            }
-            snmp.close();
-
-            return listONTs;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            System.out.println("Fin 1 inventaire");
-            try {
-                if (transport != null) {
-                    transport.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("Fin inventaire");
-        return listONTs;
-    }
-
-    public Double getPowerONT(String vendeur, String index, String ip, String _ont_) throws IOException {
+    public ResponseEvent connectToOID(String ip, String oid, String vendeur) throws IOException {
         TransportMapping<?> transport = null;
         try {
             transport = new DefaultUdpTransportMapping();
             Snmp snmp = new Snmp(transport);
             transport.listen();
-
             CommunityTarget target = new CommunityTarget();
             target.setCommunity(new OctetString(vendeur.equalsIgnoreCase("NOKIA") ? "t1HAI2nai" : "OLT@osn_read"));
             target.setAddress(new UdpAddress(ip + "/161"));
             target.setRetries(2);
             target.setTimeout(1500);
             target.setVersion(SnmpConstants.version2c);
-
-            OID oid = new OID(
-                vendeur.equalsIgnoreCase("NOKIA")
-                    ? "1.3.6.1.4.1.637.61.1.35.10.14.1.2" + "." + index
-                    : "1.3.6.1.4.1.2011.6.128.1.1.2.51.1.4" + "." + index + "." + _ont_
-            );
             PDU pdu = new PDU();
             pdu.add(new VariableBinding(new OID(oid)));
             pdu.setType(PDU.GET);
-
             ResponseEvent event = snmp.send(pdu, target);
-            if (event != null && event.getResponse() != null) {
-                for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
-                    return Double.parseDouble(varBind.getVariable().toString());
-                }
-            }
+            return event;
         } catch (Exception e) {
             System.err.println(e);
         }
-
         return null;
     }
+
+    public String getServiceFlowUp(String ip, String index, String ont) throws IOException {
+        String idService = "";
+        String oidIdService = "1.3.6.1.4.1.2011.6.128.1.1.2.62.1.4."+index+"."+ont;
+
+        ResponseEvent event = this.connectToOID(ip, oidIdService,"HUAWEI");
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                idService = varBind.getVariable().toString();
+                System.out.println(idService);
+            }
+        }
+
+        return idService;
+    }
+
+
+
 }

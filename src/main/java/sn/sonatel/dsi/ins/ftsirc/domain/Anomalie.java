@@ -43,7 +43,7 @@ public class Anomalie implements Serializable {
     @Column(name = "code")
     private Integer code;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "anomalies")
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "anomalies")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "signal", "ont", "anomalies" }, allowSetters = true)
     private Set<Diagnostic> diagnostics = new HashSet<>();

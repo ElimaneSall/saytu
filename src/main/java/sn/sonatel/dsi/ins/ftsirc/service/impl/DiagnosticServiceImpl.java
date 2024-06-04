@@ -112,7 +112,6 @@ public class DiagnosticServiceImpl implements DiagnosticService {
         try {
             if (ont != null) {
                 //Verifer que les elements ne sont pas null
-
                 String index = ont.getIndex();
                 String ip = ont.getOlt().getIp();
                 String ontId = ont.getOntID();

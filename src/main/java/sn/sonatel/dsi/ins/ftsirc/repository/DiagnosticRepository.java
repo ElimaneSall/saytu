@@ -28,6 +28,16 @@ public interface DiagnosticRepository
         "ORDER BY DATE(d.dateDiagnostic)")
     List<Object[]> countManualDiagnosticsPerDay();
 
+    @Query("SELECT DATE(d.dateDiagnostic) AS diagnosticDate, " +
+        "AVG(CAST(d.powerONT AS double)) AS averagePowerOnt, " +
+        "AVG(CAST(d.powerOLT AS double)) AS averagePowerOlt " +
+        "FROM Diagnostic d " +
+        "WHERE d.ont = :ont " +
+        "GROUP BY DATE(d.dateDiagnostic) " +
+        "ORDER BY DATE(d.dateDiagnostic)")
+    List<Object[]> calculateAveragePowerPerDay(ONT ont);
+
+
     default List<Diagnostic> findAllWithEagerRelationships() {
         return this.fetchBagRelationships(this.findAll());
     }

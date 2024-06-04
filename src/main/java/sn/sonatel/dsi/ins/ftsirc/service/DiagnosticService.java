@@ -68,7 +68,6 @@ public interface DiagnosticService {
      * @param id the id of the entity.
      */
     void delete(Long id);
-
     public Map<String, Object> diagnosticOLTPowerUnderLimit(ONT ont) throws IOException;
 
     public Map<String, Object> diagnosticONTPowerUnderLimit(ONT ont) throws IOException;
