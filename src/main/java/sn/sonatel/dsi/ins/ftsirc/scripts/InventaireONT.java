@@ -1,6 +1,11 @@
 package sn.sonatel.dsi.ins.ftsirc.scripts;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.hibernate.Session;
 import org.snmp4j.CommunityTarget;
@@ -51,13 +56,17 @@ public class InventaireONT implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //                                                Long id = Long.parseLong("4139");
-        //                                                List<ONTDTO> listONTs;
-        //                                                Optional<OLTDTO> oltdto = oltService.findOne(id);
-        //                                                OLTDTO ontdto = oltdto.orElseThrow();
-        //                                                listONTs = getAllONTOnOLT(ontdto);
-        //                                                ontService.saveListONT(ontMapper.toEntity(listONTs));
-        System.out.println("Debut diagnostic:");
+        //                                                        Long id = Long.parseLong("1658");
+        //                                                        List<ONTDTO> listONTs;
+        //                                                        Optional<OLTDTO> oltdto = oltService.findOne(id);
+        //                                                        OLTDTO ontdto = oltdto.orElseThrow();
+        //                                                        listONTs = getAllONTOnOLT(ontdto);
+        //                                                        ontService.saveListONT(ontMapper.toEntity(listONTs));
+        //        System.out.println("Debut diagnostic:");
+        //       diagnosticService.diagnosticFiberAutomatique();
+        //        diagnosticService.diagnosticFiberManuel("338674808");
+        diagnosticService.diagnosticLastDownTime("338674808");
+        diagnosticService.diagnosticLastUpTime("338674808");
         //        338257692 >> Nokia Siege1
         //        338674808 >> Huawei Foire
         //                                                ONT ont = ontRepository.findByServiceId("338257692");

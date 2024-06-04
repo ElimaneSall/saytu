@@ -324,12 +324,12 @@ public class DiagnosticServiceImpl implements DiagnosticService {
 
     @Override
     public void diagnosticFiberAutomatique() throws IOException {
-        Diagnostic diagnosticResult = new Diagnostic();
-        Set<Anomalie> anomalieSet = new HashSet<>();
-
         List<ONT> onts = ontRepository.findAll();
         for (ONT ont : onts) {
             if (ont != null) {
+                Set<Anomalie> anomalieSet = new HashSet<>();
+                Diagnostic diagnosticResult = new Diagnostic();
+                System.out.println(ont.getServiceId());
                 Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
                 anomalieSet.add(anomaliePowerSupply);
 
@@ -359,7 +359,7 @@ public class DiagnosticServiceImpl implements DiagnosticService {
                 LocalDateTime currentDateTime = LocalDateTime.now();
                 diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
 
-                diagnosticRepository.save(diagnosticResult);
+                diagnosticRepository.saveAndFlush(diagnosticResult);
             }
         }
         // envoie mail equipe DRPS
@@ -368,5 +368,47 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     @Override
     public Anomalie diagnosticDebit(ONT ont) throws IOException {
         return null;
+    }
+
+    public String diagnosticLastDownTime(String serviceId) {
+        ONT ont = ontRepository.findByServiceId(serviceId);
+
+        String lastDownTime = "";
+        try {
+            if (ont != null) {
+                //Verifer que les elements ne sont pas null
+
+                String index = ont.getIndex();
+                String ip = ont.getOlt().getIp();
+                String ontId = ont.getOntID();
+                String vendeur = ont.getOlt().getVendeur();
+
+                lastDownTime = scriptsDiagnostic.getLastDownTime(ip, index, ontId, vendeur);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lastDownTime;
+    }
+
+    public String diagnosticLastUpTime(String serviceId) {
+        ONT ont = ontRepository.findByServiceId(serviceId);
+
+        String lastUpTime = "";
+        try {
+            if (ont != null) {
+                //Verifer que les elements ne sont pas null
+
+                String index = ont.getIndex();
+                String ip = ont.getOlt().getIp();
+                String ontId = ont.getOntID();
+                String vendeur = ont.getOlt().getVendeur();
+
+                lastUpTime = scriptsDiagnostic.getLastUpTime(ip, index, ontId, vendeur);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lastUpTime;
     }
 }

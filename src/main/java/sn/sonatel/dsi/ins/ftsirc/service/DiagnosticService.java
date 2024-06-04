@@ -82,4 +82,8 @@ public interface DiagnosticService {
     public Diagnostic diagnosticFiberManuel(String serviceId) throws IOException;
 
     public void diagnosticFiberAutomatique() throws IOException;
+
+    public String diagnosticLastDownTime(String serviceId) throws IOException;
+
+    public String diagnosticLastUpTime(String serviceId) throws IOException;
 }

@@ -1,7 +1,13 @@
 package sn.sonatel.dsi.ins.ftsirc.scripts;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.SocketException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import org.snmp4j.CommunityTarget;
@@ -260,7 +266,6 @@ public class ScriptsDiagnostic {
                 ontRxPowerValue = Long.valueOf(varBind.getVariable().toString());
             }
         }
-
         return ontRxPowerValue;
     }
 
@@ -278,7 +283,64 @@ public class ScriptsDiagnostic {
                 SfpClassValue = Long.valueOf(varBind.getVariable().toString());
             }
         }
-
         return SfpClassValue;
+    }
+
+    public String getLastDownTime(String ip, String index, String ontId, String vendeur) throws IOException {
+        String OntLastDownTime = "";
+        String OntLastDownTimeValue = null;
+        OntLastDownTime = vendeur.equalsIgnoreCase("NOKIA")
+            ? "1.3.6.1.2.1.2.2.1.9" + "." + index
+            : "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.23" + "." + index + "." + ontId;
+
+        ResponseEvent event = this.connectToOID(ip, OntLastDownTime, vendeur.toUpperCase());
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                OntLastDownTimeValue = varBind.getVariable().toString();
+                System.out.println("Time Hexa:" + OntLastDownTimeValue);
+                OntLastDownTimeValue = hexToHumanReadable(OntLastDownTimeValue);
+                System.out.println("Last Down Time:" + OntLastDownTimeValue);
+            }
+        }
+        return OntLastDownTimeValue;
+    }
+
+    public String getLastUpTime(String ip, String index, String ontId, String vendeur) throws IOException {
+        String OntLastUpTime = "";
+        String OntLastUpTimeValue = null;
+        OntLastUpTime = vendeur.equalsIgnoreCase("NOKIA")
+            ? "1.3.6.1.2.1.2.2.1.9" + "." + index
+            : "1.3.6.1.4.1.2011.6.128.1.1.2.46.1.22" + "." + index + "." + ontId;
+
+        ResponseEvent event = this.connectToOID(ip, OntLastUpTime, vendeur.toUpperCase());
+        if (event != null && event.getResponse() != null) {
+            for (VariableBinding varBind : event.getResponse().getVariableBindings()) {
+                OntLastUpTimeValue = varBind.getVariable().toString();
+                System.out.println("Time Hexa:" + OntLastUpTimeValue);
+                OntLastUpTimeValue = hexToHumanReadable(OntLastUpTimeValue);
+                System.out.println("Last Up Time:" + OntLastUpTimeValue);
+            }
+        }
+        return OntLastUpTimeValue;
+    }
+
+    public static String hexToHumanReadable(String hexTime) {
+        // Split the hexadecimal string by colons
+        String[] hexParts = hexTime.split(":");
+
+        // Convert each part from hex to decimal
+        int year = Integer.parseInt(hexParts[0] + hexParts[1], 16);
+        int month = Integer.parseInt(hexParts[2], 16);
+        int day = Integer.parseInt(hexParts[3], 16);
+        int hour = Integer.parseInt(hexParts[4], 16);
+        int minute = Integer.parseInt(hexParts[5], 16);
+        int second = Integer.parseInt(hexParts[6], 16);
+
+        // Construct a LocalDateTime object
+        LocalDateTime dateTime = LocalDateTime.of(year, month, day, hour, minute, second);
+
+        // Format the datetime to a readable string
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dateTime.format(formatter);
     }
 }

@@ -39,7 +39,7 @@ public class ScheduledTasks {
         ontService.updateALLONTS();
     }
 
-    @Scheduled(cron = " 0 08 13 * * *")
+    @Scheduled(cron = " 0 32 15 * * *")
     public void diagnosticFiberAutomatique() throws IOException {
         log.debug("Started Maintenance Predictive");
         diagnosticService.diagnosticFiberAutomatique();
