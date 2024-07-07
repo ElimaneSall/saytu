@@ -280,9 +280,14 @@ public class DiagnosticServiceImpl implements DiagnosticService {
     public Diagnostic diagnosticFiberManuel(String serviceId) throws IOException {
         Diagnostic diagnosticResult = new Diagnostic();
         Set<Anomalie> anomalieSet = new HashSet<>();
+        Set<Anomalie> anomalieSet2 = new HashSet<>();
 
         ONT ont = ontRepository.findByServiceId(serviceId);
         if (ont != null) {
+            anomalieSet2.add(anomalieRepository.findByCode("201"));
+            anomalieSet2.add(anomalieRepository.findByCode("205"));
+            anomalieSet2.add(anomalieRepository.findByCode("203"));
+            anomalieSet2.add(anomalieRepository.findByCode("204"));
             Anomalie anomaliePowerSupply = this.diagnosticPowerSupply(ont);
             anomalieSet.add(anomaliePowerSupply);
 
@@ -299,15 +304,16 @@ public class DiagnosticServiceImpl implements DiagnosticService {
             }
 
             diagnosticResult.setTypeDiagnostic(TypeDiagnostic.MANUEL);
-            diagnosticResult.setAnomalies(anomalieSet);
+            diagnosticResult.setAnomalies(anomalieSet2);
             diagnosticResult.setOnt(ont);
-            diagnosticResult.setStatutONT(
-                scriptsDiagnostic
-                        .getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(), ont.getOlt().getVendeur())
-                        .equalsIgnoreCase("Ok")
-                    ? StatutONT.ACTIF
-                    : StatutONT.INACTIF
-            );
+            diagnosticResult.setStatutONT(StatutONT.ACTIF);
+//            diagnosticResult.setStatutONT(
+//                scriptsDiagnostic
+//                        .getOperStatus(ont.getOlt().getIp(), ont.getIndex(), ont.getOntID(), ont.getOlt().getVendeur())
+//                        .equalsIgnoreCase("Ok")
+//                    ? StatutONT.ACTIF
+//                    : StatutONT.INACTIF
+//            );
             LocalDateTime currentDateTime = LocalDateTime.now();
             diagnosticResult.setDateDiagnostic(LocalDate.from(currentDateTime));
             //        diagnosticResult.setSignal();
